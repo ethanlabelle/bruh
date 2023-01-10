@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.List;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -143,6 +144,7 @@ public strictfp class RobotPlayer {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runCarrier(RobotController rc) throws GameActionException {
+        Team opponent = rc.getTeam().opponent();
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
@@ -186,20 +188,36 @@ public strictfp class RobotPlayer {
 		if (foundWell && getTotalResources(rc) < 40) {
 			return;
 		}
-		
-		//RobotInfo[] nearby = rc.senseNearbyRobots();
 
-        // Occasionally try out the carriers attack
-        if (rng.nextInt(20) == 1) {
-            RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-            if (enemyRobots.length > 0) {
-                if (rc.canAttack(enemyRobots[0].location)) {
-					int before = getTotalResources(rc);
-                    rc.attack(enemyRobots[0].location);
-					rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
+		if (getTotalResources(rc) == 40) {
+            RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != opponent).toArray(RobotInfo[]::new);
+            int min_dist = 7200;
+            if (hqs.length >= 1) {
+                RobotInfo closest_hq = hqs[0];
+                for (RobotInfo hq: hqs) {
+                    int dist = hq.location.distanceSquaredTo(me);
+                    if (dist < min_dist) {
+                        min_dist = dist;
+                        closest_hq = hq;
+                    }
+                }
+                Direction dir = me.directionTo(closest_hq.location);
+                if (rc.canMove(dir)) {
+                    rc.move(dir);
                 }
             }
         }
+        // Occasionally try out the carriers attack
+        // if (rng.nextInt(20) == 1) {
+        //     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        //     if (enemyRobots.length > 0) {
+        //         if (rc.canAttack(enemyRobots[0].location)) {
+		// 			int before = getTotalResources(rc);
+        //             rc.attack(enemyRobots[0].location);
+		// 			rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
+        //         }
+        //     }
+        // }
        	
         // If we can see a well, move towards it
         WellInfo[] wells = rc.senseNearbyWells();
@@ -233,6 +251,8 @@ public strictfp class RobotPlayer {
                 rc.attack(toAttack);
             }
         }
+
+        //TODO: ATTACK ENEMY HEADQUARTERS!!!!!!!!!!!!!!!!
 
         // Also try to move randomly.
         Direction dir = directions[rng.nextInt(directions.length)];
