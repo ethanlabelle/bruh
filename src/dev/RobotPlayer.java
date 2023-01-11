@@ -121,9 +121,9 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
                 switch (rc.getType()) {
-                    case HEADQUARTERS:     runHeadquarters.runHeadquarters(rc);  break;
-                    case CARRIER:      runCarrier.runCarrier(rc);   break;
-                    case LAUNCHER: runLauncher.runLauncher(rc); break;
+                    case HEADQUARTERS:     RunHeadquarters.runHeadquarters(rc);  break;
+                    case CARRIER:      RunCarrier.runCarrier(rc);   break;
+                    case LAUNCHER: RunLauncher.runLauncher(rc); break;
                     case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
                     case DESTABILIZER: // You might want to give them a try!
                     case AMPLIFIER:       break;
