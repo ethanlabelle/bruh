@@ -49,7 +49,7 @@ public strictfp class RobotPlayer {
 	// 4 bits per tile * 3600 = 12000+2400 = 14400 bits needed
 	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits have
 	
-	static final short M_NULL = 0b0000;
+	static final short M_EMPTY = 0b0000;
 	static final short M_CLOUD = 0b0001;
 	static final short M_STORM = 0b0010;
 	static final short M_CURW = 0b0011;
@@ -64,8 +64,21 @@ public strictfp class RobotPlayer {
 	static final short M_ELIX = 0b1100;
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
+	static final short M_HIDDEN = 0b1111;
 
 	static short[][] board = new short[60][60];
+
+	static void printBoard() {
+		String out = "";
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board[i].length; j++) {
+				out = out + board[i][j] + " ";
+			}
+			out = out + "\n";
+		}
+		System.out.println(out);
+	
+	}
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -83,6 +96,7 @@ public strictfp class RobotPlayer {
 
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
+		updateMap(rc);
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -131,21 +145,89 @@ public strictfp class RobotPlayer {
     }
 
 	// Fills out the static board array for RobotPlayer board 
-	static void updateMap(rc) throws GameActionException {
+	// TODO: Approximate bytecode use
+	// TODO: Clouds, currents 
+	// TODO: HIDDEN tiles on init
+	static void updateMap(RobotController rc) throws GameActionException {
+		// static final short M_NULL = 0b0000;
+		// static final short M_CLOUD = 0b0001;
+		// static final short M_STORM = 0b0010;
+		// static final short M_CURW = 0b0011;
+		// static final short M_CURN = 0b0100;
+		// static final short M_CURS = 0b0101;
+		// static final short M_CURE = 0b0110;
+		// static final short M_AISL = 0b0111;
+		// static final short M_BISL = 0b1000;
+		// static final short M_NISL = 0b1001;
+		// static final short M_MANA = 0b1010;
+		// static final short M_ADA = 0b1011;
+		// static final short M_ELIX = 0b1100;
+		// static final short M_AHQ = 0b1101;
+		// static final short M_BHQ = 0b1110;
+        RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
+		for (RobotInfo hq : hqs) {
+			MapLocation loc = hq.getLocation();
+			Team team = hq.getTeam();
+			if (board[loc.x][loc.y] == 0b0000) {
+				if (team == Team.A) {
+					System.out.println("found Team A HQ " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_AHQ;	
+				} else {
+					System.out.println("found Team B HQ " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_BHQ;	
+				}
+			}
+		}
+		
+		MapInfo[] mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
 		for (MapInfo mapInf : mapInfos) {
-			rc.sensePassability(mapInf.loc); // <= 180 bytecode (5 * tiles in radius (at most 36))
+			MapLocation loc = mapInf.getMapLocation();
+			if(!rc.sensePassability(loc) && board[loc.x][loc.y] == 0b0000) { // <= 180 bytecode (5 * tiles in radius (at most 36))
+				board[loc.x][loc.y] = M_STORM;
+				System.out.println("found wall " + loc.x + ", " + loc.y);
+			}
 		}
 		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
+		for (WellInfo wellInfo : wells) {
+			MapLocation loc = wellInfo.getMapLocation();
+			switch (wellInfo.getResourceType()) {
+				case MANA:
+					System.out.println("found MANA well " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_MANA;
+					break;
+				case ADAMANTIUM:
+					System.out.println("found ADA well " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_ADA;
+					break;
+				case ELIXIR:	
+					System.out.println("found ELIXIR well " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_ELIX;
+					break;
+			}
+		}
 		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
-		// need to iterate over all squares in radius
-		MapInfo[] mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
+		for (int id : islands) {
+            MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
+			Team team = rc.senseTeamOccupyingIsland(id);
+			for (MapLocation loc : islandLocs) {
+				if (team == Team.A) {
+					System.out.println("found Team A island " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_AISL;
+				} else if (team == Team.B) {
+					System.out.println("found Team B island " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_BISL;
+				} else {
+					System.out.println("found Neutral island " + loc.x + ", " + loc.y);
+					board[loc.x][loc.y] = M_NISL;
+				}
+			}
+		}
 	}
 
     /**
      * Run a single turn for a Headquarters.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
 	 *
-	 *  TODO: 
      */
     static void runHeadquarters(RobotController rc) throws GameActionException {
         // Pick a direction to build in.
@@ -181,6 +263,7 @@ public strictfp class RobotPlayer {
      */
     static void runCarrier(RobotController rc) throws GameActionException {
         Team opponent = rc.getTeam().opponent();
+		updateMap(rc);
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
