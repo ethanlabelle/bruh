@@ -114,14 +114,26 @@ public strictfp class RobotPlayer {
      */
     static void runHeadquarters(RobotController rc) throws GameActionException {
         // Pick a direction to build in.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        MapLocation newLoc = rc.getLocation().add(dir);
+        boolean found = false;
+        MapLocation newLoc = null;
+        for (Direction checkDir : directions) {
+            newLoc = rc.getLocation().add(checkDir);
+            if (!rc.canSenseRobotAtLocation(newLoc)) {
+                found = true;
+                break;
+            }
+        }
+        //Direction dir = directions[rng.nextInt(directions.length)];
+        //MapLocation newLoc = rc.getLocation().add(dir);
+        if (!found) {
+            return;
+        }
         if (rc.canBuildAnchor(Anchor.STANDARD) && rng.nextInt(10) == 1) {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor! " + rc.getAnchor());
-        } 
-		if (rng.nextBoolean()) {
+        }
+        if (rng.nextBoolean()) {
             // Let's try to build a carrier.
             rc.setIndicatorString("Trying to build a carrier");
             if (rc.canBuildRobot(RobotType.CARRIER, newLoc)) {
