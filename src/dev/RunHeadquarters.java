@@ -1,11 +1,11 @@
-package v4_seperateFiles;
+package dev;
 
 
 import battlecode.common.*;
 
-import static v4_seperateFiles.RobotPlayer.*;
+import static dev.RobotPlayer.*;
 
-public strictfp class runHeadquarters {
+public strictfp class RunHeadquarters {
     /**
      * Run a single turn for a Headquarters.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.

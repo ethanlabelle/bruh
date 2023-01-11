@@ -1,10 +1,10 @@
-package v4_seperateFiles;
+package dev;
 
 import battlecode.common.*;
 
-import static v4_seperateFiles.RobotPlayer.*;
+import static dev.RobotPlayer.*;
 
-public strictfp class runLauncher {
+public strictfp class RunLauncher {
     /**
      * Run a single turn for a Launcher.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.

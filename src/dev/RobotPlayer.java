@@ -1,4 +1,4 @@
-package v4_seperateFiles;
+package dev;
 
 import battlecode.common.*;
 

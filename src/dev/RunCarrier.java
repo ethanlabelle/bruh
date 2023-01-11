@@ -1,4 +1,4 @@
-package v4_seperateFiles;
+package dev;
 
 import battlecode.common.*;
 
@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static v4_seperateFiles.RobotPlayer.*;
+import static dev.RobotPlayer.*;
 
-public strictfp class runCarrier {
+public strictfp class RunCarrier {
     /**
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
