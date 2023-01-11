@@ -117,7 +117,7 @@ public strictfp class RobotPlayer {
                     case LAUNCHER: runLauncher(rc); break;
                     case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
                     case DESTABILIZER: // You might want to give them a try!
-                    case AMPLIFIER: runAmplifier(rc);      break;
+                    case AMPLIFIER:       break;
                 }
 
             } catch (GameActionException e) {
@@ -237,26 +237,18 @@ public strictfp class RobotPlayer {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor! " + rc.getAnchor());
-        }
-        // this will cycle through all the cases to see which robot to make, this is used because headquarters can make one robot a turn
-        Double robotChance = rng.nextDouble();
-		if (robotChance < .45) {
+        } 
+		if (rng.nextBoolean()) {
             // Let's try to build a carrier.
             rc.setIndicatorString("Trying to build a carrier");
             if (rc.canBuildRobot(RobotType.CARRIER, newLoc)) {
                 rc.buildRobot(RobotType.CARRIER, newLoc);
             }
-        } else if (robotChance < .9) {
+        } else {
             // Let's try to build a launcher.
             rc.setIndicatorString("Trying to build a launcher");
             if (rc.canBuildRobot(RobotType.LAUNCHER, newLoc)) {
                 rc.buildRobot(RobotType.LAUNCHER, newLoc);
-            }
-        } else {
-            // Let's try to build an amplifier.
-            rc.setIndicatorString("Trying to build a amplifier");
-            if (rc.canBuildRobot(RobotType.AMPLIFIER, newLoc)) {
-                rc.buildRobot(RobotType.AMPLIFIER, newLoc);
             }
         }
     }
@@ -404,54 +396,6 @@ public strictfp class RobotPlayer {
         //TODO: ATTACK ENEMY HEADQUARTERS!!!!!!!!!!!!!!!!
 
         // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-        }
-    }
-    static Direction oppositeDirection (Direction dir) {
-        if (dir == Direction.NORTH) {
-            return Direction.SOUTH;
-        }
-        if (dir == Direction.NORTHEAST) {
-            return Direction.SOUTHWEST;
-        }
-        if (dir == Direction.EAST) {
-            return Direction.WEST;
-        }
-        if (dir == Direction.SOUTHEAST) {
-            return Direction.NORTHWEST;
-        }
-        if (dir == Direction.SOUTH) {
-            return Direction.NORTH;
-        }
-        if (dir == Direction.SOUTHWEST) {
-            return Direction.NORTHEAST;
-        }
-        if (dir == Direction.WEST) {
-            return Direction.EAST;
-        }
-        return Direction.SOUTHEAST;
-    }
-    /**
-     * Run a single turn for an Amplifier.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
-
-    static void runAmplifier(RobotController rc) throws GameActionException {
-
-        // run away from enemies
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length > 0) {
-            rc.setIndicatorString("Running away!!");
-            Direction dir = oppositeDirection(rc.getLocation().directionTo(enemyRobots[0].getLocation()));
-            if (rc.canMove(dir)) {
-                rc.move(dir);
-                return;
-            }
-        }
-
-        // move randomly
         Direction dir = directions[rng.nextInt(directions.length)];
         if (rc.canMove(dir)) {
             rc.move(dir);
