@@ -115,13 +115,6 @@ public strictfp class RunCarrier {
             }
         }
 
-        // If we can see a well, move towards it
-        WellInfo[] wells = rc.senseNearbyWells();
-        if (wells.length >= 1) {
-            Direction dir = me.directionTo(wells[0].getMapLocation());
-            if (rc.canMove(dir))
-                rc.move(dir);
-        }
         if (getTotalResources(rc) == 40) {
             // Also try to move randomly.
             navigateToBugRandom(rc, HQLOC);
