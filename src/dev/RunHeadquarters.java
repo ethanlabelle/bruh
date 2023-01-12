@@ -2,6 +2,7 @@ package dev;
 
 
 import battlecode.common.*;
+import java.util.Arrays;
 
 import static dev.RobotPlayer.*;
 
@@ -18,18 +19,21 @@ public strictfp class RunHeadquarters {
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor! " + rc.getAnchor());
         }
+		MapLocation loc;
         // Let's try to build a launcher.
-        rc.setIndicatorString("Trying to build a launcher");
-        MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-        if (loc != null) {
-            rc.buildRobot(RobotType.LAUNCHER, loc);
-            return;
-        }
-//        RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
+		if (rc.getResourceAmount(ResourceType.MANA) > 100) {
+        	rc.setIndicatorString("Trying to build a launcher");
+        	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+        	if (loc != null) {
+        	    rc.buildRobot(RobotType.LAUNCHER, loc);
+        	    return;
+        	}
+		}
+        RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
         // Let's try to build a carrier.
         rc.setIndicatorString("Trying to build a carrier");
         loc = getSpawnLocation(rc, RobotType.CARRIER);
-        if (loc != null && turnCount % 10 == 0) {
+        if (loc != null && turnCount % 10 == 0 && carriers.length < 15) {
             rc.buildRobot(RobotType.CARRIER, loc);
             return;
         }
