@@ -19,6 +19,7 @@ public strictfp class RunLauncher {
         Team opponent = rc.getTeam().opponent();
         MapLocation me = rc.getLocation();
         RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
+        Arrays.sort(enemies, (first,second) -> first.health - second.health);
         if (enemies.length > 0) {
             // //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
             
