@@ -67,6 +67,8 @@ public strictfp class RobotPlayer {
 
 	static short[][] board = new short[60][60];
 	static int currentDirectionInd;
+	static boolean onObstacle;
+	static boolean turnDirection; // true is right, false is left
 	static MapLocation HQLOC;
 	static MapLocation wellLoc;
 	static Team myTeam;
@@ -92,7 +94,8 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
+		
+		// TODO: clean up initialization
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
         System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
@@ -112,6 +115,8 @@ public strictfp class RobotPlayer {
 			// default direction for launcher is east
 			currentDirectionInd = 2;
 		}
+		onObstacle = false;
+		turnDirection = false;
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -247,6 +252,84 @@ public strictfp class RobotPlayer {
         	if (rc.canMove(dir)) {
         	    rc.move(dir);
         	}
+		}
+	}
+	
+	static void turnRight() throws GameActionException {
+		currentDirectionInd++;
+		currentDirectionInd %= directions.length;
+	}	
+
+	static void turnLeft() throws GameActionException {
+		currentDirectionInd--;
+		if (currentDirectionInd < 0)
+			currentDirectionInd += directions.length;
+	}	
+
+	static int directionToIndex(Direction dir) throws GameActionException {
+		for (int i = 0; i < directions.length; i++) {
+			if (directions[i] == dir) {
+				return i;
+			}
+		}
+		// should never happen
+		return -1;
+	}
+
+	static boolean senseRight(RobotController rc) throws GameActionException {
+		int senseDir = (currentDirectionInd + 1) % directions.length;
+		MapLocation tile = rc.getLocation().add(directions[senseDir]);
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
+
+	static boolean senseFront(RobotController rc) throws GameActionException {
+		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
+
+	static void navigateToBug0(RobotController rc, MapLocation loc) throws GameActionException {
+		// head towards goal
+        rc.setIndicatorString("Navigating to " + loc);
+        Direction goalDir = rc.getLocation().directionTo(loc);
+        if (rc.canMove(goalDir)) {
+			onObstacle = false;
+			currentDirectionInd = directionToIndex(goalDir);
+            rc.move(goalDir);
+			return;
+        } else {
+			if (!onObstacle) {
+				MapLocation pathTile = rc.getLocation().add(goalDir);
+				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
+					onObstacle = true;
+					currentDirectionInd = directionToIndex(goalDir);
+					turnLeft();
+					goalDir = directions[currentDirectionInd];
+					if (rc.canMove(goalDir)) {
+						rc.move(goalDir);
+					}
+				}
+			} else {
+				rc.setIndicatorString("on obstacle");
+				// follow obstacle using right hand rule
+				boolean right = senseRight(rc);
+				if (!right) {
+					turnRight();
+					goalDir = directions[currentDirectionInd];
+					if (rc.canMove(goalDir)) {
+						rc.move(goalDir);
+					}
+				}
+				boolean front = senseFront(rc);
+				if (!front) {
+					goalDir = directions[currentDirectionInd];
+					if (rc.canMove(goalDir)) {
+						rc.move(goalDir);
+					}
+				} else {
+					turnLeft();
+				}
+
+			}
 		}
 	}
 
