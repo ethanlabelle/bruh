@@ -357,13 +357,39 @@ public strictfp class RobotPlayer {
 		TODO: Check all tiles in action radius
 				i.e. sense MapInfos to radius & do set difference with occupied squares
 	 */
+	static MapLocation getClosestLocation (RobotController rc, MapLocation loc) throws GameActionException {
+		// this is the possible locations it can be the closest to
+		MapLocation [] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+		int minDist = 7200;
+		MapLocation bestLoc = null;
+		for (MapLocation checkLoc : possLoc) {
+			// rc.canSenseRobotAtLocation(MapLocation loc) always returned false, spawned robot on top of robot and deleted headquarters
+			if (rc.canBuildRobot(RobotType.LAUNCHER, checkLoc) || rc.canBuildRobot(RobotType.CARRIER, checkLoc)) {
+				int checkDist = checkLoc.distanceSquaredTo(loc);
+				if (checkDist < minDist) {
+					bestLoc = checkLoc;
+					minDist = checkDist;
+				}
+			}
+		}
+		return bestLoc;
+	}
 	static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
-        // Pick a direction to build in.
-        for (Direction checkDir : directions) {
-            MapLocation newLoc = rc.getLocation().add(checkDir);
-			if (rc.canBuildRobot(unit, newLoc)) 
+		// TODO: add target well
+		WellInfo [] wells = rc.senseNearbyWells();
+		if (wells.length > 0) {
+			MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation());
+			if (closeWell != null) {
+				return closeWell;
+			}
+		}
+
+		// Pick a direction to build in.
+		for (Direction checkDir : directions) {
+			MapLocation newLoc = rc.getLocation().add(checkDir);
+			if (rc.canBuildRobot(unit, newLoc))
 				return newLoc;
-        }
+		}
 		return null;
 	}
 
@@ -379,7 +405,7 @@ public strictfp class RobotPlayer {
 			Clock.yield();
 		}	
 		i = 0;
-		while (i < 4) {
+		while (i < 3) {
             rc.setIndicatorString("Trying to build a launcher");
 			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
             if (loc != null) {
