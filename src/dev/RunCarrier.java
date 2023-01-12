@@ -16,6 +16,7 @@ public strictfp class RunCarrier {
     static void runCarrier(RobotController rc) throws GameActionException {
         Team opponent = rc.getTeam().opponent();
         updateMap(rc);
+
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
             int[] islands = rc.senseNearbyIslands();
@@ -25,46 +26,55 @@ public strictfp class RunCarrier {
                 islandLocs.addAll(Arrays.asList(thisIslandLocs));
             }
             if (islandLocs.size() > 0) {
-                //MapLocation islandLocation = islandLocs.iterator().next();
                 for (int i = 0; i < islandLocs.size(); i++) {
                     if (rc.senseAnchor(rc.senseIsland(islandLocs.get(i))) == null) {
                         MapLocation islandLocation = islandLocs.get(i);
-                        rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-                        Direction dir = rc.getLocation().directionTo(islandLocation);
-                        if (rc.canMove(dir)) {
-                            rc.move(dir);
-                        }
-                        if (rc.canPlaceAnchor() && rc.senseAnchor(rc.senseIsland(islandLocation)) == null) {
+                        if (rc.canPlaceAnchor()) {
                             rc.setIndicatorString("Huzzah, placed anchor!");
                             rc.placeAnchor();
-                        }
+                        } else {
+                        	rc.setIndicatorString("Moving my anchor towards " + islandLocation);
+							Direction dir = rc.getLocation().directionTo(islandLocation);
+                        	if (rc.canMove(dir)) {
+                        	    rc.move(dir);
+                        	}
+						}
                         break;
                     }
                 }
             }
-            Direction dir = directions[rng.nextInt(8)];
-            rc.setIndicatorString("moving randomly " + dir);
-            if (rc.canMove(dir)) {
-                rc.move(dir);
-            }
+			// Also try to move *randomly*.
+			Direction dir = directions[currentDirectionInd];
+			if (rc.canMove(dir)) {
+			    rc.move(dir);
+			} else if (rc.getMovementCooldownTurns() == 0) {
+			    currentDirectionInd = rng.nextInt(directions.length);
+			}
             return;
         }
-        // Try to gather from squares around us.
-        MapLocation me = rc.getLocation();
-        boolean foundWell = false;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                MapLocation wellLocation = new MapLocation(me.x + dx, me.y + dy);
-                if (rc.canCollectResource(wellLocation, -1)) {
-                    rc.collectResource(wellLocation, -1);
-                    rc.setIndicatorString("Collecting, now have, AD:" +
-                            rc.getResourceAmount(ResourceType.ADAMANTIUM) +
-                            " MN: " + rc.getResourceAmount(ResourceType.MANA) +
-                            " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
-                    foundWell = true;
-                }
+
+        // Try out the carriers attack
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        if (enemyRobots.length > 0) {
+            if (rc.canAttack(enemyRobots[0].location)) {
+                int before = getTotalResources(rc);
+                rc.attack(enemyRobots[0].location);
+                rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
             }
         }
+
+        // Try to gather from squares around us.
+        MapLocation me = rc.getLocation();
+		boolean foundWell = false;
+		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
+			rc.collectResource(wellLoc, -1);
+            rc.setIndicatorString("Collecting, now have, AD:" +
+                    rc.getResourceAmount(ResourceType.ADAMANTIUM) +
+                    " MN: " + rc.getResourceAmount(ResourceType.MANA) +
+                    " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
+            foundWell = true;
+		}
+
         // If at a well, keep collecting until full.
         if (foundWell && getTotalResources(rc) < 40) {
             return;
@@ -95,7 +105,7 @@ public strictfp class RunCarrier {
                     Clock.yield();
                 }
 
-                if (rc.canTakeAnchor(closest_hq.location, Anchor.STANDARD) && rng.nextInt(20) == 1) {
+                if (rc.canTakeAnchor(closest_hq.location, Anchor.STANDARD) && rng.nextInt(10) == 1) {
                     rc.takeAnchor(closest_hq.location, Anchor.STANDARD);
                 }
 
@@ -103,15 +113,6 @@ public strictfp class RunCarrier {
                 if (rc.canMove(dir)) {
                     rc.move(dir);
                 }
-            }
-        }
-        // Occasionally try out the carriers attack
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length > 0) {
-            if (rc.canAttack(enemyRobots[0].location)) {
-                int before = getTotalResources(rc);
-                rc.attack(enemyRobots[0].location);
-                rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
             }
         }
 

@@ -180,7 +180,7 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
-			if (myTeam == team)
+			if (myTeam == team && turnCount == 0)
 				HQLOC = loc;
 		}
 		
@@ -201,7 +201,12 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			wellLoc = loc;
+			// track mana wells
+			if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
+				wellLoc = loc;
+			} else if (wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+				wellLoc = loc;
+			}
 		}
 		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
 		for (int id : islands) {
@@ -270,11 +275,21 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 5) {
+		while (i < 4) {
             rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.CARRIER, loc);
+				i++;
+            }
+			Clock.yield();
+		}	
+		i = 0;
+		while (i < 4) {
+            rc.setIndicatorString("Trying to build a launcher");
+			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+            if (loc != null) {
+                rc.buildRobot(RobotType.LAUNCHER, loc);
 				i++;
             }
 			Clock.yield();
