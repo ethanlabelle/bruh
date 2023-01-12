@@ -105,7 +105,13 @@ public strictfp class RobotPlayer {
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		updateMap(rc);
-        currentDirectionInd = rng.nextInt(directions.length);
+		if (rc.getType() != RobotType.LAUNCHER) {
+			currentDirectionInd = rng.nextInt(directions.length);
+		}
+		else {
+			// default direction for launcher is east
+			currentDirectionInd = 2;
+		}
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite

@@ -10,6 +10,7 @@ public strictfp class RunLauncher {
      * Run a single turn for a Launcher.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
+     
     static void runLauncher(RobotController rc) throws GameActionException {
         // Try to attack someone
         int radius = rc.getType().actionRadiusSquared;
@@ -47,11 +48,18 @@ public strictfp class RunLauncher {
         }
 
         // Also try to move *randomly*.
-        Direction dir = directions[currentDirectionInd];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-        } else if (rc.getMovementCooldownTurns() == 0) {
-            currentDirectionInd = rng.nextInt(directions.length);
+        Direction last_dir = directions[currentDirectionInd];
+        if (rc.canMove(last_dir)) {
+            rc.move(last_dir);
+        } else if (rc.getMovementCooldownTurns() == 0){
+            for (int i = 0; i < 3; i++) {
+                currentDirectionInd = (currentDirectionInd + 2) % directions.length;
+                last_dir = directions[currentDirectionInd];
+                if (rc.canMove(last_dir)){
+                    rc.move(last_dir);
+                    break;
+                }
+            }
         }
     }
 }
