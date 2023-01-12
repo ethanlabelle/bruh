@@ -117,10 +117,10 @@ public strictfp class RunCarrier {
         }
 
         if (getTotalResources(rc) == 40) {
-            navigateToBug0(rc, HQLOC);
+            navigateTo(rc, HQLOC);
         } else {
             if (wellLoc != null) {
-                navigateToBug0(rc, wellLoc);
+                navigateTo(rc, wellLoc);
             } else {
 				// Also try to move *randomly*.
 				Direction dir = directions[currentDirectionInd];
