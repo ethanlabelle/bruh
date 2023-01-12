@@ -1,6 +1,7 @@
 package dev;
 
 import battlecode.common.*;
+import java.util.Arrays;
 
 import static dev.RobotPlayer.*;
 
@@ -13,7 +14,7 @@ public strictfp class RunLauncher {
         // Try to attack someone
         int radius = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
+        RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(radius, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
         if (enemies.length > 0) {
             MapLocation toAttack = enemies[0].location;
             //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
@@ -24,7 +25,26 @@ public strictfp class RunLauncher {
             }
         }
 
+        MapLocation me = rc.getLocation();
+
         //TODO: ATTACK ENEMY HEADQUARTERS!!!!!!!!!!!!!!!!
+        RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam).toArray(RobotInfo[]::new);
+        int min_dist = 7200;
+        if (hqs.length >= 1) {
+            RobotInfo closest_hq = hqs[0];
+            for (RobotInfo hq: hqs) {
+                int dist = hq.location.distanceSquaredTo(me);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    closest_hq = hq;
+                }
+            }
+
+            Direction dir = me.directionTo(closest_hq.location);
+            if (rc.canMove(dir)) {
+                rc.move(dir);
+            }
+        }
 
         // Also try to move *randomly*.
         Direction dir = directions[currentDirectionInd];
