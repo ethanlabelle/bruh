@@ -191,7 +191,7 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
-			if (myTeam == team && turnCount == 0)
+			if (myTeam == team)
 				HQLOC = loc;
 		}
 		
