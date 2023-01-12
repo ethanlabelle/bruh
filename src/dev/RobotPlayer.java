@@ -237,6 +237,28 @@ public strictfp class RobotPlayer {
 		bug0(rc, loc);
 	}
 	
+	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
+        if (rc.canMove(dir)) {
+            rc.move(dir);
+			return true;
+        } else {
+			int dirInd = directionToIndex(dir);
+			int right = (dirInd + 1) % 8;
+			int left = dirInd - 1;
+			if (left < 0)
+				left += 8;
+			if (rc.canMove(directions[right])) {
+				rc.move(directions[right]);
+				return true;
+			}
+			if (rc.canMove(directions[left])) {
+				rc.move(directions[left]);
+				return true;
+			}
+		}
+		return false;	
+	}
+
 	static void turnRight() throws GameActionException {
 		currentDirectionInd++;
 		currentDirectionInd %= directions.length;
@@ -294,9 +316,9 @@ public strictfp class RobotPlayer {
         rc.setIndicatorString("Navigating to " + loc);
         Direction goalDir = rc.getLocation().directionTo(loc);
         if (rc.canMove(goalDir)) {
+			rc.move(goalDir);
 			onObstacle = false;
 			currentDirectionInd = directionToIndex(goalDir);
-            rc.move(goalDir);
 			return;
         } else {
 			if (!onObstacle) {
@@ -317,16 +339,12 @@ public strictfp class RobotPlayer {
 				if (!right) {
 					turnRight();
 					goalDir = directions[currentDirectionInd];
-					if (rc.canMove(goalDir)) {
-						rc.move(goalDir);
-					}
+					tryMove(rc, goalDir);
 				}
 				boolean front = senseFront(rc);
 				if (!front) {
 					goalDir = directions[currentDirectionInd];
-					if (rc.canMove(goalDir)) {
-						rc.move(goalDir);
-					}
+					tryMove(rc, goalDir);
 				} else {
 					turnLeft();
 				}
