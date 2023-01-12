@@ -20,24 +20,24 @@ public strictfp class RunLauncher {
         MapLocation me = rc.getLocation();
         RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
         if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
-            //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
+            MapLocation toAttack;
+            // //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
 
-            if (rc.canAttack(toAttack)) {
-                rc.setIndicatorString("Attacking");
-                rc.attack(toAttack);
-            }
+            // if (rc.canAttack(toAttack)) {
+            //     rc.setIndicatorString("Attacking");
+            //     rc.attack(toAttack);
+            // }
             Direction dir;
             for (RobotInfo enemy: enemies) {
                 toAttack = enemy.location;
                 dir = me.directionTo(toAttack);
                 if (rc.canAttack(toAttack)) {
                     rc.attack(toAttack);
-                }
-                if (!at_hq && !at_well){
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
-                        break;
+                    if (!at_hq && !at_well){
+                        if (rc.canMove(dir)) {
+                            rc.move(dir);
+                            break;
+                        }
                     }
                 }
             }
