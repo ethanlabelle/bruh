@@ -56,11 +56,11 @@ public strictfp class RunHeadquarters {
                 i.e. sense MapInfos to radius & do set difference with occupied squares
      */
     static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
-        // Pick a direction to build in.
-        for (Direction checkDir : directions) {
-            MapLocation newLoc = rc.getLocation().add(checkDir);
-            if (rc.canBuildRobot(unit, newLoc))
+        // pick a square within the action radius
+        for (MapLocation newLoc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), rc.getType().actionRadiusSquared)) {
+            if (rc.canBuildRobot(unit, newLoc)) {
                 return newLoc;
+            }
         }
         return null;
     }
