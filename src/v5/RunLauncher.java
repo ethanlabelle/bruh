@@ -1,9 +1,9 @@
-package dev;
+package v5;
 
 import battlecode.common.*;
 import java.util.Arrays;
 
-import static dev.RobotPlayer.*;
+import static v5.RobotPlayer.*;
 
 public strictfp class RunLauncher {
     /**
