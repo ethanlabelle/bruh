@@ -19,7 +19,16 @@ public strictfp class RunLauncher {
         Team opponent = rc.getTeam().opponent();
         MapLocation me = rc.getLocation();
         RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
-        Arrays.sort(enemies, (first,second) -> first.health - second.health);
+        // sort by health and put launcher types first in the array
+        Arrays.sort(enemies, (robot1, robot2) -> {
+            if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
+                return -1;
+            } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
+                return 1;
+            } else {
+                return robot1.health - robot2.health;
+            }
+        });
         if (enemies.length > 0) {
             // //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
             
@@ -88,8 +97,9 @@ public strictfp class RunLauncher {
 
         RobotInfo[] hqs = Arrays.stream(nearby_robots).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam).toArray(RobotInfo[]::new);
         int min_dist = 7200;
+        RobotInfo closest_hq = null;
         if (hqs.length >= 1) {
-            RobotInfo closest_hq = hqs[0];
+            closest_hq = hqs[0];
             for (RobotInfo hq: hqs) {
                 int dist = hq.location.distanceSquaredTo(me);
                 if (dist < min_dist) {
@@ -108,15 +118,22 @@ public strictfp class RunLauncher {
             }
         }
 
+        if (EnemyHQLOC == null) {
+            int width = rc.getMapWidth();
+			int height = rc.getMapHeight();
+			MapLocation possibleEnemyLOC = new MapLocation(abs(SPAWN_LOC.x - width) , abs(SPAWN_LOC.y - height));
+            navigateToBug0(rc, possibleEnemyLOC);
+        }
+        
         // Also try to move *randomly*.
         Direction last_dir = directions[currentDirectionInd];
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
-        } else if (rc.getMovementCooldownTurns() == 0){
+        } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                currentDirectionInd = (currentDirectionInd + 2) % directions.length;
+                currentDirectionInd = (currentDirectionInd + 3) % directions.length;
                 last_dir = directions[currentDirectionInd];
-                if (rc.canMove(last_dir)){
+                if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;
                 }
