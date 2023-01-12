@@ -1,4 +1,4 @@
-package dev;
+package v6;
 
 import battlecode.common.*;
 
