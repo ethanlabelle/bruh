@@ -279,11 +279,15 @@ public strictfp class RobotPlayer {
 	static boolean senseRight(RobotController rc) throws GameActionException {
 		int senseDir = (currentDirectionInd + 1) % directions.length;
 		MapLocation tile = rc.getLocation().add(directions[senseDir]);
+		if (!rc.onTheMap(tile))
+			return true;
 		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
 	}
 
 	static boolean senseFront(RobotController rc) throws GameActionException {
 		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+		if (!rc.onTheMap(tile))
+			return true;
 		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
 	}
 
@@ -299,7 +303,7 @@ public strictfp class RobotPlayer {
         } else {
 			if (!onObstacle) {
 				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
+				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(4) == 1) { // indicates obstacle
 					onObstacle = true;
 					currentDirectionInd = directionToIndex(goalDir);
 					turnLeft();
