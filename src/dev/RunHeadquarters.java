@@ -27,11 +27,11 @@ public strictfp class RunHeadquarters {
             rc.buildRobot(RobotType.LAUNCHER, loc);
             return;
         }
-        //RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
+        RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
         // Let's try to build a carrier.
         rc.setIndicatorString("Trying to build a carrier");
         loc = getSpawnLocation(rc, RobotType.CARRIER);
-        if (loc != null && turnCount % 10 == 0) {
+        if (loc != null && turnCount % 10 == 0 && carriers.length < 20) {
             rc.buildRobot(RobotType.CARRIER, loc);
             return;
         }

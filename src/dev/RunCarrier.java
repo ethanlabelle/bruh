@@ -117,18 +117,18 @@ public strictfp class RunCarrier {
         }
 
         if (getTotalResources(rc) == 40) {
-            // Also try to move randomly.
             navigateToBug0(rc, HQLOC);
         } else {
             if (wellLoc != null) {
                 navigateToBug0(rc, wellLoc);
             } else {
-                // Also try to move *randomly*.
-                Direction dir = directions[rng.nextInt(8)];
-                rc.setIndicatorString("moving randomly " + dir);
-                if (rc.canMove(dir)) {
-                    rc.move(dir);
-                }
+				// Also try to move *randomly*.
+				Direction dir = directions[currentDirectionInd];
+				if (rc.canMove(dir)) {
+				    rc.move(dir);
+				} else if (rc.getMovementCooldownTurns() == 0) {
+				    currentDirectionInd = rng.nextInt(directions.length);
+				}
             }
         }
     }
