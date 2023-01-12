@@ -210,7 +210,8 @@ public strictfp class RobotPlayer {
 			// track mana wells
 			if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
 				wellLoc = loc;
-			} else if (wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+			} 
+			if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 				wellLoc = loc;
 			}
 		}

@@ -21,19 +21,17 @@ public strictfp class RunHeadquarters {
         }
 		MapLocation loc;
         // Let's try to build a launcher.
-		if (rc.getResourceAmount(ResourceType.MANA) > 100) {
-        	rc.setIndicatorString("Trying to build a launcher");
-        	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-        	if (loc != null) {
-        	    rc.buildRobot(RobotType.LAUNCHER, loc);
-        	    return;
-        	}
-		}
-        RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
+        rc.setIndicatorString("Trying to build a launcher");
+        loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+        if (loc != null) {
+            rc.buildRobot(RobotType.LAUNCHER, loc);
+            return;
+        }
+        //RobotInfo[] carriers = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
         // Let's try to build a carrier.
         rc.setIndicatorString("Trying to build a carrier");
         loc = getSpawnLocation(rc, RobotType.CARRIER);
-        if (loc != null && turnCount % 10 == 0 && carriers.length < 15) {
+        if (loc != null && turnCount % 10 == 0) {
             rc.buildRobot(RobotType.CARRIER, loc);
             return;
         }
