@@ -55,7 +55,7 @@ public strictfp class RunCarrier {
 
         // Try out the carriers attack
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length > 0) {
+        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
             if (rc.canAttack(enemyRobots[0].location)) {
                 int before = getTotalResources(rc);
                 rc.attack(enemyRobots[0].location);
