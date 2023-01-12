@@ -19,13 +19,6 @@ import java.util.ArrayList;
 public strictfp class RobotPlayer {
 
     /**
-     * We will use this variable to count the number of turns this robot has been alive.
-     * You can use static variables like this to save any information you want. Keep in mind that even though
-     * these variables are static, in Battlecode they aren't actually shared between your robots.
-     */
-    static int turnCount = 0;
-
-    /**
      * A random number generator.
      * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
@@ -45,9 +38,8 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
-	// constants for shared array map
+	// constants for local map
 	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits
-	
 	static final short M_EMPTY = 0b0000;
 	static final short M_CLOUD = 0b0001;
 	static final short M_STORM = 0b0010;
@@ -64,13 +56,19 @@ public strictfp class RobotPlayer {
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
 	static final short M_HIDDEN = 0b1111;
-
 	static short[][] board = new short[60][60];
+
+	// pathfinding state
 	static int currentDirectionInd;
 	static boolean onObstacle;
-	static boolean turnDirection; // true is right, false is left
+
+	// map state
 	static MapLocation HQLOC;
+	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
+	
+	// general robot state
+    static int turnCount = 0; // number of turns robot has been alive
 	static Team myTeam;
 
 	static void printBoard() {
@@ -96,15 +94,6 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
 		
 		// TODO: clean up initialization
-        // Hello world! Standard output is very useful for debugging.
-        // Everything you say here will be directly viewable in your terminal when you run a match!
-        System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
-		
-		if (rc.getType() == RobotType.HEADQUARTERS) {
-			setup(rc);
-		}
-
-        // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		updateMap(rc);
@@ -116,7 +105,11 @@ public strictfp class RobotPlayer {
 			currentDirectionInd = 2;
 		}
 		onObstacle = false;
-		turnDirection = false;
+		
+		if (rc.getType() == RobotType.HEADQUARTERS) {
+			setup(rc);
+		}
+
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -178,6 +171,8 @@ public strictfp class RobotPlayer {
 			}
 		}
 
+		// search for HQs
+		// save location of HQ
         RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
 		for (RobotInfo hq : hqs) {
 			MapLocation loc = hq.getLocation();
@@ -191,8 +186,11 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
-			if (myTeam == team)
+			if (myTeam == team) {
 				HQLOC = loc;
+				if (turnCount == 0)
+					spawnHQLOC = loc;
+			}
 		}
 		
 		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
@@ -200,19 +198,16 @@ public strictfp class RobotPlayer {
 			MapLocation loc = wellInfo.getMapLocation();
 			switch (wellInfo.getResourceType()) {
 				case MANA:
-					//System.out.println("found MANA well " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_MANA;
 					break;
 				case ADAMANTIUM:
-					//System.out.println("found ADA well " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_ADA;
 					break;
 				case ELIXIR:	
-					//System.out.println("found ELIXIR well " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			// track mana wells
+			// Odd ID get ADA, even get MANA
 			if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
 				wellLoc = loc;
 			} 
@@ -220,39 +215,26 @@ public strictfp class RobotPlayer {
 				wellLoc = loc;
 			}
 		}
+
 		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
 		for (int id : islands) {
             MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
 			Team team = rc.senseTeamOccupyingIsland(id);
 			for (MapLocation loc : islandLocs) {
 				if (team == Team.A) {
-					//System.out.println("found Team A island " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_AISL;
 				} else if (team == Team.B) {
-					//System.out.println("found Team B island " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_BISL;
 				} else {
-					//System.out.println("found Neutral island " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_NISL;
 				}
 			}
 		}
 	}
 
-	static void navigateToBugRandom(RobotController rc, MapLocation loc) throws GameActionException {
-		// head towards goal
-        rc.setIndicatorString("Navigating to " + loc);
-        Direction goalDir = rc.getLocation().directionTo(loc);
-        if (rc.canMove(goalDir)) {
-            rc.move(goalDir);
-			return;
-        } else { // indicates obstacle
-			// move random
-			Direction dir = directions[rng.nextInt(8)];
-        	if (rc.canMove(dir)) {
-        	    rc.move(dir);
-        	}
-		}
+	// Navigation
+	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
+		bug0(rc, loc);
 	}
 	
 	static void turnRight() throws GameActionException {
@@ -291,7 +273,23 @@ public strictfp class RobotPlayer {
 		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
 	}
 
-	static void navigateToBug0(RobotController rc, MapLocation loc) throws GameActionException {
+	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
+		// head towards goal
+        rc.setIndicatorString("Navigating to " + loc);
+        Direction goalDir = rc.getLocation().directionTo(loc);
+        if (rc.canMove(goalDir)) {
+            rc.move(goalDir);
+			return;
+        } else { // indicates obstacle
+			// move random
+			Direction dir = directions[rng.nextInt(8)];
+        	if (rc.canMove(dir)) {
+        	    rc.move(dir);
+        	}
+		}
+	}
+
+	static void bug0(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
         rc.setIndicatorString("Navigating to " + loc);
         Direction goalDir = rc.getLocation().directionTo(loc);
@@ -303,7 +301,7 @@ public strictfp class RobotPlayer {
         } else {
 			if (!onObstacle) {
 				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(4) == 1) { // indicates obstacle
+				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
 					onObstacle = true;
 					currentDirectionInd = directionToIndex(goalDir);
 					turnLeft();
@@ -337,29 +335,9 @@ public strictfp class RobotPlayer {
 		}
 	}
 
-	/*
-        boolean found = false;
-        MapLocation newLoc = null;
-        for (Direction checkDir : directions) {
-            newLoc = rc.getLocation().add(checkDir);
-            if (!rc.canSenseRobotAtLocation(newLoc)) {
-                found = true;
-                break;
-            }
-        }
-        //Direction dir = directions[rng.nextInt(directions.length)];
-        //MapLocation newLoc = rc.getLocation().add(dir);
-        if (!found) {
-            return;
-        }
-
-		Can return null if there is not a free tile nearby
-		TODO: Check all tiles in action radius
-				i.e. sense MapInfos to radius & do set difference with occupied squares
-	 */
 	static MapLocation getClosestLocation (RobotController rc, MapLocation loc) throws GameActionException {
 		// this is the possible locations it can be the closest to
-		MapLocation [] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+		MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
 		int minDist = 7200;
 		MapLocation bestLoc = null;
 		for (MapLocation checkLoc : possLoc) {
@@ -374,6 +352,7 @@ public strictfp class RobotPlayer {
 		}
 		return bestLoc;
 	}
+
 	static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
 		// TODO: add target well
 		WellInfo [] wells = rc.senseNearbyWells();
