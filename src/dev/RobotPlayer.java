@@ -157,7 +157,7 @@ public strictfp class RobotPlayer {
                     case LAUNCHER: RunLauncher.runLauncher(rc); break;
                     case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
                     case DESTABILIZER: // You might want to give them a try!
-                    case AMPLIFIER:       break;
+                    case AMPLIFIER:       RunAmplifier.runAmplifier(rc); break;
                 }
 
             } catch (GameActionException e) {
