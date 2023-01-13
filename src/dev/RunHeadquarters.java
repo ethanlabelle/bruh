@@ -30,7 +30,7 @@ public strictfp class RunHeadquarters {
         // Let's try to build a carrier.
         rc.setIndicatorString("Trying to build a carrier");
         loc = getSpawnLocation(rc, RobotType.CARRIER);
-        if (loc != null && turnCount % 10 == 0) {
+        if (loc != null && turnCount % 5 == 0) {
             rc.buildRobot(RobotType.CARRIER, loc);
             return;
         }

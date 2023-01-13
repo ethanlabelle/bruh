@@ -14,8 +14,26 @@ public strictfp class RunCarrier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runCarrier(RobotController rc) throws GameActionException {
-        Team opponent = rc.getTeam().opponent();
         updateMap(rc);
+        MapLocation me = rc.getLocation();
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+
+		// Try out the carriers attack
+        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
+            if (rc.canAttack(enemyRobots[0].location)) {
+                int before = getTotalResources(rc);
+                rc.attack(enemyRobots[0].location);
+                rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
+            }
+        }
+
+        // run away from enemy launchers
+        if (enemyRobots.length > 0) {
+			for (RobotInfo r : enemyRobots) {
+				if (r.type == RobotType.LAUNCHER && tryMove(rc, oppositeDirection(me.directionTo(r.location))))
+					break;
+			}
+        }
 
         if (rc.getAnchor() != null) {
             // If I have an anchor singularly focus on getting it to the first island I see
@@ -53,18 +71,8 @@ public strictfp class RunCarrier {
             return;
         }
 
-        // Try out the carriers attack
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
-            if (rc.canAttack(enemyRobots[0].location)) {
-                int before = getTotalResources(rc);
-                rc.attack(enemyRobots[0].location);
-                rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
-            }
-        }
 
         // Try to gather from squares around us.
-        MapLocation me = rc.getLocation();
 		boolean foundWell = false;
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
 			rc.collectResource(wellLoc, -1);
@@ -80,45 +88,24 @@ public strictfp class RunCarrier {
             return;
         }
 
+		// try to deposite resources
         if (getTotalResources(rc) == 40) {
-            rc.setIndicatorString("Full resources!");
-            RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != opponent).toArray(RobotInfo[]::new);
-            int min_dist = 7200;
-            if (hqs.length >= 1) {
-                RobotInfo closest_hq = hqs[0];
-                for (RobotInfo hq: hqs) {
-                    int dist = hq.location.distanceSquaredTo(me);
-                    if (dist < min_dist) {
-                        min_dist = dist;
-                        closest_hq = hq;
-                    }
-                }
-                // try to transfer ADAMANTIUM
-                if (rc.canTransferResource(closest_hq.location, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM))) {
-                    rc.transferResource(closest_hq.location, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM));
-                    Clock.yield();
-                }
-
-                // try to transfer MANA
-                if (rc.canTransferResource(closest_hq.location, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA))) {
-                    rc.transferResource(closest_hq.location, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA));
-                    Clock.yield();
-                }
-
-                if (rc.canTakeAnchor(closest_hq.location, Anchor.STANDARD) && rng.nextInt(10) == 1) {
-                    rc.takeAnchor(closest_hq.location, Anchor.STANDARD);
-                }
-
-                Direction dir = me.directionTo(closest_hq.location);
-                if (rc.canMove(dir)) {
-                    rc.move(dir);
-                }
+            // try to transfer ADAMANTIUM
+            if (rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM))) {
+                rc.transferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM));
+                Clock.yield();
             }
-        }
-
-        if (getTotalResources(rc) == 40) {
-            navigateTo(rc, HQLOC);
+            // try to transfer MANA
+            if (rc.canTransferResource(HQLOC, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA))) {
+                rc.transferResource(HQLOC, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA));
+                Clock.yield();
+            }
+            if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD) && rng.nextInt(10) == 1) {
+                rc.takeAnchor(HQLOC, Anchor.STANDARD);
+            }
+		    navigateTo(rc, HQLOC);
         } else {
+			// find resources
             if (wellLoc != null) {
                 navigateTo(rc, wellLoc);
             } else {

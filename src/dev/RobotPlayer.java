@@ -18,6 +18,9 @@ import java.util.ArrayList;
  */
 public strictfp class RobotPlayer {
 
+	// parameters
+	static final int MAX_FRIENDS = 5;
+
     /**
      * A random number generator.
      * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
@@ -163,26 +166,27 @@ public strictfp class RobotPlayer {
 	// TODO: HIDDEN tiles on init
 	static void updateMap(RobotController rc) throws GameActionException {
 		MapInfo[] mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
+		RobotInfo[] robotInfos = rc.senseNearbyRobots();
+		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
+		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
+
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
 			if(!rc.sensePassability(loc) && board[loc.x][loc.y] == 0b0000) { // <= 180 bytecode (5 * tiles in radius (at most 36))
 				board[loc.x][loc.y] = M_STORM;
-				//System.out.println("found wall " + loc.x + ", " + loc.y);
 			}
 		}
 
 		// search for HQs
 		// save location of HQ
-        RobotInfo[] hqs = Arrays.stream(rc.senseNearbyRobots()).filter(robot -> robot.type == RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
+        RobotInfo[] hqs = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
 		for (RobotInfo hq : hqs) {
 			MapLocation loc = hq.getLocation();
 			Team team = hq.getTeam();
 			if (board[loc.x][loc.y] == 0b0000) {
 				if (team == Team.A) {
-					//System.out.println("found Team A HQ " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_AHQ;	
 				} else {
-					//System.out.println("found Team B HQ " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
@@ -192,8 +196,8 @@ public strictfp class RobotPlayer {
 					spawnHQLOC = loc;
 			}
 		}
-		
-		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
+			
+        RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);
 		for (WellInfo wellInfo : wells) {
 			MapLocation loc = wellInfo.getMapLocation();
 			switch (wellInfo.getResourceType()) {
@@ -207,16 +211,17 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			// Odd ID get ADA, even get MANA
-			if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
-				wellLoc = loc;
-			} 
-			if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
-				wellLoc = loc;
+			if (wellLoc == null || friends.length > MAX_FRIENDS) {
+				// Odd ID get ADA, even get MANA
+				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
+					wellLoc = loc;
+				} 
+				if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+					wellLoc = loc;
+				}
 			}
 		}
 
-		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
 		for (int id : islands) {
             MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
 			Team team = rc.senseTeamOccupyingIsland(id);
@@ -279,6 +284,27 @@ public strictfp class RobotPlayer {
 		// should never happen
 		return -1;
 	}
+
+	static Direction oppositeDirection (Direction dir) {
+		switch (dir) {
+			case NORTH:
+				return Direction.SOUTH;
+			case NORTHEAST:
+				return Direction.SOUTHWEST;
+			case SOUTHEAST:
+				return Direction.NORTHWEST;
+			case SOUTH:
+				return Direction.NORTH;
+			case EAST:
+				return Direction.WEST;
+			case WEST:
+				return Direction.EAST;
+			case SOUTHWEST:
+				return Direction.NORTHEAST;
+			default:
+				return Direction.SOUTHEAST;
+		}
+    }
 
 	static boolean senseRight(RobotController rc) throws GameActionException {
 		int senseDir = (currentDirectionInd + 1) % directions.length;
