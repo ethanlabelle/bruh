@@ -13,7 +13,6 @@ public strictfp class RunLauncher {
      */
     static boolean at_hq = false;
     static boolean at_well = false;
-    static MapLocation possibleEnemyLOC;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
@@ -126,17 +125,9 @@ public strictfp class RunLauncher {
             }
             navigateTo(rc, EnemyHQLOC);
         }
+
         else{
-			if(possibleEnemyLOC == null){
-                // set possible enemy loc based on symmetry of our HQ
-                int id = rc.getID();
-                if(id % 3 == 0)
-                    possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), abs(spawnHQLOC.y - height));
-                else if(id % 3 == 1)
-                    possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), spawnHQLOC.y);
-                else
-                    possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y - height));
-            }
+			MapLocation possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width) , abs(spawnHQLOC.y - height));
             navigateTo(rc, possibleEnemyLOC);
         }
         
