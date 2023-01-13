@@ -63,6 +63,8 @@ public strictfp class RobotPlayer {
 	// pathfinding state
 	static int currentDirectionInd;
 	static boolean onObstacle;
+	static int maxDistSquared = 7200;
+	static int checkPointSquared = maxDistSquared;
 	static int width;
 	static int height;
 
@@ -267,7 +269,7 @@ public strictfp class RobotPlayer {
 
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		bug0(rc, loc);
+		bug2(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
@@ -387,6 +389,49 @@ public strictfp class RobotPlayer {
 					}
 				}
 			} else {
+				rc.setIndicatorString("on obstacle");
+				// follow obstacle using right hand rule
+				boolean right = senseRight(rc);
+				if (!right) {
+					turnRight();
+					goalDir = directions[currentDirectionInd];
+					tryMove(rc, goalDir);
+				}
+				boolean front = senseFront(rc);
+				if (!front) {
+					goalDir = directions[currentDirectionInd];
+					tryMove(rc, goalDir);
+				} else {
+					turnLeft();
+				}
+
+			}
+		}
+	}
+	static void bug2(RobotController rc, MapLocation loc) throws GameActionException {
+		// head towards goal
+		rc.setIndicatorString("Navigating to " + loc);
+		Direction goalDir = rc.getLocation().directionTo(loc);
+		if (rc.canMove(goalDir) && rc.getLocation().distanceSquaredTo(loc) < checkPointSquared) {
+			rc.move(goalDir);
+			onObstacle = false;
+			checkPointSquared = maxDistSquared;
+			currentDirectionInd = directionToIndex(goalDir);
+		} else {
+			if (!onObstacle) {
+				MapLocation pathTile = rc.getLocation().add(goalDir);
+				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
+					onObstacle = true;
+					checkPointSquared = rc.getLocation().distanceSquaredTo(loc);
+					currentDirectionInd = directionToIndex(goalDir);
+					turnLeft();
+					goalDir = directions[currentDirectionInd];
+					if (rc.canMove(goalDir)) {
+						rc.move(goalDir);
+					}
+				}
+			} else {
+				//TODO this doesn't include doing a 180
 				rc.setIndicatorString("on obstacle");
 				// follow obstacle using right hand rule
 				boolean right = senseRight(rc);
