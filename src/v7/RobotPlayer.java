@@ -1,4 +1,4 @@
-package dev;
+package v7;
 
 import battlecode.common.*;
 
@@ -61,12 +61,9 @@ public strictfp class RobotPlayer {
 	// pathfinding state
 	static int currentDirectionInd;
 	static boolean onObstacle;
-	static int width;
-	static int height;
 
 	// map state
 	static MapLocation HQLOC;
-	static MapLocation EnemyHQLOC;
 	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
 	
@@ -97,10 +94,6 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
 		
 		// TODO: clean up initialization
-
-		width = rc.getMapWidth();
-		height = rc.getMapHeight();
-
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		updateMap(rc);
@@ -108,24 +101,8 @@ public strictfp class RobotPlayer {
 			currentDirectionInd = rng.nextInt(directions.length);
 		}
 		else {
-			// make launcher go the opposite direction of the quadrant they were spawned in
-			MapLocation loc = rc.getLocation();
-			int x = loc.x;
-			int y = loc.y;
-			int map_width = rc.getMapWidth();
-			int map_height = rc.getMapHeight();
-			if (x < map_width / 2 && y < map_height / 2) {
-				currentDirectionInd = 1;
-			}
-			else if (x < map_width / 2 && y >= map_height / 2) {
-				currentDirectionInd = 3;
-			}
-			else if (x >= map_width / 2 && y < map_height / 2) {
-				currentDirectionInd = 7;
-			}
-			else {
-				currentDirectionInd = 5;
-			}
+			// default direction for launcher is east
+			currentDirectionInd = 2;
 		}
 		onObstacle = false;
 		
@@ -214,9 +191,6 @@ public strictfp class RobotPlayer {
 				if (turnCount == 0)
 					spawnHQLOC = loc;
 			}
-			else if(EnemyHQLOC == null){
-				EnemyHQLOC = loc;
-			}
 		}
 		
 		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
@@ -294,7 +268,7 @@ public strictfp class RobotPlayer {
 		currentDirectionInd--;
 		if (currentDirectionInd < 0)
 			currentDirectionInd += directions.length;
-	}
+	}	
 
 	static int directionToIndex(Direction dir) throws GameActionException {
 		for (int i = 0; i < directions.length; i++) {
@@ -441,9 +415,5 @@ public strictfp class RobotPlayer {
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {
 		return rc.getResourceAmount(ResourceType.ADAMANTIUM) + rc.getResourceAmount(ResourceType.MANA) + rc.getResourceAmount(ResourceType.ELIXIR);
-	}
-
-	static int abs(int x) {
-		return x < 0 ? -x : x;
 	}
 }

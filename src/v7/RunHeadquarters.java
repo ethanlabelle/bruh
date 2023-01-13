@@ -1,10 +1,10 @@
-package dev;
+package v7;
 
 
 import battlecode.common.*;
 import java.util.Arrays;
 
-import static dev.RobotPlayer.*;
+import static v7.RobotPlayer.*;
 
 public strictfp class RunHeadquarters {
     /**

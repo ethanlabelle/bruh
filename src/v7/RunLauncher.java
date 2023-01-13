@@ -1,10 +1,10 @@
-package dev;
+package v7;
 
 import battlecode.common.*;
 import java.util.Arrays;
 import java.util.Random;
 
-import static dev.RobotPlayer.*;
+import static v7.RobotPlayer.*;
 
 public strictfp class RunLauncher {
     /**
@@ -15,21 +15,11 @@ public strictfp class RunLauncher {
     static boolean at_well = false;
 
     static void runLauncher(RobotController rc) throws GameActionException {
-        updateMap(rc);
         // Try to attack someone
         Team opponent = rc.getTeam().opponent();
         MapLocation me = rc.getLocation();
         RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
-        // sort by health and put launcher types first in the array
-        Arrays.sort(enemies, (robot1, robot2) -> {
-            if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
-                return -1;
-            } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
-                return 1;
-            } else {
-                return robot1.health - robot2.health;
-            }
-        });
+        Arrays.sort(enemies, (first,second) -> first.health - second.health);
         if (enemies.length > 0) {
             // //MapLocation toAttack = rc.getLocation().add(Direction.EAST);
             
@@ -96,50 +86,37 @@ public strictfp class RunLauncher {
 
         }
 
-        // RobotInfo[] hqs = Arrays.stream(nearby_robots).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam).toArray(RobotInfo[]::new);
-        // int min_dist = 7200;
-        // RobotInfo closest_hq = null;
-        // if (hqs.length >= 1) {
-        //     closest_hq = hqs[0];
-        //     for (RobotInfo hq: hqs) {
-        //         int dist = hq.location.distanceSquaredTo(me);
-        //         if (dist < min_dist) {
-        //             min_dist = dist;
-        //             closest_hq = hq;
-        //         }
-        //     }
-        //     int distance_to_hq = me.distanceSquaredTo(closest_hq.location);
-        //     if (distance_to_hq == 1 || distance_to_hq == 2){
-        //         at_hq = true;
-        //         return;
-        //     }
-        //     Direction dir = me.directionTo(closest_hq.location);
-        //     if (rc.canMove(dir)) {
-        //         rc.move(dir);
-        //     }
-        // }
-        if(EnemyHQLOC != null) {
-            if (me.distanceSquaredTo(EnemyHQLOC) == 1 || me.distanceSquaredTo(EnemyHQLOC) == 2){
+        RobotInfo[] hqs = Arrays.stream(nearby_robots).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam).toArray(RobotInfo[]::new);
+        int min_dist = 7200;
+        if (hqs.length >= 1) {
+            RobotInfo closest_hq = hqs[0];
+            for (RobotInfo hq: hqs) {
+                int dist = hq.location.distanceSquaredTo(me);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    closest_hq = hq;
+                }
+            }
+            int distance_to_hq = me.distanceSquaredTo(closest_hq.location);
+            if (distance_to_hq == 1 || distance_to_hq == 2){
                 at_hq = true;
                 return;
             }
-            navigateTo(rc, EnemyHQLOC);
+            Direction dir = me.directionTo(closest_hq.location);
+            if (rc.canMove(dir)) {
+                rc.move(dir);
+            }
         }
 
-        else{
-			MapLocation possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width) , abs(spawnHQLOC.y - height));
-            navigateTo(rc, possibleEnemyLOC);
-        }
-        
         // Also try to move *randomly*.
         Direction last_dir = directions[currentDirectionInd];
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
-        } else if (rc.getMovementCooldownTurns() == 0) {
+        } else if (rc.getMovementCooldownTurns() == 0){
             for (int i = 0; i < 3; i++) {
-                currentDirectionInd = (currentDirectionInd + 3) % directions.length;
+                currentDirectionInd = (currentDirectionInd + 2) % directions.length;
                 last_dir = directions[currentDirectionInd];
-                if (rc.canMove(last_dir)) {
+                if (rc.canMove(last_dir)){
                     rc.move(last_dir);
                     break;
                 }

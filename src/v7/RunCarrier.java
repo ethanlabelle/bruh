@@ -1,4 +1,4 @@
-package dev;
+package v7;
 
 import battlecode.common.*;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static dev.RobotPlayer.*;
+import static v7.RobotPlayer.*;
 
 public strictfp class RunCarrier {
     /**
