@@ -270,7 +270,7 @@ public strictfp class RobotPlayer {
 
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		bug1(rc, loc);
+		bug2(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
