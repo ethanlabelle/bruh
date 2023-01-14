@@ -73,6 +73,7 @@ public strictfp class RobotPlayer {
 	static MapLocation EnemyHQLOC;
 	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
+	static MapLocation possibleEnemyLOC;
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
@@ -269,7 +270,7 @@ public strictfp class RobotPlayer {
 
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		bug2(rc, loc);
+		bug1(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
