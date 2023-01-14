@@ -15,6 +15,7 @@ public strictfp class RunLauncher {
     static boolean at_well = false;
     static boolean guess_was_right = true;
     static int fake_id = 0;
+    static MapLocation possibleEnemyLOC = null;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
@@ -36,7 +37,7 @@ public strictfp class RunLauncher {
         }
 
         else{
-			MapLocation possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width) , abs(spawnHQLOC.y - height));
+			possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width) , abs(spawnHQLOC.y - height));
             navigateTo(rc, possibleEnemyLOC);
         }
     }

@@ -78,6 +78,66 @@ public strictfp class RobotPlayer {
     static int turnCount = 0; // number of turns robot has been alive
 	static Team myTeam;
 
+	// possible enemy loc
+	static MapLocation possibleEnemyLOC = null;
+
+	// write to shared array
+	static int totalAvailableIndexs = 64;
+	static String [] sharedTranslation = new String [] {"NONE", "M_AHQ", "M_BHQ", "M_STORM", "M_CLOUD", "M_MANA", "M_ADA", "M_ELIX", "M_AIL", "M_BIL", "M_NIL", "DEST_CARRIER", "DEST_LAUNCHER", "DEST_DESTABILIZER", "DEST_BOOSTER", "DEST_AMPLIFIER"};
+	static int getIndex (String [] words, String value) throws GameActionException {
+		for (int index = 0; index < words.length; index ++) {
+			if (words[index].equals(value)) {
+				return index;
+			}
+		}
+		System.out.println("Error: Meaning doesn't exist");
+		return -1;
+	}
+	static void communicate (RobotController rc, String meaning, MapLocation loc) throws GameActionException {
+		// make sure overflow wont occur
+		if (sharedTranslation.length > 16) {
+			System.out.println("Buffer overflow may occur and offset the location");
+		}
+
+		// convet to a number less than 2^16
+		int value = (loc.x << 10) + (loc.y << 4) + getIndex(sharedTranslation, meaning);
+
+		// robot can write
+		int availableIndex = totalAvailableIndexs;
+		for (int index = 0; index < totalAvailableIndexs; index ++) {
+			if (rc.readSharedArray(index) != 0) {
+			}
+			if (rc.canWriteSharedArray(index, value) && rc.readSharedArray(index) == 0) {
+				availableIndex = index;
+				break;
+			}
+		}
+		if (availableIndex == totalAvailableIndexs) {
+			return;
+		}
+
+		// writes to the array
+		rc.writeSharedArray(availableIndex, value);
+	}
+	static MapLocation decrypt (RobotController rc, int index) throws GameActionException {
+		// decrypt the location after finding it through findIndex
+		int info = rc.readSharedArray(index);
+		int x = info >> 10;
+		int y = (info >> 4) % 64;
+		MapLocation loc = new MapLocation (x, y);
+		return loc;
+	}
+	static int findIndex (RobotController rc, String meaning) throws GameActionException {
+		// search the shared array for the meaning that is wanted
+		for (int index = 0; index < totalAvailableIndexs; index ++) {
+			String meaningShared = sharedTranslation[rc.readSharedArray(index) % 16];
+			if (meaning.equals(meaningShared)) {
+				return index;
+			}
+		}
+		return -1;
+	}
+
 	static void printBoard() {
 		String out = "";
 		for (int i = 0; i < board.length; i++) {

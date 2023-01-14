@@ -13,6 +13,14 @@ public strictfp class RunHeadquarters {
      *
      */
     static void runHeadquarters(RobotController rc) throws GameActionException {
+        // Let's try to build a amplifier. This code is meant to test the shared array
+        //communicate (rc, "DEST_AMPLIFIER", new MapLocation(1, 1));
+        //rc.setIndicatorString("Trying to build a amplifier");
+        //MapLocation loc2 = getSpawnLocation(rc, RobotType.LAUNCHER);
+        //if (rc.canBuildRobot(RobotType.AMPLIFIER, loc2)) {
+        //    rc.buildRobot(RobotType.AMPLIFIER, loc2);
+        //    return;
+        //}
         // Pick a direction to build in.
         if (rc.canBuildAnchor(Anchor.STANDARD) && rng.nextInt(10) == 1) {
             // If we can build an anchor do it!
