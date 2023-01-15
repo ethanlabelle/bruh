@@ -272,7 +272,7 @@ public strictfp class RobotPlayer {
 
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		bug2(rc, loc);
+		bug0(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
@@ -494,21 +494,21 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 4) {
-            rc.setIndicatorString("Trying to build a carrier");
-			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
-            if (loc != null) {
-                rc.buildRobot(RobotType.CARRIER, loc);
-				i++;
-            }
-			Clock.yield();
-		}	
-		i = 0;
 		while (i < 3) {
             rc.setIndicatorString("Trying to build a launcher");
 			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
             if (loc != null) {
                 rc.buildRobot(RobotType.LAUNCHER, loc);
+				i++;
+            }
+			Clock.yield();
+		}	
+		i = 0;
+		while (i < 4) {
+            rc.setIndicatorString("Trying to build a carrier");
+			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
+            if (loc != null) {
+                rc.buildRobot(RobotType.CARRIER, loc);
 				i++;
             }
 			Clock.yield();

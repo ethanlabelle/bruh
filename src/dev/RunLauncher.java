@@ -99,13 +99,13 @@ public strictfp class RunLauncher {
         });
         if (enemies.length > 0) {
             MapLocation toAttack = enemies[0].location;
+			System.out.println(enemies.length);
             for (RobotInfo enemy: enemies) {
+				System.out.println(enemy);
                 toAttack = enemy.location;
-                int enemy_hp = enemy.health;
-                while(rc.canAttack(toAttack) && enemy_hp > 0){
+                if (rc.canAttack(toAttack)){
                     rc.attack(toAttack);
-                    toAttack = enemy.location;
-                    enemy_hp -= 8;
+					break;
                 }
             }
             if (!at_hq && !at_well){
