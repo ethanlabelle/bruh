@@ -10,7 +10,7 @@ public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 30;
 	static final int CARRIER_MOD = 10;
-	static final int EXCESS = 1000;
+	static final int EXCESS = 160;
 	static int launcherCount = 0;
 	static int carrierCount = 0;
 
@@ -21,7 +21,7 @@ public strictfp class RunHeadquarters {
      */
     static void runHeadquarters(RobotController rc) throws GameActionException {
         // Pick a direction to build in.
-        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0 ) {
+        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0 && rc.getRoundNum() > 250) {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor!");
@@ -33,7 +33,7 @@ public strictfp class RunHeadquarters {
 		RobotInfo[] robotInfos = rc.senseNearbyRobots();
 		RobotInfo[] carriers = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
         // Let's try to build a launcher.
-		if (launcherCount < LAUNCHER_MOD) {
+		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
         	rc.setIndicatorString("Trying to build a launcher");
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
         	if (loc != null) {
@@ -44,7 +44,7 @@ public strictfp class RunHeadquarters {
 		}
 
         // Let's try to build a carrier.
-		if ((carriers.length <= 20) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS)) {
+		if ((carriers.length <= 40) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS)) {
         	rc.setIndicatorString("Trying to build a carrier");
         	loc = getSpawnLocation(rc, RobotType.CARRIER);
         	if (loc != null) {
