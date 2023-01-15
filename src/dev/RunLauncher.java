@@ -17,17 +17,24 @@ public strictfp class RunLauncher {
     static MapLocation possibleEnemyLOC;
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
+    static MapLocation center = new MapLocation(width/2, height/2);
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
 
         attackEnemies(rc);
-
+        
         if (at_hq || at_well) {
             return;
         }
+        
+        if ((rc.getRoundNum() / 150) % 2 == 0) {
+            navigateTo(rc, center);
+            return;
+        }
 
-        //protectWell(rc);
+
+        // protectWell(rc);
 
         if (move_randomly) {
             moveLastResort(rc);
@@ -53,11 +60,11 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             int id = fake_id;
             if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), abs(spawnHQLOC.y - height));
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), abs(spawnHQLOC.y + 1 - height));
             else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), spawnHQLOC.y);
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), spawnHQLOC.y);
             else
-                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y - height));
+                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y + 1 - height));
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
@@ -106,9 +113,9 @@ public strictfp class RunLauncher {
 					break;
                 }
             }
-            if (!at_hq && !at_well){
-                navigateTo(rc, toAttack);
-            }
+            // if (!at_hq && !at_well && rc.getRoundNum() % 150 == 0){
+            //     navigateTo(rc, toAttack);
+            // }
         }
     }
 
