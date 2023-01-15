@@ -24,7 +24,8 @@ public strictfp class RobotPlayer {
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
-    static final Random rng = new Random(6147);
+    //static final Random rng = new Random(6147);
+    static final Random rng = new Random();
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -74,7 +75,10 @@ public strictfp class RobotPlayer {
 	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
 	static MapLocation possibleEnemyLOC;
-	static WellInfo[] nearbyWells;
+	static MapInfo[] mapInfos; // rc.senseNearbyMapInfos();
+	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
+	static int[] islands; // rc.senseNearbyIslands();
+	static WellInfo[] nearbyWells; // rc.senseNearbyWells();
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
@@ -191,11 +195,10 @@ public strictfp class RobotPlayer {
 	// TODO: Clouds, currents 
 	// TODO: HIDDEN tiles on init
 	static void updateMap(RobotController rc) throws GameActionException {
-		MapInfo[] mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
-		RobotInfo[] robotInfos = rc.senseNearbyRobots();
-		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
-		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
-		nearbyWells = wells;
+		mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
+		robotInfos = rc.senseNearbyRobots();
+		islands = rc.senseNearbyIslands(); // 200 bytecode
+		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
 
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
@@ -231,7 +234,7 @@ public strictfp class RobotPlayer {
 		}
 
 		RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-		for (WellInfo wellInfo : wells) {
+		for (WellInfo wellInfo : nearbyWells) {
 			MapLocation loc = wellInfo.getMapLocation();
 			switch (wellInfo.getResourceType()) {
 				case MANA:
@@ -246,10 +249,10 @@ public strictfp class RobotPlayer {
 			}
 			if (wellLoc == null || friends.length > MAX_FRIENDS) {
 				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.MANA) {
+				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				} 
-				if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+				else if (wellInfo.getResourceType() != ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				}
 			}

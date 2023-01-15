@@ -100,7 +100,7 @@ public strictfp class RunCarrier {
                 rc.transferResource(HQLOC, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA));
                 Clock.yield();
             }
-            if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD) && rng.nextInt(10) == 1) {
+            if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD)) {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
 		    navigateTo(rc, HQLOC);
