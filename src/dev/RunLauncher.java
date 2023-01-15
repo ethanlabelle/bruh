@@ -13,8 +13,10 @@ public strictfp class RunLauncher {
      */
     static boolean at_hq = false;
     static boolean at_well = false;
-    static boolean guess_was_right = true;
+    static boolean move_randomly = false;
+    static MapLocation possibleEnemyLOC;
     static int fake_id = 0;
+    static MapLocation undefined_loc = new MapLocation(-1, -1);
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
@@ -27,18 +29,23 @@ public strictfp class RunLauncher {
 
         protectWell(rc);
 
-        if(EnemyHQLOC != null) {
+        if (move_randomly) {
+            moveLastResort(rc);
+            return;
+        }
+        
+        if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
             if (adjacentTo(rc, EnemyHQLOC)) {
                 at_hq = true;
                 return;
             }
             navigateTo(rc, EnemyHQLOC);
+            checkForFriends(rc, EnemyHQLOC);
         }
-
         else{
-			MapLocation possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width) , abs(spawnHQLOC.y - height));
-            navigateTo(rc, possibleEnemyLOC);
+            travelToPossibleHQ(rc);
         }
+        
     }
 
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
@@ -52,21 +59,24 @@ public strictfp class RunLauncher {
             else
                 possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y - height));
         }
-        navigateTo(rc, possibleEnemyLOC);
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
+            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, 2, myTeam);
+            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 6) {
                 EnemyHQLOC = possibleEnemyLOC;
                 return;
             }
             else{
                 possibleEnemyLOC = null;
+                EnemyHQLOC = undefined_loc;
                 fake_id += 1;
-                if (fake_id == 3) {
-                    guess_was_right = false;
+                if(fake_id == 6){
+                    move_randomly = true;
                 }
             }
         }
+        if(possibleEnemyLOC != null)
+            navigateTo(rc, possibleEnemyLOC);
     }
 
     static boolean adjacentTo(RobotController rc, MapLocation loc) throws GameActionException {
@@ -75,7 +85,6 @@ public strictfp class RunLauncher {
     }
 
     static void attackEnemies(RobotController rc) throws GameActionException {
-        MapLocation me = rc.getLocation();
         Team opponent = RobotPlayer.myTeam.opponent();
         RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
         // sort by health and put launcher types first in the array
@@ -92,48 +101,41 @@ public strictfp class RunLauncher {
             MapLocation toAttack = enemies[0].location;
             for (RobotInfo enemy: enemies) {
                 toAttack = enemy.location;
-                if (rc.canAttack(toAttack)) {
+                int enemy_hp = enemy.health;
+                while(rc.canAttack(toAttack) && enemy_hp > 0){
                     rc.attack(toAttack);
+                    toAttack = enemy.location;
+                    enemy_hp -= 8;
                 }
             }
-            Direction dir = me.directionTo(toAttack);
             if (!at_hq && !at_well){
-                if (rc.canMove(dir)) {
-                    rc.move(dir);
-                    me = rc.getLocation();
-                }
+                navigateTo(rc, toAttack);
             }
         }
     }
 
     static void protectWell(RobotController rc) throws GameActionException {
-        RobotInfo[] nearby_robots = rc.senseNearbyRobots();
-        WellInfo[] nearby_wells = rc.senseNearbyWells();
         MapLocation me = rc.getLocation();
 
-        int min_dist_well = 7200;
-        if (nearby_wells.length >= 1) {
-            WellInfo closest_well = nearby_wells[0];
-            for (WellInfo well: nearby_wells) {
-                int dist = well.getMapLocation().distanceSquaredTo(me);
-                if (dist < min_dist_well) {
-                    min_dist_well = dist;
+        if (nearbyWells.length >= 1) {
+            WellInfo closest_well = nearbyWells[0];
+            int closest_dist = 7200;
+            for(WellInfo well: nearbyWells) {
+                int dist = me.distanceSquaredTo(well.getMapLocation());
+                if(dist < closest_dist){
+                    closest_dist = dist;
                     closest_well = well;
                 }
             }
-
-            
             boolean friend_already_at_well = false;
-            for (RobotInfo robot: nearby_robots) {
-                int robot_dist_to_well = robot.getLocation().distanceSquaredTo(closest_well.getMapLocation());
-                if (robot.team == RobotPlayer.myTeam && robot.getType() == RobotType.LAUNCHER && robot_dist_to_well == 0) {
+            if (rc.canSenseLocation(closest_well.getMapLocation())) {
+                RobotInfo robot = rc.senseRobotAtLocation(closest_well.getMapLocation());
+                if (robot != null && robot.team == myTeam && robot.type == RobotType.LAUNCHER) {
                     friend_already_at_well = true;
-                    break;
                 }
             }
 
-            int distance_to_well = me.distanceSquaredTo(closest_well.getMapLocation());
-            if (!friend_already_at_well && distance_to_well == 0) {
+            if (me.equals(closest_well.getMapLocation())) {
                 at_well = true;
                 return;
             }
@@ -160,6 +162,15 @@ public strictfp class RunLauncher {
                     rc.move(last_dir);
                     break;
                 }
+            }
+        }
+    }
+
+    static void checkForFriends(RobotController rc, MapLocation hq_loc) throws GameActionException {
+        if(rc.canSenseLocation(hq_loc)){
+            RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
+            if(friends.length >= 7){
+                EnemyHQLOC = undefined_loc;
             }
         }
     }

@@ -74,6 +74,7 @@ public strictfp class RobotPlayer {
 	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
 	static MapLocation possibleEnemyLOC;
+	static WellInfo[] nearbyWells;
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
@@ -194,6 +195,7 @@ public strictfp class RobotPlayer {
 		RobotInfo[] robotInfos = rc.senseNearbyRobots();
 		int[] islands = rc.senseNearbyIslands(); // 200 bytecode
 		WellInfo[] wells = rc.senseNearbyWells(); // 100 bytecode
+		nearbyWells = wells;
 
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
