@@ -1,10 +1,10 @@
-package dev;
+package v9;
 
 import battlecode.common.*;
 import java.util.Arrays;
 import java.util.Random;
 
-import static dev.RobotPlayer.*;
+import static v9.RobotPlayer.*;
 
 public strictfp class RunLauncher {
     /**
@@ -27,7 +27,7 @@ public strictfp class RunLauncher {
             return;
         }
 
-        //protectWell(rc);
+        protectWell(rc);
 
         if (move_randomly) {
             moveLastResort(rc);

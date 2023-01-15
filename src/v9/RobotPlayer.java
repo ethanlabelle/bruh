@@ -1,4 +1,4 @@
-package dev;
+package v9;
 
 import battlecode.common.*;
 
@@ -74,6 +74,7 @@ public strictfp class RobotPlayer {
 	static MapLocation EnemyHQLOC;
 	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
+	static MapLocation possibleEnemyLOC;
 	static MapInfo[] mapInfos; // rc.senseNearbyMapInfos();
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
 	static int[] islands; // rc.senseNearbyIslands();
@@ -251,7 +252,7 @@ public strictfp class RobotPlayer {
 				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				} 
-				else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
+				else if (wellInfo.getResourceType() != ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				}
 			}
@@ -478,21 +479,13 @@ public strictfp class RobotPlayer {
 	static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
 		// TODO: add target well
 		WellInfo [] wells = rc.senseNearbyWells();
-		if (unit == RobotType.CARRIER) {
-			if (wells.length > 0) {
-				MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation());
-				if (closeWell != null) {
-					return closeWell;
-				}
-			}
-		} else if (unit == RobotType.LAUNCHER) {
-            MapLocation center = new MapLocation(width/2, height/2);
-			MapLocation spawnLoc = getClosestLocation(rc, center);
-			if (spawnLoc != null) {
-				return spawnLoc;
+		if (wells.length > 0) {
+			MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation());
+			if (closeWell != null) {
+				return closeWell;
 			}
 		}
-		
+
 		// Pick a direction to build in.
 		for (Direction checkDir : directions) {
 			MapLocation newLoc = rc.getLocation().add(checkDir);
