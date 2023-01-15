@@ -99,9 +99,7 @@ public strictfp class RunLauncher {
         });
         if (enemies.length > 0) {
             MapLocation toAttack = enemies[0].location;
-			System.out.println(enemies.length);
             for (RobotInfo enemy: enemies) {
-				System.out.println(enemy);
                 toAttack = enemy.location;
                 if (rc.canAttack(toAttack)){
                     rc.attack(toAttack);
