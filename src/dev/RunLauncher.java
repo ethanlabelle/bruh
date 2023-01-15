@@ -27,8 +27,6 @@ public strictfp class RunLauncher {
             return;
         }
 
-        protectWell(rc);
-
         if (move_randomly) {
             protectWell(rc);
         }
