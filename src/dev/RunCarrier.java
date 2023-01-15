@@ -13,10 +13,6 @@ public strictfp class RunCarrier {
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
-
-    static int manaAmount = 0;
-    static int adamAmount = 0;
-
 	static void runCarrier(RobotController rc) throws GameActionException {
         updateMap(rc);
         MapLocation me = rc.getLocation();
@@ -75,22 +71,6 @@ public strictfp class RunCarrier {
             return;
         }
 
-        // update mana and adam amounts
-        if (rc.canSenseLocation(HQLOC)) {
-            RobotInfo hq = rc.senseRobotAtLocation(HQLOC);
-            if (hq != null) {
-                manaAmount = hq.getResourceAmount(ResourceType.MANA);
-                adamAmount = hq.getResourceAmount(ResourceType.ADAMANTIUM);
-            }
-        }
-
-        // set wellLoc
-        MapLocation wellLoc;
-        if (manaAmount > adamAmount) {
-            wellLoc = adamLoc;
-        } else {
-            wellLoc = manaLoc;
-        }
 
         // Try to gather from squares around us.
 		boolean foundWell = false;

@@ -24,8 +24,8 @@ public strictfp class RobotPlayer {
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
-    //static final Random rng = new Random(6147);
-    static final Random rng = new Random();
+    static final Random rng = new Random(6147);
+    //static final Random rng = new Random();
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -73,9 +73,7 @@ public strictfp class RobotPlayer {
 	static MapLocation HQLOC;
 	static MapLocation EnemyHQLOC;
 	static MapLocation spawnHQLOC;
-	static MapLocation manaLoc;
-	static MapLocation adamLoc;
-	static MapLocation possibleEnemyLOC;
+	static MapLocation wellLoc;
 	static MapInfo[] mapInfos; // rc.senseNearbyMapInfos();
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
 	static int[] islands; // rc.senseNearbyIslands();
@@ -248,15 +246,14 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			if (adamLoc == null || friends.length > MAX_FRIENDS) {
-				if (wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
-					adamLoc = loc;
+			if (wellLoc == null || friends.length > MAX_FRIENDS) {
+				// Odd ID get ADA, even get MANA
+				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+					wellLoc = loc;
 				} 
-			}
-			if (manaLoc == null || friends.length > MAX_FRIENDS) {
-				if (wellInfo.getResourceType() == ResourceType.MANA) {
-					manaLoc = loc;
-				} 
+				else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
+					wellLoc = loc;
+				}
 			}
 		}
 

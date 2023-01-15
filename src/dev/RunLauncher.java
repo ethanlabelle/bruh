@@ -27,10 +27,11 @@ public strictfp class RunLauncher {
             return;
         }
 
-        protectWell(rc);
+        //protectWell(rc);
 
         if (move_randomly) {
-            protectWell(rc);
+            moveLastResort(rc);
+            return;
         }
         
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
@@ -52,11 +53,11 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             int id = fake_id;
             if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), abs(spawnHQLOC.y - height));
             else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), spawnHQLOC.y);
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x - width), spawnHQLOC.y);
             else
-                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y - height));
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
@@ -113,7 +114,6 @@ public strictfp class RunLauncher {
 
     static void protectWell(RobotController rc) throws GameActionException {
         MapLocation me = rc.getLocation();
-        // if can sense a friendly headquarter, return early
 
         if (nearbyWells.length >= 1) {
             WellInfo closest_well = nearbyWells[0];
@@ -125,7 +125,6 @@ public strictfp class RunLauncher {
                     closest_well = well;
                 }
             }
-            
             boolean friend_already_at_well = false;
             if (rc.canSenseLocation(closest_well.getMapLocation())) {
                 RobotInfo robot = rc.senseRobotAtLocation(closest_well.getMapLocation());
