@@ -248,10 +248,10 @@ public strictfp class RobotPlayer {
 			}
 			if (wellLoc == null || friends.length > MAX_FRIENDS) {
 				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+				if (rc.getID() % 3 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				} 
-				else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
+				else if (wellInfo.getResourceType() == ResourceType.MANA) {
 					wellLoc = loc;
 				}
 			}
