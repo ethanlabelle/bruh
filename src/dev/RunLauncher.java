@@ -21,15 +21,15 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
-
-        attackEnemies(rc);
         
         if (at_hq || at_well) {
+            attackEnemies(rc);
             return;
         }
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
             navigateTo(rc, center);
+            attackEnemies(rc);
             return;
         }
 
@@ -38,19 +38,23 @@ public strictfp class RunLauncher {
 
         if (move_randomly) {
             moveLastResort(rc);
+            attackEnemies(rc);
             return;
         }
         
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
             if (adjacentTo(rc, EnemyHQLOC)) {
                 at_hq = true;
+                attackEnemies(rc);
                 return;
             }
             navigateTo(rc, EnemyHQLOC);
             checkForFriends(rc, EnemyHQLOC);
+            attackEnemies(rc);
         }
         else{
             travelToPossibleHQ(rc);
+            attackEnemies(rc);
         }
         
     }
