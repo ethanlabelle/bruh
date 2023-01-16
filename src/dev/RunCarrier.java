@@ -74,6 +74,14 @@ public strictfp class RunCarrier {
             return;
         }
 
+		if (wellLoc == null) {
+			if (rc.getID() % 3 == 0) {
+				wellLoc = Communication.readManaWellLocation(rc);
+			} 
+			else {
+				wellLoc = Communication.readAdaWellLocation(rc);
+			}
+		}
 
         // Try to gather from squares around us.
 		boolean foundWell = false;

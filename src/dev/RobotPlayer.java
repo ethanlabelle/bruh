@@ -203,7 +203,6 @@ public strictfp class RobotPlayer {
 			MapLocation loc = mapInf.getMapLocation();
 			if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) { // <= 180 bytecode (5 * tiles in radius (at most 36))
 				board[loc.x][loc.y] = M_STORM;
-				//System.out.println("found wall " + loc.x + ", " + loc.y);
 			}
 		}
 
@@ -215,10 +214,8 @@ public strictfp class RobotPlayer {
 			Team team = hq.getTeam();
 			if (board[loc.x][loc.y] == 0b0000) {
 				if (team == Team.A) {
-					//System.out.println("found Team A HQ " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_AHQ;	
 				} else {
-					//System.out.println("found Team B HQ " + loc.x + ", " + loc.y);
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
@@ -253,6 +250,28 @@ public strictfp class RobotPlayer {
 				} 
 				else if (wellInfo.getResourceType() == ResourceType.MANA) {
 					wellLoc = loc;
+				}
+			}
+			MapLocation arrayLoc;
+			if (rc.getType() == RobotType.HEADQUARTERS) {
+				switch (wellInfo.getResourceType()) {
+					case MANA:
+						arrayLoc = Communication.readManaWellLocation(rc);
+						if (arrayLoc == null) {
+							Communication.updateManaWellLocation(rc, loc);
+							System.out.println("updated mana well loc");
+							System.out.println(loc);
+						}
+						break;
+					case ADAMANTIUM:
+						arrayLoc= Communication.readAdaWellLocation(rc);
+						if (arrayLoc == null) {
+							Communication.updateAdaWellLocation(rc, loc);
+							System.out.println("updated ada well loc");
+						}
+						break;
+					default:
+						break;
 				}
 			}
 		}
