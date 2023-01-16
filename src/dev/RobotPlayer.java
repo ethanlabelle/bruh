@@ -434,26 +434,23 @@ public strictfp class RobotPlayer {
 		// head towards goal
 		rc.setIndicatorString("Navigating to " + loc);
 		Direction goalDir = rc.getLocation().directionTo(loc);
-		if (rc.canMove(goalDir) && rc.getLocation().distanceSquaredTo(loc) < checkPointSquared) {
-			rc.move(goalDir);
+		if (rc.getLocation().distanceSquaredTo(loc) < checkPointSquared  && tryMove(rc, goalDir)) {
 			onObstacle = false;
 			checkPointSquared = maxDistSquared;
 			currentDirectionInd = directionToIndex(goalDir);
 		} else {
 			if (!onObstacle) {
 				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
+				if (board[pathTile.x][pathTile.y] == M_STORM) { // indicates obstacle
+					// TODO: the new defense strat makes navigation need to consider stopped robots to be storms
 					onObstacle = true;
 					checkPointSquared = rc.getLocation().distanceSquaredTo(loc);
 					currentDirectionInd = directionToIndex(goalDir);
 					turnLeft();
 					goalDir = directions[currentDirectionInd];
-					if (rc.canMove(goalDir)) {
-						rc.move(goalDir);
-					}
+					tryMove(rc, goalDir);
 				}
 			} else {
-				//TODO this doesn't include doing a 180
 				rc.setIndicatorString("on obstacle");
 				// follow obstacle using right hand rule
 				boolean right = senseRight(rc);
@@ -462,8 +459,7 @@ public strictfp class RobotPlayer {
 					goalDir = directions[currentDirectionInd];
 					tryMove(rc, goalDir);
 				}
-				boolean front = senseFront(rc);
-				if (!front) {
+				else if (!senseFront(rc)) {
 					goalDir = directions[currentDirectionInd];
 					tryMove(rc, goalDir);
 				} else {
