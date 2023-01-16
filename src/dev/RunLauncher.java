@@ -59,6 +59,15 @@ public strictfp class RunLauncher {
         else{
             travelToPossibleHQ(rc);
         }
+		
+		// if did not attack before, can maybe attack now
+		clouds = rc.senseNearbyCloudLocations();
+		// can we see any clouds in vision radius
+		if (clouds.length > 0) {
+			exploit(rc);
+		}
+		else
+        	attackEnemies(rc);
         
     }
 
