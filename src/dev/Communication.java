@@ -157,12 +157,14 @@ class Communication {
 
     static void updateManaWellLocation(RobotController rc, MapLocation wellLoc) throws GameActionException {
 		int wellLocInt = locationToInt(rc, wellLoc);
-		rc.writeSharedArray(MANA_WELL_IDX, wellLocInt);
+        Message msg = new Message(MANA_WELL_IDX, wellLocInt, RobotPlayer.turnCount);
+        messagesQueue.add(msg);
     }
 
     static void updateAdaWellLocation(RobotController rc, MapLocation wellLoc) throws GameActionException {
 		int wellLocInt = locationToInt(rc, wellLoc);
-		rc.writeSharedArray(ADA_WELL_IDX, wellLocInt);
+        Message msg = new Message(ADA_WELL_IDX, wellLocInt, RobotPlayer.turnCount);
+        messagesQueue.add(msg);
     }
 
     static int readMaxIslandHealth(RobotController rc, int islandId) {

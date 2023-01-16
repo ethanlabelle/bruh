@@ -198,6 +198,7 @@ public strictfp class RobotPlayer {
 		robotInfos = rc.senseNearbyRobots();
 		islands = rc.senseNearbyIslands(); // 200 bytecode
 		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
+		Communication.tryWriteMessages(rc);
 
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
@@ -245,31 +246,29 @@ public strictfp class RobotPlayer {
 			}
 			if (wellLoc == null || friends.length > MAX_FRIENDS) {
 				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 3 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				} 
-				else if (wellInfo.getResourceType() == ResourceType.MANA) {
+				else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
 					wellLoc = loc;
 				}
 			}
 			MapLocation arrayLoc;
-			if (rc.getType() == RobotType.HEADQUARTERS) {
-				switch (wellInfo.getResourceType()) {
-					case MANA:
-						arrayLoc = Communication.readManaWellLocation(rc);
-						if (arrayLoc == null) {
-							Communication.updateManaWellLocation(rc, loc);
-						}
-						break;
-					case ADAMANTIUM:
-						arrayLoc= Communication.readAdaWellLocation(rc);
-						if (arrayLoc == null) {
-							Communication.updateAdaWellLocation(rc, loc);
-						}
-						break;
-					default:
-						break;
-				}
+			switch (wellInfo.getResourceType()) {
+				case MANA:
+					arrayLoc = Communication.readManaWellLocation(rc);
+					if (arrayLoc == null) {
+						Communication.updateManaWellLocation(rc, loc);
+					}
+					break;
+				case ADAMANTIUM:
+					arrayLoc = Communication.readAdaWellLocation(rc);
+					if (arrayLoc == null) {
+						Communication.updateAdaWellLocation(rc, loc);
+					}
+					break;
+				default:
+					break;
 			}
 		}
 

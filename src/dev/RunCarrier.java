@@ -76,10 +76,10 @@ public strictfp class RunCarrier {
 
 		if (wellLoc == null) {
 			if (rc.getID() % 3 == 0) {
-				wellLoc = Communication.readManaWellLocation(rc);
+				wellLoc = Communication.readAdaWellLocation(rc);
 			} 
 			else {
-				wellLoc = Communication.readAdaWellLocation(rc);
+				wellLoc = Communication.readManaWellLocation(rc);
 			}
 		}
 
