@@ -30,8 +30,11 @@ public strictfp class RunCarrier {
         // run away from enemy launchers
         if (enemyRobots.length > 0) {
 			for (RobotInfo r : enemyRobots) {
-				if (r.type == RobotType.LAUNCHER && tryMove(rc, oppositeDirection(me.directionTo(r.location))))
+				if (r.type == RobotType.LAUNCHER) {
+					tryMove(rc, oppositeDirection(me.directionTo(r.location)));
+					tryMove(rc, oppositeDirection(me.directionTo(r.location)));
 					break;
+				}
 			}
         }
 
@@ -111,6 +114,12 @@ public strictfp class RunCarrier {
             } else {
 				// Also try to move *randomly*.
 				Direction dir = directions[currentDirectionInd];
+				if (rc.canMove(dir)) {
+				    rc.move(dir);
+				} else if (rc.getMovementCooldownTurns() == 0) {
+				    currentDirectionInd = rng.nextInt(directions.length);
+				}
+				dir = directions[currentDirectionInd];
 				if (rc.canMove(dir)) {
 				    rc.move(dir);
 				} else if (rc.getMovementCooldownTurns() == 0) {
