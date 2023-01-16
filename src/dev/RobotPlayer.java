@@ -275,6 +275,8 @@ public strictfp class RobotPlayer {
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
 		bug0(rc, loc);
+		if (rc.getType() == RobotType.CARRIER)
+			bug0(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
