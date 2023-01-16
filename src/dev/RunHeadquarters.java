@@ -54,33 +54,4 @@ public strictfp class RunHeadquarters {
         	}
 		}
     }
-    /*
-        boolean found = false;
-        MapLocation newLoc = null;
-        for (Direction checkDir : directions) {
-            newLoc = rc.getLocation().add(checkDir);
-            if (!rc.canSenseRobotAtLocation(newLoc)) {
-                found = true;
-                break;
-            }
-        }
-        //Direction dir = directions[rng.nextInt(directions.length)];
-        //MapLocation newLoc = rc.getLocation().add(dir);
-        if (!found) {
-            return;
-        }
-
-        Can return null if there is not a free tile nearby
-        TODO: Check all tiles in action radius
-                i.e. sense MapInfos to radius & do set difference with occupied squares
-     */
-    static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
-        // pick a square within the action radius
-        for (MapLocation newLoc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), rc.getType().actionRadiusSquared)) {
-            if (rc.canBuildRobot(unit, newLoc)) {
-                return newLoc;
-            }
-        }
-        return null;
-    }
 }

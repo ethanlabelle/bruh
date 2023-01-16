@@ -259,15 +259,12 @@ public strictfp class RobotPlayer {
 						arrayLoc = Communication.readManaWellLocation(rc);
 						if (arrayLoc == null) {
 							Communication.updateManaWellLocation(rc, loc);
-							System.out.println("updated mana well loc");
-							System.out.println(loc);
 						}
 						break;
 					case ADAMANTIUM:
 						arrayLoc= Communication.readAdaWellLocation(rc);
 						if (arrayLoc == null) {
 							Communication.updateAdaWellLocation(rc, loc);
-							System.out.println("updated ada well loc");
 						}
 						break;
 					default:
@@ -478,14 +475,14 @@ public strictfp class RobotPlayer {
 		}
 	}
 
-	static MapLocation getClosestLocation (RobotController rc, MapLocation loc) throws GameActionException {
+	static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
 		// this is the possible locations it can be the closest to
 		MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
 		int minDist = 7200;
 		MapLocation bestLoc = null;
 		for (MapLocation checkLoc : possLoc) {
 			// rc.canSenseRobotAtLocation(MapLocation loc) always returned false, spawned robot on top of robot and deleted headquarters
-			if (rc.canBuildRobot(RobotType.LAUNCHER, checkLoc) || rc.canBuildRobot(RobotType.CARRIER, checkLoc)) {
+			if (rc.canBuildRobot(unit, checkLoc)) {
 				int checkDist = checkLoc.distanceSquaredTo(loc);
 				if (checkDist < minDist) {
 					bestLoc = checkLoc;
@@ -501,14 +498,14 @@ public strictfp class RobotPlayer {
 		WellInfo [] wells = rc.senseNearbyWells();
 		if (unit == RobotType.CARRIER) {
 			if (wells.length > 0) {
-				MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation());
+				MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation(), unit);
 				if (closeWell != null) {
 					return closeWell;
 				}
 			}
 		} else if (unit == RobotType.LAUNCHER) {
             MapLocation center = new MapLocation(width/2, height/2);
-			MapLocation spawnLoc = getClosestLocation(rc, center);
+			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
 			if (spawnLoc != null) {
 				return spawnLoc;
 			}
