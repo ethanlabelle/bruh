@@ -35,7 +35,8 @@ public strictfp class RunLauncher {
         }
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
-            navigateTo(rc, center);
+			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 
+            	navigateTo(rc, center);
             return;
         }
 
