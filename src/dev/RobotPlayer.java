@@ -78,6 +78,7 @@ public strictfp class RobotPlayer {
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
 	static int[] islands; // rc.senseNearbyIslands();
 	static WellInfo[] nearbyWells; // rc.senseNearbyWells();
+	static MapLocation goalLoc;
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
@@ -289,9 +290,13 @@ public strictfp class RobotPlayer {
 
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		bug0(rc, loc);
+		if (goalLoc != loc) {
+			goalLoc = loc;
+			checkPointSquared = maxDistSquared;
+		}
+		bug2(rc, loc);
 		if (rc.getType() == RobotType.CARRIER)
-			bug0(rc, loc);
+			bug2(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
@@ -363,14 +368,20 @@ public strictfp class RobotPlayer {
 		MapLocation tile = rc.getLocation().add(directions[senseDir]);
 		if (!rc.onTheMap(tile))
 			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+		RobotInfo robot = null;
+		if (rc.canSenseRobotAtLocation(tile))
+			robot = rc.senseRobotAtLocation(tile);
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
 	}
 
 	static boolean senseFront(RobotController rc) throws GameActionException {
 		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
 		if (!rc.onTheMap(tile))
 			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+		RobotInfo robot = null;
+		if (rc.canSenseRobotAtLocation(tile))
+			robot = rc.senseRobotAtLocation(tile);
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
 	}
 
 	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
@@ -451,7 +462,8 @@ public strictfp class RobotPlayer {
 					tryMove(rc, goalDir);
 				}
 			} else {
-				rc.setIndicatorString("on obstacle");
+				//TODO this doesn't include doing a 180
+				rc.setIndicatorString("on obstacle " + rc.getLocation().add(goalDir) + " goal: " + loc + " " + rc.getLocation().distanceSquaredTo(loc) + " " + checkPointSquared);
 				// follow obstacle using right hand rule
 				boolean right = senseRight(rc);
 				if (!right) {
