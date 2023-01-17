@@ -20,7 +20,7 @@ public strictfp class RunCarrier {
 
 		// Try out the carriers attack
         if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
-            if (rc.canAttack(enemyRobots[0].location)) {
+            if (rc.canAttack(enemyRobots[0].location) && enemyRobots[0].getType() == RobotType.LAUNCHER) {
                 int before = getTotalResources(rc);
                 rc.attack(enemyRobots[0].location);
                 rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
