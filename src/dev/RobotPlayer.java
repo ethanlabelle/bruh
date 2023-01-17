@@ -294,9 +294,9 @@ public strictfp class RobotPlayer {
 			goalLoc = loc;
 			checkPointSquared = maxDistSquared;
 		}
-		bug2(rc, loc);
+		bug0(rc, loc);
 		if (rc.getType() == RobotType.CARRIER)
-			bug2(rc, loc);
+			bug0(rc, loc);
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
