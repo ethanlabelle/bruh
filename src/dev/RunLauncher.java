@@ -33,6 +33,12 @@ public strictfp class RunLauncher {
         if (at_hq || at_well) {
             return;
         }
+
+		// look for targets to defend
+		MapLocation defLoc = Communication.getClosestEnemy(rc);
+		if (defLoc != null) {
+			navigateTo(rc, defLoc);
+		}
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
 			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 

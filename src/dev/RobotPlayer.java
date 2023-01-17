@@ -247,10 +247,10 @@ public strictfp class RobotPlayer {
 			}
 			if (wellLoc == null || friends.length > MAX_FRIENDS) {
 				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+				if (rc.getID() % 3 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
 					wellLoc = loc;
 				} 
-				else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
+				else if (wellInfo.getResourceType() == ResourceType.MANA) {
 					wellLoc = loc;
 				}
 			}
@@ -362,7 +362,21 @@ public strictfp class RobotPlayer {
 				return Direction.SOUTHEAST;
 		}
     }
+	static boolean senseRight(RobotController rc) throws GameActionException {
+		int senseDir = (currentDirectionInd + 1) % directions.length;
+		MapLocation tile = rc.getLocation().add(directions[senseDir]);
+		if (!rc.onTheMap(tile))
+			return true;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
 
+	static boolean senseFront(RobotController rc) throws GameActionException {
+		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+		if (!rc.onTheMap(tile))
+			return true;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
+	/*
 	static boolean senseRight(RobotController rc) throws GameActionException {
 		int senseDir = (currentDirectionInd + 1) % directions.length;
 		MapLocation tile = rc.getLocation().add(directions[senseDir]);
@@ -383,7 +397,7 @@ public strictfp class RobotPlayer {
 			robot = rc.senseRobotAtLocation(tile);
 		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
 	}
-
+	*/
 	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
         rc.setIndicatorString("Navigating to " + loc);
