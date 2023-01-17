@@ -15,6 +15,7 @@ public strictfp class RunCarrier {
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
         updateMap(rc);
+		Communication.tryWriteMessages(rc);
         MapLocation me = rc.getLocation();
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
@@ -75,11 +76,11 @@ public strictfp class RunCarrier {
         }
 
 		if (wellLoc == null) {
-			if (rc.getID() % 3 == 0) {
-				wellLoc = Communication.readAdaWellLocation(rc);
+			if (rc.getID() % 2 == 0) {
+				wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
 			} 
 			else {
-				wellLoc = Communication.readManaWellLocation(rc);
+				wellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 			}
 		}
 

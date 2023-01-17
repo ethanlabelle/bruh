@@ -9,6 +9,7 @@ import static dev.RobotPlayer.*;
 public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 30;
+	static final int LAUNCHERS_PER_AMPLIFIER = 10;
 	static final int CARRIER_MOD = 10;
 	static final int MAX_CARRIERS = 40;
 	static final int EXCESS = 160;
@@ -28,7 +29,6 @@ public strictfp class RunHeadquarters {
 
 		if (enemies.length > 0) {
 			Communication.reportEnemy(rc, rc.getLocation());
-			System.out.println("emergency meeting! SUS!!!");
 		}
 		// write to shared array outstanding messages
 		Communication.tryWriteMessages(rc);
@@ -47,13 +47,23 @@ public strictfp class RunHeadquarters {
 		MapLocation loc;
         // Let's try to build a launcher.
 		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
-        	rc.setIndicatorString("Trying to build a launcher");
-        	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-        	if (loc != null) {
-        	    rc.buildRobot(RobotType.LAUNCHER, loc);
-				launcherCount++;
-        	    return;
-        	}
+			if (launcherCount % LAUNCHERS_PER_AMPLIFIER == 0) {
+        		rc.setIndicatorString("Trying to build amplifier");
+				loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
+				if (loc != null) {
+					rc.buildRobot(RobotType.AMPLIFIER, loc);
+					launcherCount++;
+					return;
+				}
+			} else {
+        		rc.setIndicatorString("Trying to build a launcher");
+        		loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+        		if (loc != null) {
+        		    rc.buildRobot(RobotType.LAUNCHER, loc);
+					launcherCount++;
+        		    return;
+        		}
+			}
 		}
 
         // Let's try to build a carrier.

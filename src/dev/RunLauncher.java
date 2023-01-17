@@ -11,6 +11,7 @@ public strictfp class RunLauncher {
      * Run a single turn for a Launcher.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
+	static final int HQ_DEFENSE_RADIUS = 100;
     static boolean at_hq = false;
     static boolean at_well = false;
     static boolean move_randomly = false;
@@ -21,6 +22,7 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
+		Communication.tryWriteMessages(rc);
 
 		MapLocation[] clouds = rc.senseNearbyCloudLocations();
 		// can we see any clouds in vision radius
@@ -41,9 +43,9 @@ public strictfp class RunLauncher {
 		}
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
-			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 
-            	navigateTo(rc, center);
-            return;
+			navigateTo(rc, center);
+			//defendHeadquarters(rc);
+			return;
         }
 
 
@@ -77,16 +79,35 @@ public strictfp class RunLauncher {
         
     }
 
+
+	// move randomly near the headquarters
+	static void defendHeadquarters(RobotController rc) throws GameActionException {
+		if (rc.getLocation().distanceSquaredTo(HQLOC) < HQ_DEFENSE_RADIUS) {
+        	Direction dir = directions[currentDirectionInd];
+       		if (rc.canMove(dir)) {
+       		    rc.move(dir);
+       		} else if (rc.getMovementCooldownTurns() == 0) {
+       		    currentDirectionInd = rng.nextInt(directions.length);
+       		}
+		} else {
+			Direction dir = rc.getLocation().directionTo(HQLOC);	
+       		if (rc.canMove(dir)) {
+       		    rc.move(dir);
+       		}
+			currentDirectionInd = directionToIndex(dir);
+		}
+	}
+
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
             int id = fake_id;
             if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
             else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), spawnHQLOC.y);
+                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
             else
-                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);

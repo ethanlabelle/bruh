@@ -23,12 +23,13 @@ class Communication {
     private static final int OUTDATED_TURNS_AMOUNT = 30;
     private static final int AREA_RADIUS = RobotType.CARRIER.visionRadiusSquared;
 	private static final int ARRAY_SIZE = 64;
+	private static final int N_SAVED_WELLS = 4;
 
     // Maybe you want to change this based on exact amounts which you can get on turn 1
     static final int STARTING_ISLAND_IDX = GameConstants.MAX_STARTING_HEADQUARTERS;
     private static final int MANA_WELL_IDX = GameConstants.MAX_NUMBER_ISLANDS + GameConstants.MAX_STARTING_HEADQUARTERS;
-    private static final int ADA_WELL_IDX = MANA_WELL_IDX + 1; 
-    private static final int STARTING_ENEMY_IDX = ADA_WELL_IDX + 1; 
+    private static final int ADA_WELL_IDX = MANA_WELL_IDX + N_SAVED_WELLS; 
+    private static final int STARTING_ENEMY_IDX = ADA_WELL_IDX + N_SAVED_WELLS; 
 
     private static final int TOTAL_BITS = 16;
     private static final int MAPLOC_BITS = 12;
@@ -139,32 +140,51 @@ class Communication {
         return null;
     }
 
-	static MapLocation readManaWellLocation(RobotController rc) throws GameActionException {
-		int wellMessage = rc.readSharedArray(MANA_WELL_IDX);	
-		if (wellMessage != 0) {
-			return intToLocation(rc, wellMessage);
+    static MapLocation getClosestWell(RobotController rc, ResourceType resource) {
+		int start = MANA_WELL_IDX;
+		if (resource == ResourceType.ADAMANTIUM) {
+			start = ADA_WELL_IDX;	
 		}
-		return null;
-	}
-
-	static MapLocation readAdaWellLocation(RobotController rc) throws GameActionException {
-		int wellMessage = rc.readSharedArray(ADA_WELL_IDX);	
-		if (wellMessage != 0) {
-			return intToLocation(rc, wellMessage);
-		}
-		return null;
-	}
-
-    static void updateManaWellLocation(RobotController rc, MapLocation wellLoc) throws GameActionException {
-		int wellLocInt = locationToInt(rc, wellLoc);
-        Message msg = new Message(MANA_WELL_IDX, wellLocInt, RobotPlayer.turnCount);
-        messagesQueue.add(msg);
+        MapLocation answer = null;
+        for (int i = start; i < start + N_SAVED_WELLS; i++) {
+            final int value;
+            try {
+                value = rc.readSharedArray(i);
+                final MapLocation m = intToLocation(rc, value);
+                if (m != null && (answer == null || rc.getLocation().distanceSquaredTo(m) < rc.getLocation().distanceSquaredTo(answer))) {
+                    answer = m;
+                }
+            } catch (GameActionException e) {
+                continue;
+            }
+        }
+        return answer;
     }
 
-    static void updateAdaWellLocation(RobotController rc, MapLocation wellLoc) throws GameActionException {
-		int wellLocInt = locationToInt(rc, wellLoc);
-        Message msg = new Message(ADA_WELL_IDX, wellLocInt, RobotPlayer.turnCount);
-        messagesQueue.add(msg);
+    static void addWell(RobotController rc, MapLocation well, ResourceType resource) {
+		int start = MANA_WELL_IDX;
+		if (resource == ResourceType.ADAMANTIUM) {
+			start = ADA_WELL_IDX;	
+		}
+        int slot = -1;
+        for (int i = start; i < start + N_SAVED_WELLS; i++) {
+            try {
+                MapLocation prevWell = intToLocation(rc, rc.readSharedArray(i));
+				if (prevWell == well) {
+					return;
+				}
+                if (prevWell == null) {
+                    slot = i;
+                    break;
+                }
+            } catch (GameActionException e) {
+                continue;
+            }
+        }
+        if (slot != -1) {
+            Message msg = new Message(slot, locationToInt(rc, well), RobotPlayer.turnCount);
+            messagesQueue.add(msg);
+        }
     }
 
     static int readMaxIslandHealth(RobotController rc, int islandId) {

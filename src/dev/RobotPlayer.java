@@ -39,7 +39,7 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
-	static final int MAX_FRIENDS = 5;
+	static final int MAX_FRIENDS = 15;
 
 	// constants for local map
 	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits
@@ -72,7 +72,6 @@ public strictfp class RobotPlayer {
 	// map state
 	static MapLocation HQLOC;
 	static MapLocation EnemyHQLOC;
-	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
 	static MapInfo[] mapInfos; // rc.senseNearbyMapInfos();
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
@@ -200,6 +199,7 @@ public strictfp class RobotPlayer {
 		islands = rc.senseNearbyIslands(); // 200 bytecode
 		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
 		Communication.tryWriteMessages(rc);
+		MapLocation me = rc.getLocation();
 
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
@@ -222,9 +222,8 @@ public strictfp class RobotPlayer {
 				}
 			}
 			if (myTeam == team) {
-				HQLOC = loc;
 				if (turnCount == 0)
-					spawnHQLOC = loc;
+					HQLOC = loc;
 			}
 			else if(EnemyHQLOC == null){
 				EnemyHQLOC = loc;
@@ -245,27 +244,28 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			if (wellLoc == null || friends.length > MAX_FRIENDS) {
-				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 3 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
-					wellLoc = loc;
-				} 
-				else if (wellInfo.getResourceType() == ResourceType.MANA) {
-					wellLoc = loc;
-				}
-			}
+			//if (wellLoc == null || friends.length > MAX_FRIENDS) {
+			//	// Odd ID get ADA, even get MANA
+			//	if (rc.getID() % 2 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
+			//		wellLoc = loc;
+			//	} 
+			//	else if (rc.getID() % 2 == 1 && wellInfo.getResourceType() == ResourceType.MANA) {
+			//		wellLoc = loc;
+			//	}
+			//}
 			MapLocation arrayLoc;
 			switch (wellInfo.getResourceType()) {
 				case MANA:
-					arrayLoc = Communication.readManaWellLocation(rc);
-					if (arrayLoc == null) {
-						Communication.updateManaWellLocation(rc, loc);
+					arrayLoc = Communication.getClosestWell(rc, ResourceType.MANA);
+					if (arrayLoc == null || me.distanceSquaredTo(arrayLoc) < me.distanceSquaredTo(loc)) {
+						System.out.println("FOUND MANA WELL " + loc);
+						Communication.addWell(rc, loc, ResourceType.MANA);
 					}
 					break;
 				case ADAMANTIUM:
-					arrayLoc = Communication.readAdaWellLocation(rc);
-					if (arrayLoc == null) {
-						Communication.updateAdaWellLocation(rc, loc);
+					arrayLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
+					if (arrayLoc == null || me.distanceSquaredTo(arrayLoc) < me.distanceSquaredTo(loc)) {
+						Communication.addWell(rc, loc, ResourceType.ADAMANTIUM);
 					}
 					break;
 				default:
@@ -524,7 +524,7 @@ public strictfp class RobotPlayer {
 					return closeWell;
 				}
 			}
-		} else if (unit == RobotType.LAUNCHER) {
+		} else if (unit == RobotType.LAUNCHER || unit == RobotType.AMPLIFIER) {
             MapLocation center = new MapLocation(width/2, height/2);
 			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
 			if (spawnLoc != null) {
@@ -560,6 +560,16 @@ public strictfp class RobotPlayer {
                 rc.buildRobot(RobotType.CARRIER, loc);
 				i++;
             }
+			Clock.yield();
+		}
+		while (true) {
+			rc.setIndicatorString("Trying to build an amplifier");
+			MapLocation loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
+			if (loc != null) {
+				rc.buildRobot(RobotType.AMPLIFIER, loc);
+				i++;
+				break;
+			}
 			Clock.yield();
 		}	
 	}

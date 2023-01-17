@@ -10,6 +10,8 @@ public strictfp class RunAmplifier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runAmplifier(RobotController rc) throws GameActionException {
+		updateMap(rc);
+		Communication.tryWriteMessages(rc);
         // Move randomly
         Direction dir = directions[currentDirectionInd];
         if (rc.canMove(dir)) {
