@@ -82,11 +82,11 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             int id = fake_id;
             if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
             else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), spawnHQLOC.y);
+                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
             else
-                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);

@@ -72,7 +72,6 @@ public strictfp class RobotPlayer {
 	// map state
 	static MapLocation HQLOC;
 	static MapLocation EnemyHQLOC;
-	static MapLocation spawnHQLOC;
 	static MapLocation wellLoc;
 	static MapInfo[] mapInfos; // rc.senseNearbyMapInfos();
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
@@ -113,7 +112,6 @@ public strictfp class RobotPlayer {
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
-		updateMap(rc);
 		if (rc.getType() != RobotType.LAUNCHER) {
 			currentDirectionInd = rng.nextInt(directions.length);
 		}
@@ -140,8 +138,17 @@ public strictfp class RobotPlayer {
 		onObstacle = false;
 		
 		if (rc.getType() == RobotType.HEADQUARTERS) {
+			Communication.addHeadquarter(rc);
+			Communication.tryWriteMessages(rc);
+			HQLOC = rc.getLocation();
+			updateMap(rc);
 			setup(rc);
+			Communication.updateHeadquarterInfo(rc);
+		} else {
+			Communication.updateHeadquarterInfo(rc);
+			updateMap(rc);
 		}
+
 
 
         while (true) {
@@ -199,7 +206,6 @@ public strictfp class RobotPlayer {
 		robotInfos = rc.senseNearbyRobots();
 		islands = rc.senseNearbyIslands(); // 200 bytecode
 		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
-		Communication.tryWriteMessages(rc);
 
 		for (MapInfo mapInf : mapInfos) {
 			MapLocation loc = mapInf.getMapLocation();
@@ -221,12 +227,10 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_BHQ;	
 				}
 			}
-			if (myTeam == team) {
+			if (myTeam == team && turnCount == 0) {
 				HQLOC = loc;
-				if (turnCount == 0)
-					spawnHQLOC = loc;
 			}
-			else if(EnemyHQLOC == null){
+			if (myTeam != team && EnemyHQLOC == null){
 				EnemyHQLOC = loc;
 			}
 		}
@@ -245,27 +249,22 @@ public strictfp class RobotPlayer {
 					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-			if (wellLoc == null || friends.length > MAX_FRIENDS) {
-				// Odd ID get ADA, even get MANA
-				if (rc.getID() % 3 == 0 && wellInfo.getResourceType() == ResourceType.ADAMANTIUM) {
-					wellLoc = loc;
-				} 
-				else if (wellInfo.getResourceType() == ResourceType.MANA) {
-					wellLoc = loc;
-				}
-			}
 			MapLocation arrayLoc;
 			switch (wellInfo.getResourceType()) {
 				case MANA:
-					arrayLoc = Communication.readManaWellLocation(rc);
-					if (arrayLoc == null) {
-						Communication.updateManaWellLocation(rc, loc);
+					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
+						Communication.updateManaWellLocation(rc, loc, HQLOC);
+						if (rc.getID() % 3 != 0)
+							wellLoc = loc;
 					}
 					break;
 				case ADAMANTIUM:
-					arrayLoc = Communication.readAdaWellLocation(rc);
-					if (arrayLoc == null) {
-						Communication.updateAdaWellLocation(rc, loc);
+					arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
+						Communication.updateAdaWellLocation(rc, loc, HQLOC);
+						if (rc.getID() % 3 == 0)
+							wellLoc = loc;
 					}
 					break;
 				default:
@@ -286,6 +285,7 @@ public strictfp class RobotPlayer {
 				}
 			}
 		}
+		Communication.tryWriteMessages(rc);
 	}
 
 	// Navigation
@@ -376,28 +376,27 @@ public strictfp class RobotPlayer {
 			return true;
 		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
 	}
-	/*
-	static boolean senseRight(RobotController rc) throws GameActionException {
-		int senseDir = (currentDirectionInd + 1) % directions.length;
-		MapLocation tile = rc.getLocation().add(directions[senseDir]);
-		if (!rc.onTheMap(tile))
-			return true;
-		RobotInfo robot = null;
-		if (rc.canSenseRobotAtLocation(tile))
-			robot = rc.senseRobotAtLocation(tile);
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
-	}
 
-	static boolean senseFront(RobotController rc) throws GameActionException {
-		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
-		if (!rc.onTheMap(tile))
-			return true;
-		RobotInfo robot = null;
-		if (rc.canSenseRobotAtLocation(tile))
-			robot = rc.senseRobotAtLocation(tile);
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
-	}
-	*/
+	//static boolean senseRight(RobotController rc) throws GameActionException {
+	//	int senseDir = (currentDirectionInd + 1) % directions.length;
+	//	MapLocation tile = rc.getLocation().add(directions[senseDir]);
+	//	if (!rc.onTheMap(tile))
+	//		return true;
+	//	RobotInfo robot = null;
+	//	if (rc.canSenseRobotAtLocation(tile))
+	//		robot = rc.senseRobotAtLocation(tile);
+	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
+	//}
+
+	//static boolean senseFront(RobotController rc) throws GameActionException {
+	//	MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+	//	if (!rc.onTheMap(tile))
+	//		return true;
+	//	RobotInfo robot = null;
+	//	if (rc.canSenseRobotAtLocation(tile))
+	//		robot = rc.senseRobotAtLocation(tile);
+	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
+	//}
 	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
         rc.setIndicatorString("Navigating to " + loc);

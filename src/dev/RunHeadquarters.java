@@ -28,7 +28,6 @@ public strictfp class RunHeadquarters {
 
 		if (enemies.length > 0) {
 			Communication.reportEnemy(rc, rc.getLocation());
-			System.out.println("emergency meeting! SUS!!!");
 		}
 		// write to shared array outstanding messages
 		Communication.tryWriteMessages(rc);
@@ -46,7 +45,7 @@ public strictfp class RunHeadquarters {
 
 		MapLocation loc;
         // Let's try to build a launcher.
-		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
+		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS || rc.getRoundNum() <= 250) {
         	rc.setIndicatorString("Trying to build a launcher");
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
         	if (loc != null) {
@@ -57,7 +56,7 @@ public strictfp class RunHeadquarters {
 		}
 
         // Let's try to build a carrier.
-		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS)) {
+		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS) || rc.getRoundNum() <= 250) {
         	rc.setIndicatorString("Trying to build a carrier");
         	loc = getSpawnLocation(rc, RobotType.CARRIER);
         	if (loc != null) {

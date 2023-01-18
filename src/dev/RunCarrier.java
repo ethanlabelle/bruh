@@ -73,13 +73,13 @@ public strictfp class RunCarrier {
 			}
             return;
         }
-
+		
 		if (wellLoc == null) {
-			if (rc.getID() % 3 == 0) {
-				wellLoc = Communication.readAdaWellLocation(rc);
+			if (rc.getID() % 2 == 0) {
+				wellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 			} 
 			else {
-				wellLoc = Communication.readManaWellLocation(rc);
+				wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
 			}
 		}
 
