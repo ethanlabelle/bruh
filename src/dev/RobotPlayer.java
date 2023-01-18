@@ -294,9 +294,10 @@ public strictfp class RobotPlayer {
 			goalLoc = loc;
 			checkPointSquared = maxDistSquared;
 		}
-		bug0(rc, loc);
-		if (rc.getType() == RobotType.CARRIER)
-			bug0(rc, loc);
+		bug2(rc, loc);
+		if (rc.getType() == RobotType.CARRIER) {
+			bug2(rc, loc);
+		}
 	}
 	
 	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
@@ -367,14 +368,22 @@ public strictfp class RobotPlayer {
 		MapLocation tile = rc.getLocation().add(directions[senseDir]);
 		if (!rc.onTheMap(tile))
 			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+	}
+
+	static boolean senseLeft(RobotController rc) throws GameActionException {
+		int senseDir = (currentDirectionInd + 7) % directions.length;
+		MapLocation tile = rc.getLocation().add(directions[senseDir]);
+		if (!rc.onTheMap(tile))
+			return true;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
 	}
 
 	static boolean senseFront(RobotController rc) throws GameActionException {
 		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
 		if (!rc.onTheMap(tile))
 			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
 	}
 
 	//static boolean senseRight(RobotController rc) throws GameActionException {
@@ -454,29 +463,56 @@ public strictfp class RobotPlayer {
 			}
 		}
 	}
+	static boolean isTouching (RobotController rc) throws GameActionException {
+		MapLocation me = rc.getLocation();
+		try {
+			// may consider adding robots to this checking rather than jsut storms
+			return board[me.x][me.y + 1]  == M_STORM || board[me.x][me.y - 1]  == M_STORM || board[me.x + 1][me.y]  == M_STORM || board[me.x - 1][me.y]  == M_STORM || board[me.x + 1][me.y + 1]  == M_STORM || board[me.x + 1][me.y - 1]  == M_STORM || board[me.x - 1][me.y - 1] == M_STORM || board[me.x - 1][me.y + 1] == M_STORM;
+		} catch (Exception e) {
+			// if this is true then they will potentially orbit around edge of map to get to destination
+			// TODO: implement bug2 but instead of right hand left hand, this will also prevent launchers from favoring one side and leaving an opening
+			return false;
+		}
+	}
+	static MapLocation lastLoc = null;
 	static void bug2(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
-		rc.setIndicatorString("Navigating to " + loc);
+		// incase goal loc is changed
+		if (lastLoc != loc) {
+			lastLoc = loc;
+			checkPointSquared = maxDistSquared;
+		}
 		Direction goalDir = rc.getLocation().directionTo(loc);
 		if (rc.getLocation().distanceSquaredTo(loc) < checkPointSquared  && tryMove(rc, goalDir)) {
 			onObstacle = false;
 			checkPointSquared = maxDistSquared;
 			currentDirectionInd = directionToIndex(goalDir);
+			rc.setIndicatorString("here1");
 		} else {
 			if (!onObstacle) {
 				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (board[pathTile.x][pathTile.y] == M_STORM) { // indicates obstacle
+				if (board[pathTile.x][pathTile.y] == M_STORM || rc.canSenseRobotAtLocation(pathTile)) { // indicates obstacle
 					// TODO: the new defense strat makes navigation need to consider stopped robots to be storms
 					onObstacle = true;
 					checkPointSquared = rc.getLocation().distanceSquaredTo(loc);
+					rc.setIndicatorString("my checkPoint is" + checkPointSquared);
 					currentDirectionInd = directionToIndex(goalDir);
 					turnLeft();
 					goalDir = directions[currentDirectionInd];
 					tryMove(rc, goalDir);
+				} else {
+					tryMove(rc, goalDir);
+					onObstacle = false;
+					checkPointSquared = maxDistSquared;
+					rc.setIndicatorString("here2");
 				}
 			} else {
-				//TODO this doesn't include doing a 180
-				rc.setIndicatorString("on obstacle " + rc.getLocation().add(goalDir) + " goal: " + loc + " " + rc.getLocation().distanceSquaredTo(loc) + " " + checkPointSquared);
+				if (!isTouching(rc)) {
+					onObstacle = false;
+					checkPointSquared = maxDistSquared;
+					rc.setIndicatorString("here3");
+				}
+				rc.setIndicatorString("currDist: " + rc.getLocation().distanceSquaredTo(loc) + " lastDist: " + checkPointSquared);
 				// follow obstacle using right hand rule
 				boolean right = senseRight(rc);
 				if (!right) {
@@ -490,11 +526,9 @@ public strictfp class RobotPlayer {
 				} else {
 					turnLeft();
 				}
-
 			}
 		}
 	}
-
 	static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
 		// this is the possible locations it can be the closest to
 		MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
