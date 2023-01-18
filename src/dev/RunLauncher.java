@@ -207,7 +207,7 @@ public strictfp class RunLauncher {
     static void checkForFriends(RobotController rc, MapLocation hq_loc) throws GameActionException {
         if(rc.canSenseLocation(hq_loc)){
             RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
-            if(friends.length >= 7){
+            if(friends.length >= 8){
                 EnemyHQLOC = undefined_loc;
             }
         }
