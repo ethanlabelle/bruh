@@ -255,7 +255,7 @@ public strictfp class RobotPlayer {
 					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
 					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
 						Communication.updateManaWellLocation(rc, loc, HQLOC);
-						if (rc.getID() % 3 != 0)
+						if (rc.getID() % 2 != 0)
 							wellLoc = loc;
 					}
 					break;
@@ -263,7 +263,7 @@ public strictfp class RobotPlayer {
 					arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
 					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
 						Communication.updateAdaWellLocation(rc, loc, HQLOC);
-						if (rc.getID() % 3 == 0)
+						if (rc.getID() % 2 == 0)
 							wellLoc = loc;
 					}
 					break;
@@ -294,9 +294,9 @@ public strictfp class RobotPlayer {
 			goalLoc = loc;
 			checkPointSquared = maxDistSquared;
 		}
-		bug2(rc, loc);
+		bug0(rc, loc);
 		if (rc.getType() == RobotType.CARRIER) {
-			bug2(rc, loc);
+			bug0(rc, loc);
 		}
 	}
 	
