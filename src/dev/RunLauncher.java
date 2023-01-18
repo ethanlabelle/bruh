@@ -22,13 +22,7 @@ public strictfp class RunLauncher {
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
 
-		MapLocation[] clouds = rc.senseNearbyCloudLocations();
-		// can we see any clouds in vision radius
-		if (clouds.length > 0) {
-			exploit(rc);
-		}
-		else
-        	attackEnemies(rc);
+        attackEnemies(rc);
         
         if (at_hq || at_well) {
             return;
@@ -66,14 +60,7 @@ public strictfp class RunLauncher {
             travelToPossibleHQ(rc);
         }
 		
-		// if did not attack before, can maybe attack now
-		clouds = rc.senseNearbyCloudLocations();
-		// can we see any clouds in vision radius
-		if (clouds.length > 0) {
-			exploit(rc);
-		}
-		else
-        	attackEnemies(rc);
+        attackEnemies(rc);
         
     }
 
@@ -136,20 +123,6 @@ public strictfp class RunLauncher {
                 }
             }
         }
-    }
-
-    static void exploit(RobotController rc) throws GameActionException {
-		// test if we can shoot anything
-		MapLocation me = rc.getLocation();
-		int radius = 4;
-		for (int i = -radius; i < radius; i++) {
-			for (int j = -radius; j < radius; j++) {
-				MapLocation tile = me.translate(i, j);
-				if (rc.canAttack(tile)) {
-					rc.attack(tile);
-				}
-			}
-		}
     }
 
     static void protectWell(RobotController rc) throws GameActionException {
