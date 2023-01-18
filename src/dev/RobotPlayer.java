@@ -201,6 +201,7 @@ public strictfp class RobotPlayer {
 	// TODO: Clouds, currents 
 	// TODO: HIDDEN tiles on init
 	static void updateMap(RobotController rc) throws GameActionException {
+        int before = Clock.getBytecodeNum();
 		mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
 		robotInfos = rc.senseNearbyRobots();
 		islands = rc.senseNearbyIslands(); // 200 bytecode
@@ -285,6 +286,8 @@ public strictfp class RobotPlayer {
 			}
 		}
 		Communication.tryWriteMessages(rc);
+        int after = Clock.getBytecodeNum();
+        System.out.println("call to update map " + (after - before));
 	}
 
 	
@@ -300,22 +303,21 @@ public strictfp class RobotPlayer {
         if (rc.canMove(dir)) {
             rc.move(dir);
 			return true;
-        } 
-		// else {
-		// 	int dirInd = directionToIndex(dir);
-		// 	int right = (dirInd + 1) % 8;
-		// 	int left = dirInd - 1;
-		// 	if (left < 0)
-		// 		left += 8;
-		// 	if (rc.canMove(directions[right])) {
-		// 		rc.move(directions[right]);
-		// 		return true;
-		// 	}
-		// 	if (rc.canMove(directions[left])) {
-		// 		rc.move(directions[left]);
-		// 		return true;
-		// 	}
-		// }
+        } else {
+			int dirInd = directionToIndex(dir);
+			int right = (dirInd + 1) % 8;
+			int left = dirInd - 1;
+			if (left < 0)
+				left += 8;
+			if (rc.canMove(directions[right])) {
+				rc.move(directions[right]);
+				return true;
+			}
+			if (rc.canMove(directions[left])) {
+				rc.move(directions[left]);
+				return true;
+			}
+		}
 		return false;	
 	}
 
@@ -360,28 +362,28 @@ public strictfp class RobotPlayer {
 				return Direction.SOUTHEAST;
 		}
     }
-	static boolean senseRight(RobotController rc) throws GameActionException {
-		int senseDir = (currentDirectionInd + 1) % directions.length;
-		MapLocation tile = rc.getLocation().add(directions[senseDir]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
-	}
+	//static boolean senseRight(RobotController rc) throws GameActionException {
+	//	int senseDir = (currentDirectionInd + 1) % directions.length;
+	//	MapLocation tile = rc.getLocation().add(directions[senseDir]);
+	//	if (!rc.onTheMap(tile))
+	//		return true;
+	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+	//}
 
-	static boolean senseLeft(RobotController rc) throws GameActionException {
-		int senseDir = (currentDirectionInd + 7) % directions.length;
-		MapLocation tile = rc.getLocation().add(directions[senseDir]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
-	}
+	//static boolean senseLeft(RobotController rc) throws GameActionException {
+	//	int senseDir = (currentDirectionInd + 7) % directions.length;
+	//	MapLocation tile = rc.getLocation().add(directions[senseDir]);
+	//	if (!rc.onTheMap(tile))
+	//		return true;
+	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+	//}
 
-	static boolean senseFront(RobotController rc) throws GameActionException {
-		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
-	}
+	//static boolean senseFront(RobotController rc) throws GameActionException {
+	//	MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+	//	if (!rc.onTheMap(tile))
+	//		return true;
+	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+	//}
 
 	//static boolean senseRight(RobotController rc) throws GameActionException {
 	//	int senseDir = (currentDirectionInd + 1) % directions.length;
@@ -389,8 +391,11 @@ public strictfp class RobotPlayer {
 	//	if (!rc.onTheMap(tile))
 	//		return true;
 	//	RobotInfo robot = null;
-	//	if (rc.canSenseRobotAtLocation(tile))
+	//	if (rc.canSenseRobotAtLocation(tile)) {
 	//		robot = rc.senseRobotAtLocation(tile);
+    //        if (robot != null)
+    //            System.out.println("robot at " + tile);
+    //    }
 	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
 	//}
 
@@ -401,8 +406,26 @@ public strictfp class RobotPlayer {
 	//	RobotInfo robot = null;
 	//	if (rc.canSenseRobotAtLocation(tile))
 	//		robot = rc.senseRobotAtLocation(tile);
+    //        if (robot != null)
+    //            System.out.println("robot at " + tile);
 	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
 	//}
+
+	static boolean senseRight(RobotController rc) throws GameActionException {
+		int senseDir = (currentDirectionInd + 1) % directions.length;
+		MapLocation tile = rc.getLocation().add(directions[senseDir]);
+		if (!rc.onTheMap(tile))
+			return true;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
+
+	static boolean senseFront(RobotController rc) throws GameActionException {
+		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
+		if (!rc.onTheMap(tile))
+			return true;
+		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ;
+	}
+
 	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
         rc.setIndicatorString("Navigating to " + loc);
@@ -516,21 +539,27 @@ public strictfp class RobotPlayer {
 		}
 		Direction goalDir = rc.getLocation().directionTo(goalLoc);
 		// head towards goal
-		if (!wallMode && !tryMove(rc, goalDir)) {
+		if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
 			// if we're in this block, we couldn't move in the direction of the goal
 			wallMode = true;
+            turnLeft();
 			hitPoint = rc.getLocation();
 		}
 		
 
 		if (wallMode) {
 			rc.setIndicatorString("s " + startPoint + " g "  + goalLoc + " cd " + directions[currentDirectionInd]  + " h " + hitPoint);
+            rc.setIndicatorLine(startPoint, goalLoc, 255, 0, 0);
 
 			// check if we are on the line
 
-			if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) < hitPoint.distanceSquaredTo(goalLoc)) {
+            if (onMLine(rc.getLocation())) {
+			    rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
+            }
+			if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) <= hitPoint.distanceSquaredTo(goalLoc)) {
 				// if we are on the line, we are done wall following
 				wallMode = false;
+                rc.setIndicatorString("left wall");
 				return;
 			}
 
@@ -538,13 +567,19 @@ public strictfp class RobotPlayer {
 			boolean right = senseRight(rc);
 			boolean front = senseFront(rc);
 			if (!right) {
+                rc.setIndicatorString("turning right");
 				turnRight();
 				goalDir = directions[currentDirectionInd];
-				tryMove(rc, goalDir);
+				//tryMove(rc, goalDir);
+                if (rc.canMove(goalDir))
+                    rc.move(goalDir);
 			} else if (!front) {
 				goalDir = directions[currentDirectionInd];
-				tryMove(rc, goalDir);
+				//tryMove(rc, goalDir);
+                if (rc.canMove(goalDir))
+                    rc.move(goalDir);
 			} else {
+                rc.setIndicatorString("turning left");
 				turnLeft();
 			}
 		}
@@ -552,7 +587,7 @@ public strictfp class RobotPlayer {
 	}
 
 	static boolean onMLine(MapLocation loc) {
-		float epsilon = 1.5f;
+		float epsilon = 2f;
 		return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
 	}
 
@@ -657,15 +692,15 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 3) {
-            rc.setIndicatorString("Trying to build a launcher");
-			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-            if (loc != null) {
-                rc.buildRobot(RobotType.LAUNCHER, loc);
-				i++;
-            }
-			Clock.yield();
-		}	
+		//while (i < 3) {
+        //    rc.setIndicatorString("Trying to build a launcher");
+		//	MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+        //    if (loc != null) {
+        //        rc.buildRobot(RobotType.LAUNCHER, loc);
+		//		i++;
+        //    }
+		//	Clock.yield();
+		//}	
 		i = 0;
 		while (i < 4) {
             rc.setIndicatorString("Trying to build a carrier");
