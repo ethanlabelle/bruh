@@ -101,6 +101,7 @@ public strictfp class RunCarrier {
 
 		// try to deposite resources
         if (getTotalResources(rc) == 40) {
+            navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
             if (rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM))) {
                 rc.transferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM));
@@ -114,7 +115,6 @@ public strictfp class RunCarrier {
             if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD)) {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
-		    navigateTo(rc, HQLOC);
         } else {
 			// find resources
             if (wellLoc != null) {
