@@ -159,13 +159,13 @@ public strictfp class RunLauncher {
     }
 
     static void moveLastResort(RobotController rc) throws GameActionException {
-        Direction last_dir = directions[currentDirectionInd];
+        Direction last_dir = currentDirection;
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                currentDirectionInd = (currentDirectionInd + 3) % directions.length;
-                last_dir = directions[currentDirectionInd];
+                currentDirection = currentDirection.rotateRight().rotateRight().rotateRight();
+                last_dir = currentDirection;
                 if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;

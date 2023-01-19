@@ -62,7 +62,7 @@ public strictfp class RobotPlayer {
 	static short[][] board = new short[60][60];
 
 	// pathfinding state
-	static int currentDirectionInd;
+	static Direction currentDirection;
 	static boolean onObstacle;
 	static int maxDistSquared = 7200;
 	static int checkPointSquared = maxDistSquared;
@@ -77,12 +77,11 @@ public strictfp class RobotPlayer {
 	static RobotInfo[] robotInfos; // rc.senseNearbyRobots();
 	static int[] islands; // rc.senseNearbyIslands();
 	static WellInfo[] nearbyWells; // rc.senseNearbyWells();
-	static MapLocation goalLoc;
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
 	static Team myTeam;
-
+	
 	static void printBoard() {
 		String out = "";
 		for (int i = 0; i < board.length; i++) {
@@ -92,30 +91,41 @@ public strictfp class RobotPlayer {
 			out = out + "\n";
 		}
 		System.out.println(out);
-	
+		
 	}
-
+	
     /**
-     * run() is the method that is called when a robot is instantiated in the Battlecode world.
-     * It is like the main function for your robot. If this method returns, the robot dies!
+	 * run() is the method that is called when a robot is instantiated in the Battlecode world.
+	 * It is like the main function for your robot. If this method returns, the robot dies!
      *
-     * @param rc  The RobotController object. You use it to perform actions from this robot, and to get
+	 * @param rc  The RobotController object. You use it to perform actions from this robot, and to get
      *            information on its current status. Essentially your portal to interacting with the world.
      **/
-    @SuppressWarnings("unused")
+	@SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 		
 		// TODO: clean up initialization
-
+		
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		if (rc.getType() != RobotType.LAUNCHER) {
-			currentDirectionInd = rng.nextInt(directions.length);
+			currentDirection = directions[rng.nextInt(directions.length)];
 		}
 		else {
+            //static final Direction[] directions = {
+            //    Direction.NORTH,
+            //    Direction.NORTHEAST,
+            //    Direction.EAST,
+            //    Direction.SOUTHEAST,
+            //    Direction.SOUTH,
+            //    Direction.SOUTHWEST,
+            //    Direction.WEST,
+            //    Direction.NORTHWEST,
+            //};
+            
 			// make launcher go the opposite direction of the quadrant they were spawned in
 			MapLocation loc = rc.getLocation();
 			int x = loc.x;
@@ -123,16 +133,16 @@ public strictfp class RobotPlayer {
 			int map_width = rc.getMapWidth();
 			int map_height = rc.getMapHeight();
 			if (x < map_width / 2 && y < map_height / 2) {
-				currentDirectionInd = 1;
+				currentDirection = Direction.NORTHEAST;
 			}
 			else if (x < map_width / 2 && y >= map_height / 2) {
-				currentDirectionInd = 3;
+				currentDirection = Direction.SOUTHEAST;
 			}
 			else if (x >= map_width / 2 && y < map_height / 2) {
-				currentDirectionInd = 7;
+				currentDirection = Direction.NORTHWEST;
 			}
 			else {
-				currentDirectionInd = 5;
+				currentDirection = Direction.SOUTHWEST;
 			}
 		}
 		onObstacle = false;
@@ -150,17 +160,17 @@ public strictfp class RobotPlayer {
 		}
 
 
-
+		
         while (true) {
-            // This code runs during the entire lifespan of the robot, which is why it is in an infinite
+			// This code runs during the entire lifespan of the robot, which is why it is in an infinite
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
-
+			
             turnCount += 1;  // We have now been alive for one more turn!
-
+			
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
-                // The same run() function is called for every robot on your team, even if they are
+				// The same run() function is called for every robot on your team, even if they are
                 // different types. Here, we separate the control depending on the RobotType, so we can
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
@@ -174,12 +184,12 @@ public strictfp class RobotPlayer {
                 }
 
             } catch (GameActionException e) {
-                // Oh no! It looks like we did something illegal in the Battlecode world. You should
+				// Oh no! It looks like we did something illegal in the Battlecode world. You should
                 // handle GameActionExceptions judiciously, in case unexpected events occur in the game
                 // world. Remember, uncaught exceptions cause your robot to explode!
                 System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
-
+				
             } catch (Exception e) {
                 // Oh no! It looks like our code tried to do something bad. This isn't a
                 // GameActionException, so it's more likely to be a bug in our code.
@@ -285,37 +295,41 @@ public strictfp class RobotPlayer {
 				}
 			}
 		}
-		Communication.tryWriteMessages(rc);
+        Communication.tryWriteMessages(rc);
 	}
 
+	
 	// Navigation
 	static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-		if (goalLoc != loc) {
-			goalLoc = loc;
-			checkPointSquared = maxDistSquared;
-		}
-		bug0(rc, loc);
+		bug2(rc, loc);
 		if (rc.getType() == RobotType.CARRIER) {
-			bug0(rc, loc);
+			bug2(rc, loc);
 		}
 	}
+
+    static boolean hasObstacle(RobotController rc, MapLocation loc) throws GameActionException {
+        if (!rc.onTheMap(loc))
+            return true;
+        int tile = board[loc.x][loc.y];
+        if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
+            return true;
+        return false;
+    }    
 	
-	static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
-        if (rc.canMove(dir)) {
+    static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
+        MapLocation me = rc.getLocation();
+        if (!hasObstacle(rc, me.add(dir)) && rc.canMove(dir)) {
             rc.move(dir);
 			return true;
         } else {
-			int dirInd = directionToIndex(dir);
-			int right = (dirInd + 1) % 8;
-			int left = dirInd - 1;
-			if (left < 0)
-				left += 8;
-			if (rc.canMove(directions[right])) {
-				rc.move(directions[right]);
+            Direction right = dir.rotateRight();
+			if (!hasObstacle(rc, me.add(dir)) && rc.canMove(right)) {
+				rc.move(right);
 				return true;
 			}
-			if (rc.canMove(directions[left])) {
-				rc.move(directions[left]);
+            Direction left = dir.rotateLeft();
+			if (!hasObstacle(rc, me.add(dir)) && rc.canMove(left)) {
+				rc.move(left);
 				return true;
 			}
 		}
@@ -323,14 +337,11 @@ public strictfp class RobotPlayer {
 	}
 
 	static void turnRight() throws GameActionException {
-		currentDirectionInd++;
-		currentDirectionInd %= directions.length;
+		currentDirection = currentDirection.rotateRight();
 	}	
 
 	static void turnLeft() throws GameActionException {
-		currentDirectionInd--;
-		if (currentDirectionInd < 0)
-			currentDirectionInd += directions.length;
+        currentDirection = currentDirection.rotateLeft();
 	}
 
 	static int directionToIndex(Direction dir) throws GameActionException {
@@ -363,49 +374,24 @@ public strictfp class RobotPlayer {
 				return Direction.SOUTHEAST;
 		}
     }
+
 	static boolean senseRight(RobotController rc) throws GameActionException {
-		int senseDir = (currentDirectionInd + 1) % directions.length;
-		MapLocation tile = rc.getLocation().add(directions[senseDir]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+		Direction senseDir = currentDirection.rotateRight().rotateRight(); 
+		MapLocation tile = rc.getLocation().add(senseDir);
+        return hasObstacle(rc, tile);
 	}
 
-	static boolean senseLeft(RobotController rc) throws GameActionException {
-		int senseDir = (currentDirectionInd + 7) % directions.length;
-		MapLocation tile = rc.getLocation().add(directions[senseDir]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+	static boolean senseFrontRight(RobotController rc) throws GameActionException {
+		Direction senseDir = currentDirection.rotateRight(); 
+		MapLocation tile = rc.getLocation().add(senseDir);
+        return hasObstacle(rc, tile);
 	}
 
 	static boolean senseFront(RobotController rc) throws GameActionException {
-		MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
-		if (!rc.onTheMap(tile))
-			return true;
-		return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || rc.canSenseRobotAtLocation(tile);
+		MapLocation tile = rc.getLocation().add(currentDirection);
+        return hasObstacle(rc, tile);
 	}
 
-	//static boolean senseRight(RobotController rc) throws GameActionException {
-	//	int senseDir = (currentDirectionInd + 1) % directions.length;
-	//	MapLocation tile = rc.getLocation().add(directions[senseDir]);
-	//	if (!rc.onTheMap(tile))
-	//		return true;
-	//	RobotInfo robot = null;
-	//	if (rc.canSenseRobotAtLocation(tile))
-	//		robot = rc.senseRobotAtLocation(tile);
-	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
-	//}
-
-	//static boolean senseFront(RobotController rc) throws GameActionException {
-	//	MapLocation tile = rc.getLocation().add(directions[currentDirectionInd]);
-	//	if (!rc.onTheMap(tile))
-	//		return true;
-	//	RobotInfo robot = null;
-	//	if (rc.canSenseRobotAtLocation(tile))
-	//		robot = rc.senseRobotAtLocation(tile);
-	//	return board[tile.x][tile.y] == M_STORM || board[tile.x][tile.y] == M_AHQ || board[tile.x][tile.y] == M_BHQ || robot != null;
-	//}
 	static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
 		// head towards goal
         rc.setIndicatorString("Navigating to " + loc);
@@ -429,16 +415,16 @@ public strictfp class RobotPlayer {
         if (rc.canMove(goalDir)) {
 			rc.move(goalDir);
 			onObstacle = false;
-			currentDirectionInd = directionToIndex(goalDir);
+			currentDirection = goalDir;
 			return;
         } else {
 			if (!onObstacle) {
 				MapLocation pathTile = rc.getLocation().add(goalDir);
 				if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
 					onObstacle = true;
-					currentDirectionInd = directionToIndex(goalDir);
+					currentDirection = goalDir;
 					turnLeft();
-					goalDir = directions[currentDirectionInd];
+					goalDir = currentDirection;
 					if (rc.canMove(goalDir)) {
 						rc.move(goalDir);
 					}
@@ -446,89 +432,141 @@ public strictfp class RobotPlayer {
 			} else {
 				rc.setIndicatorString("on obstacle");
 				// follow obstacle using right hand rule
-				boolean right = senseRight(rc);
-				if (!right) {
-					turnRight();
-					goalDir = directions[currentDirectionInd];
+				boolean frontRight = senseFrontRight(rc);
+				if (!frontRight) {
+                    currentDirection = currentDirection.rotateRight();
+					goalDir = currentDirection;
 					tryMove(rc, goalDir);
 				}
 				boolean front = senseFront(rc);
 				if (!front) {
-					goalDir = directions[currentDirectionInd];
+					goalDir = currentDirection;
 					tryMove(rc, goalDir);
 				} else {
-					turnLeft();
+                    currentDirection = currentDirection.rotateLeft();
 				}
 
 			}
 		}
 	}
-	static boolean isTouching (RobotController rc) throws GameActionException {
+	static boolean touchingObstacle(RobotController rc) throws GameActionException {
 		MapLocation me = rc.getLocation();
-		try {
-			// may consider adding robots to this checking rather than jsut storms
-			return board[me.x][me.y + 1]  == M_STORM || board[me.x][me.y - 1]  == M_STORM || board[me.x + 1][me.y]  == M_STORM || board[me.x - 1][me.y]  == M_STORM || board[me.x + 1][me.y + 1]  == M_STORM || board[me.x + 1][me.y - 1]  == M_STORM || board[me.x - 1][me.y - 1] == M_STORM || board[me.x - 1][me.y + 1] == M_STORM;
-		} catch (Exception e) {
-			// if this is true then they will potentially orbit around edge of map to get to destination
-			// TODO: implement bug2 but instead of right hand left hand, this will also prevent launchers from favoring one side and leaving an opening
-			return false;
-		}
+        Direction rightHandDir = currentDirection.rotateRight().rotateRight();
+        return hasObstacle(rc, me.add(rightHandDir)) || hasObstacle(rc, me.add(rightHandDir.rotateRight())) || hasObstacle(rc, me.add(rightHandDir.rotateLeft()));
 	}
-	static MapLocation lastLoc = null;
+
+	static MapLocation startPoint;
+	static MapLocation goalLoc;
+	static MapLocation hitPoint;
+	static float slope;
+	static float yIntercept;
+	static boolean wallMode = false;
+
 	static void bug2(RobotController rc, MapLocation loc) throws GameActionException {
-		// head towards goal
-		// incase goal loc is changed
-		if (lastLoc != loc) {
-			lastLoc = loc;
-			checkPointSquared = maxDistSquared;
+		//write this path finding algorithm based on the following pseudocode
+		// 		On a high level, the Bug2 algorithm has two main modes:
+
+		// Go to Goal Mode: Move from the current location towards the goal (x,y) coordinate.
+		// Wall Following Mode: Move along a wall.
+		// Here is pseudocode for the algorithm:
+
+		// 1.      Calculate a start-goal line. The start-goal line is an imaginary line that connects the starting position to the goal position.
+
+		// 2.      While Not at the Goal
+
+		// Move towards the goal along the start-goal line.
+		// If a wall is encountered:
+		// Remember the location where the wall was first encountered. This is the “hit point.”
+		// Follow the wall until you encounter the start-goal line. This point is known as the “leave point.”
+		//  If the leave point is closer to the goal than the hit point, leave the wall, and move towards the goal again.
+		// Otherwise, continue following the wall.
+		// 3.      When the goal is reached, stop.
+
+		int dist = rc.getLocation().distanceSquaredTo(loc);
+		if (dist <= 2) {
+			return;
 		}
-		Direction goalDir = rc.getLocation().directionTo(loc);
-		if (rc.getLocation().distanceSquaredTo(loc) < checkPointSquared  && tryMove(rc, goalDir)) {
-			onObstacle = false;
-			checkPointSquared = maxDistSquared;
-			currentDirectionInd = directionToIndex(goalDir);
-			rc.setIndicatorString("here1");
-		} else {
-			if (!onObstacle) {
-				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (board[pathTile.x][pathTile.y] == M_STORM || rc.canSenseRobotAtLocation(pathTile)) { // indicates obstacle
-					// TODO: the new defense strat makes navigation need to consider stopped robots to be storms
-					onObstacle = true;
-					checkPointSquared = rc.getLocation().distanceSquaredTo(loc);
-					rc.setIndicatorString("my checkPoint is" + checkPointSquared);
-					currentDirectionInd = directionToIndex(goalDir);
-					turnLeft();
-					goalDir = directions[currentDirectionInd];
-					tryMove(rc, goalDir);
-				} else {
-					tryMove(rc, goalDir);
-					onObstacle = false;
-					checkPointSquared = maxDistSquared;
-					rc.setIndicatorString("here2");
-				}
+
+		// calculate a start-goal line
+		if (goalLoc == null || !goalLoc.equals(loc)) {
+			goalLoc = loc;
+			currentDirection = rc.getLocation().directionTo(goalLoc);
+			startPoint = rc.getLocation();
+			slope = (goalLoc.y - startPoint.y) / (goalLoc.x - startPoint.x + 0.001f);
+			yIntercept = startPoint.y - slope * startPoint.x;
+			hitPoint = null;
+			wallMode = false;
+		}
+		Direction goalDir = rc.getLocation().directionTo(goalLoc);
+		// head towards goal
+		if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
+			// if we're in this block, we couldn't move in the direction of the goal
+            MapLocation pathTile = rc.getLocation().add(goalDir);
+            if (hasObstacle(rc, pathTile)) {
+			    wallMode = true;
+                currentDirection = currentDirection.rotateLeft().rotateLeft();
+			    hitPoint = rc.getLocation();
+            } else {
+                bugRandom(rc, goalLoc);
+            }
+		}
+		
+
+		if (wallMode) {
+            rc.setIndicatorLine(startPoint, goalLoc, 255, 0, 0);
+
+			// check if we are on the line
+
+            if (onMLine(rc.getLocation())) {
+			    rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
+            }
+			if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) < hitPoint.distanceSquaredTo(goalLoc)) {
+				// if we are on the line, we are done wall following
+				wallMode = false;
+                rc.setIndicatorString("left wall");
+				return;
+			}
+
+			// follow obstacle using right hand rule
+			boolean frontRight = senseFrontRight(rc);
+			boolean front = senseFront(rc);
+            boolean right = senseRight(rc);
+			if (!right) {
+				Direction moveDirection = currentDirection.rotateRight().rotateRight();
+				if (tryMove(rc, moveDirection)) {
+                    currentDirection = moveDirection;
+                    rc.setIndicatorString("turning right " + currentDirection);
+                } else if (rc.getMovementCooldownTurns() == 0) {
+                    rc.setIndicatorString("could not turn right " + moveDirection);
+                    bugRandom(rc, goalLoc);
+                }
+            } else if (!frontRight) {
+				Direction moveDirection = currentDirection.rotateRight();
+				if (tryMove(rc, moveDirection)) {
+                    currentDirection = moveDirection;
+                    rc.setIndicatorString("turning front right " + currentDirection);
+                } else if (rc.getMovementCooldownTurns() == 0){
+                    rc.setIndicatorString("could not turn front right " + moveDirection);
+                    bugRandom(rc, goalLoc);
+                }
+			} else if (!front) {
+                if (tryMove(rc, currentDirection))
+                    rc.setIndicatorString("moving forward " + currentDirection);
 			} else {
-				if (!isTouching(rc)) {
-					onObstacle = false;
-					checkPointSquared = maxDistSquared;
-					rc.setIndicatorString("here3");
-				}
-				rc.setIndicatorString("currDist: " + rc.getLocation().distanceSquaredTo(loc) + " lastDist: " + checkPointSquared);
-				// follow obstacle using right hand rule
-				boolean right = senseRight(rc);
-				if (!right) {
-					turnRight();
-					goalDir = directions[currentDirectionInd];
-					tryMove(rc, goalDir);
-				}
-				else if (!senseFront(rc)) {
-					goalDir = directions[currentDirectionInd];
-					tryMove(rc, goalDir);
-				} else {
-					turnLeft();
-				}
+				turnLeft();
+                rc.setIndicatorString("turning left " + currentDirection);
 			}
 		}
+        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
+        if (!touchingObstacle(rc))
+            goalLoc = null;
 	}
+
+	static boolean onMLine(MapLocation loc) {
+		float epsilon = 2.5f;
+		return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
+	}
+
 	static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
 		// this is the possible locations it can be the closest to
 		MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
@@ -602,6 +640,10 @@ public strictfp class RobotPlayer {
 	}
 
 	static int abs(int x) {
+		return x < 0 ? -x : x;
+	}
+
+	static float abs(float x) {
 		return x < 0 ? -x : x;
 	}
 }
