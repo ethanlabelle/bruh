@@ -201,7 +201,6 @@ public strictfp class RobotPlayer {
 	// TODO: Clouds, currents 
 	// TODO: HIDDEN tiles on init
 	static void updateMap(RobotController rc) throws GameActionException {
-        int before = Clock.getBytecodeNum();
 		mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
 		robotInfos = rc.senseNearbyRobots();
 		islands = rc.senseNearbyIslands(); // 200 bytecode
@@ -285,9 +284,6 @@ public strictfp class RobotPlayer {
 				}
 			}
 		}
-		Communication.tryWriteMessages(rc);
-        int after = Clock.getBytecodeNum();
-        System.out.println("call to update map " + (after - before));
 	}
 
 	
@@ -556,7 +552,7 @@ public strictfp class RobotPlayer {
             if (onMLine(rc.getLocation())) {
 			    rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
             }
-			if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) <= hitPoint.distanceSquaredTo(goalLoc)) {
+			if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) < hitPoint.distanceSquaredTo(goalLoc)) {
 				// if we are on the line, we are done wall following
 				wallMode = false;
                 rc.setIndicatorString("left wall");
