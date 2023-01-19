@@ -1,10 +1,10 @@
-package dev;
+package v13;
 
 import battlecode.common.*;
 import java.util.Arrays;
 import java.util.Random;
 
-import static dev.RobotPlayer.*;
+import static v13.RobotPlayer.*;
 
 public strictfp class RunLauncher {
     /**
@@ -27,12 +27,6 @@ public strictfp class RunLauncher {
         if (at_hq || at_well) {
             return;
         }
-
-		// look for targets to defend
-		MapLocation defLoc = Communication.getClosestEnemy(rc);
-		if (defLoc != null) {
-			navigateTo(rc, defLoc);
-		}
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
 			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 
@@ -69,11 +63,11 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             int id = fake_id;
             if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), abs(spawnHQLOC.y + 1 - height));
             else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
+                possibleEnemyLOC = new MapLocation(abs(spawnHQLOC.x + 1 - width), spawnHQLOC.y);
             else
-                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
+                possibleEnemyLOC = new MapLocation(spawnHQLOC.x, abs(spawnHQLOC.y + 1 - height));
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
@@ -162,13 +156,13 @@ public strictfp class RunLauncher {
     }
 
     static void moveLastResort(RobotController rc) throws GameActionException {
-        Direction last_dir = currentDirection;
+        Direction last_dir = directions[currentDirectionInd];
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                currentDirection = currentDirection.rotateRight().rotateRight().rotateRight();
-                last_dir = currentDirection;
+                currentDirectionInd = (currentDirectionInd + 3) % directions.length;
+                last_dir = directions[currentDirectionInd];
                 if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;
@@ -180,7 +174,7 @@ public strictfp class RunLauncher {
     static void checkForFriends(RobotController rc, MapLocation hq_loc) throws GameActionException {
         if(rc.canSenseLocation(hq_loc)){
             RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
-            if(friends.length >= 8){
+            if(friends.length >= 7){
                 EnemyHQLOC = undefined_loc;
             }
         }
