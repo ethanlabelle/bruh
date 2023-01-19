@@ -21,10 +21,15 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
-
+        
         attackEnemies(rc);
         
-        if (at_hq || at_well) {
+        if (at_well) {
+            return;
+        }
+
+        // checks if within enemy HQ target location
+        if (EnemyHQLOC != null && justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 2)) {
             return;
         }
 
@@ -184,6 +189,14 @@ public strictfp class RunLauncher {
                 EnemyHQLOC = undefined_loc;
             }
         }
+    }
+
+    static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared, double epsilon) {
+        return distanceSquared + epsilon < loc1.distanceSquaredTo(loc2);
+    }
+    static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared) {
+        // TODO: modify epsilon
+        return justOutside(loc1, loc2, distanceSquared, .5);
     }
 }
 
