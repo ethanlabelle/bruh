@@ -33,10 +33,13 @@ public strictfp class RunLauncher {
 			navigateTo(rc, defLoc);
             Communication.clearObsoleteEnemies(rc);
 		}
+
+        if (wellLoc != null && turnCount < 100) {
+            navigateTo(rc, HQLOC);
+        }
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
-			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 
-            	navigateTo(rc, center);
+            navigateTo(rc, center);
             return;
         }
 
@@ -46,7 +49,7 @@ public strictfp class RunLauncher {
             return;
         }
         
-        // want to stop 'outside' HQ action radius
+        //// want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
             if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
                 return;
@@ -54,9 +57,9 @@ public strictfp class RunLauncher {
             navigateTo(rc, EnemyHQLOC);
             checkForFriends(rc, EnemyHQLOC);
         }
-        else{
-            travelToPossibleHQ(rc);
-        }
+        //else{
+        //    travelToPossibleHQ(rc);
+        //}
 		
         attackEnemies(rc);
         

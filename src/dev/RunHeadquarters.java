@@ -45,17 +45,17 @@ public strictfp class RunHeadquarters {
         }
 
 		MapLocation loc;
+        if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
+            rc.setIndicatorString("Trying to build a launcher");
+            loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
+            if (loc != null) {
+                rc.buildRobot(RobotType.AMPLIFIER, loc);
+                launcherCount++;
+                return;
+            }
+        }
         // Let's try to build a launcher.
 		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS || rc.getRoundNum() <= 250) {
-            if (launcherCount % LAUNCHERS_PER_AMPLIFIER == 0) {
-        	    rc.setIndicatorString("Trying to build a launcher");
-                loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
-                if (loc != null) {
-                    rc.buildRobot(RobotType.AMPLIFIER, loc);
-                    launcherCount++;
-                    return;
-                }
-            }
         	rc.setIndicatorString("Trying to build a launcher");
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
         	if (loc != null) {
