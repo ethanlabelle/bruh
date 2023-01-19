@@ -9,6 +9,7 @@ import static dev.RobotPlayer.*;
 public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 30;
+	static final int LAUNCHERS_PER_AMPLIFIER = 10;
 	static final int CARRIER_MOD = 10;
 	static final int MAX_CARRIERS = 20;
 	static final int EXCESS = 160;
@@ -46,6 +47,15 @@ public strictfp class RunHeadquarters {
 		MapLocation loc;
         // Let's try to build a launcher.
 		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS || rc.getRoundNum() <= 250) {
+            if (launcherCount % LAUNCHERS_PER_AMPLIFIER == 0) {
+        	    rc.setIndicatorString("Trying to build a launcher");
+                loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
+                if (loc != null) {
+                    rc.buildRobot(RobotType.AMPLIFIER, loc);
+                    launcherCount++;
+                    return;
+                }
+            }
         	rc.setIndicatorString("Trying to build a launcher");
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
         	if (loc != null) {
