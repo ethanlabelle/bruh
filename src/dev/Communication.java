@@ -33,8 +33,8 @@ class Communication {
 
     private static final int TOTAL_BITS = 16;
     private static final int MAPLOC_BITS = 12;
-    private static final int TEAM_BITS = 1;
-    private static final int HEALTH_BITS = 3;
+    private static final int TEAM_BITS = 2;
+    private static final int HEALTH_BITS = 2;
     private static final int HEALTH_SIZE = (int) Math.ceil(Anchor.ACCELERATING.totalHealth / 8.0);
 
 

@@ -123,36 +123,80 @@ public strictfp class RunCarrier {
     
     static void carryAnchor(RobotController rc) throws GameActionException {
         // If I have an anchor singularly focus on getting it to the first island I see
-        int[] islands = rc.senseNearbyIslands();
-        List<MapLocation> islandLocs = new ArrayList<>();
-        for (int id : islands) {
-            MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-            islandLocs.addAll(Arrays.asList(thisIslandLocs));
+//        int[] islands = rc.senseNearbyIslands();
+//        //List<MapLocation> islandLocs = new ArrayList<>();
+//        for (int id : islands) {
+//            maplocation[] thisislandlocs = rc.sensenearbyislandlocations(id);
+//        //    islandLocs.addAll(Arrays.asList(thisIslandLocs));
+//			Team team = rc.senseTeamOccupyingIsland(id);
+//            if (team == Team.NEUTRAL) {
+//                for (MapLocation loc: thisIslandLocs) {
+//                    if (me.equals(loc) && rc.canPlaceAnchor()) {
+//                        rc.setIndicatorString("Huzzah, placed anchor!");
+//                        rc.placeAnchor();
+//                        Clock.yield();
+//                        Communication.updateIslandInfo(rc, id);
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+        //if (islandLocs.size() > 0) {
+        //    for (int i = 0; i < islandLocs.size(); i++) {
+        //        if (rc.senseAnchor(rc.senseIsland(islandLocs.get(i))) == null) {
+        //            MapLocation islandLocation = islandLocs.get(i);
+        //            if (rc.canPlaceAnchor()) {
+        //                rc.setIndicatorString("Huzzah, placed anchor!");
+        //                rc.placeAnchor();
+        //            } else {
+        //            	rc.setIndicatorString("Moving my anchor towards " + islandLocation);
+	    //				Direction dir = rc.getLocation().directionTo(islandLocation);
+        //            	if (rc.canMove(dir)) {
+        //            	    rc.move(dir);
+        //            	}
+	    //			}
+        //            break;
+        //        }
+        //    }
+        //}
+
+        MapLocation neutralIslandLoc = null;
+        int id;
+        for (id = 0; id < GameConstants.MAX_NUMBER_ISLANDS; id++) {
+            if (Communication.readTeamHoldingIsland(rc, id) == Team.NEUTRAL && Communication.readIslandLocation(rc, id) != null) {
+                neutralIslandLoc = Communication.readIslandLocation(rc, id);
+                break;
+            }
         }
-        if (islandLocs.size() > 0) {
-            for (int i = 0; i < islandLocs.size(); i++) {
-                if (rc.senseAnchor(rc.senseIsland(islandLocs.get(i))) == null) {
-                    MapLocation islandLocation = islandLocs.get(i);
-                    if (rc.canPlaceAnchor()) {
-                        rc.setIndicatorString("Huzzah, placed anchor!");
-                        rc.placeAnchor();
-                    } else {
-                    	rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-	    				Direction dir = rc.getLocation().directionTo(islandLocation);
-                    	if (rc.canMove(dir)) {
-                    	    rc.move(dir);
-                    	}
-	    			}
-                    break;
+        if (neutralIslandLoc != null) {
+            bugRandom(rc, neutralIslandLoc);
+            int[] islands = rc.senseNearbyIslands();
+            for (int i: islands) {
+                if (i == id) {
+			        Team team = rc.senseTeamOccupyingIsland(id);
+                    MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
+                    if (team == Team.NEUTRAL) {
+                        for (MapLocation loc: thisIslandLocs) {
+                            if (me.equals(loc) && rc.canPlaceAnchor()) {
+                                rc.setIndicatorString("Huzzah, placed anchor!");
+                                rc.placeAnchor();
+                                Clock.yield();
+                                Communication.updateIslandInfo(rc, id);
+                                return;
+                            }
+                        }
+                    }
                 }
             }
         }
-	    // Also try to move *randomly*.
-	    Direction dir = currentDirection;
-	    if (rc.canMove(dir)) {
-	        rc.move(dir);
-	    } else if (rc.getMovementCooldownTurns() == 0) {
-	        currentDirection = directions[rng.nextInt(directions.length)];
-	    }
+        else {
+	        // try to move *randomly*.
+	        Direction dir = currentDirection;
+	        if (rc.canMove(dir)) {
+	            rc.move(dir);
+	        } else if (rc.getMovementCooldownTurns() == 0) {
+	            currentDirection = directions[rng.nextInt(directions.length)];
+	        }
+        }
     }
 }

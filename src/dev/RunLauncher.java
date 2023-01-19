@@ -24,9 +24,43 @@ public strictfp class RunLauncher {
         
         attackEnemies(rc);
         
-        if (at_well) {
+        if (wellLoc != null && turnCount < 100) {
+            navigateTo(rc, HQLOC);
+        }
+        
+        if ((rc.getRoundNum() / 150) % 2 == 0) {
+            if (rc.getLocation().distanceSquaredTo(HQLOC) < 35)
+                bugRandom(rc, center);
             return;
         }
+
+        if (rc.getID() % 5 == 0) {
+		    // look for targets to defend
+		    MapLocation defLoc = Communication.getClosestEnemy(rc);
+		    if (defLoc != null) {
+		    	navigateTo(rc, defLoc);
+                Communication.clearObsoleteEnemies(rc);
+                attackEnemies(rc);
+                return;
+		    }
+        }
+
+        if (move_randomly) {
+            moveLastResort(rc);
+            return;
+        }
+        
+        // want to stop 'outside' HQ action radius
+        if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
+            if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
+                return;
+            }
+            navigateTo(rc, EnemyHQLOC);
+            checkForFriends(rc, EnemyHQLOC);
+        } else{
+            travelToPossibleHQ(rc);
+        }
+
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
@@ -34,32 +68,6 @@ public strictfp class RunLauncher {
             Communication.clearObsoleteEnemies(rc);
 		}
 
-        if (wellLoc != null && turnCount < 100) {
-            navigateTo(rc, HQLOC);
-        }
-        
-        if ((rc.getRoundNum() / 150) % 2 == 0) {
-            navigateTo(rc, center);
-            return;
-        }
-
-
-        if (move_randomly) {
-            moveLastResort(rc);
-            return;
-        }
-        
-        //// want to stop 'outside' HQ action radius
-        if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
-            if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-                return;
-            }
-            navigateTo(rc, EnemyHQLOC);
-            checkForFriends(rc, EnemyHQLOC);
-        }
-        //else{
-        //    travelToPossibleHQ(rc);
-        //}
 		
         attackEnemies(rc);
         
