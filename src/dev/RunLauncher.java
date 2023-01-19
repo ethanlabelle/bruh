@@ -27,12 +27,6 @@ public strictfp class RunLauncher {
         if (at_well) {
             return;
         }
-
-        // checks if within enemy HQ target location
-        if (EnemyHQLOC != null && justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 2)) {
-            return;
-        }
-
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
@@ -46,16 +40,14 @@ public strictfp class RunLauncher {
         }
 
 
-        // protectWell(rc);
-
         if (move_randomly) {
             moveLastResort(rc);
             return;
         }
         
+        // want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
-            if (adjacentTo(rc, EnemyHQLOC)) {
-                at_hq = true;
+            if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
                 return;
             }
             navigateTo(rc, EnemyHQLOC);
@@ -82,8 +74,8 @@ public strictfp class RunLauncher {
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, 2, myTeam);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 6) {
+            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
+            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
                 EnemyHQLOC = possibleEnemyLOC;
                 return;
             }
@@ -185,14 +177,14 @@ public strictfp class RunLauncher {
     static void checkForFriends(RobotController rc, MapLocation hq_loc) throws GameActionException {
         if(rc.canSenseLocation(hq_loc)){
             RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
-            if(friends.length >= 8){
+            if(friends.length >= 4){
                 EnemyHQLOC = undefined_loc;
             }
         }
     }
 
     static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared, double epsilon) {
-        return distanceSquared + epsilon < loc1.distanceSquaredTo(loc2);
+        return distanceSquared + epsilon > loc1.distanceSquaredTo(loc2);
     }
     static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared) {
         // TODO: modify epsilon
