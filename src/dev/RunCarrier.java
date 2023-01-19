@@ -16,11 +16,11 @@ public strictfp class RunCarrier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
-        int start = Clock.getBytecodeNum(); 
+        //int start = Clock.getBytecodeNum(); 
         //System.out.println("start " + start);
 
         updateMap(rc);
-        int mapUpdate = Clock.getBytecodeNum() - start;
+        //int mapUpdate = Clock.getBytecodeNum() - start;
         //System.out.println("map update " + mapUpdate);
 
         me = rc.getLocation();
@@ -36,22 +36,26 @@ public strictfp class RunCarrier {
             runAway(rc);
         }
 
-        int combatMicro = Clock.getBytecodeNum() - mapUpdate - start;
+        //int combatMicro = Clock.getBytecodeNum() - mapUpdate - start;
         //System.out.println("combat micro " + combatMicro);
 
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
         }
 		
-		if (wellLoc == null) {
+        MapLocation pWellLoc;
+		//if (wellLoc == null) {
 			if (rc.getID() % 2 == 0) {
-				wellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
+			    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 			} 
 			else {
-				wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
+				pWellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
 			}
-		}
-        int wells = Clock.getBytecodeNum() - combatMicro - mapUpdate - start;
+        if (pWellLoc != null) {
+            wellLoc = pWellLoc;
+        }
+		//}
+        //int wells = Clock.getBytecodeNum() - combatMicro - mapUpdate - start;
         //System.out.println("finding well " + wells);
 
         // Try to gather from squares around us.
@@ -64,7 +68,7 @@ public strictfp class RunCarrier {
                     " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
             foundWell = true;
 		}
-        int mining = Clock.getBytecodeNum() - wells - combatMicro - mapUpdate - start;
+        //int mining = Clock.getBytecodeNum() - wells - combatMicro - mapUpdate - start;
         //System.out.println("mining " + wells);
 
         // If at a well, keep collecting until full.
@@ -93,23 +97,23 @@ public strictfp class RunCarrier {
         } else {
 			// find resources
             if (wellLoc != null) {
-                int before = Clock.getBytecodeNum();
+                //int before = Clock.getBytecodeNum();
                 navigateTo(rc, wellLoc);
-                int after = Clock.getBytecodeNum();
+                //int after = Clock.getBytecodeNum();
                 //System.out.println("navigateTo " + (after - before));
             } else {
 				// Also try to move *randomly*.
-				Direction dir = directions[currentDirectionInd];
+				Direction dir = currentDirection;
 				if (rc.canMove(dir)) {
 				    rc.move(dir);
 				} else if (rc.getMovementCooldownTurns() == 0) {
-				    currentDirectionInd = rng.nextInt(directions.length);
+				    currentDirection = directions[rng.nextInt(directions.length)];
 				}
-				dir = directions[currentDirectionInd];
+				dir = currentDirection;
 				if (rc.canMove(dir)) {
 				    rc.move(dir);
 				} else if (rc.getMovementCooldownTurns() == 0) {
-				    currentDirectionInd = rng.nextInt(directions.length);
+				    currentDirection = directions[rng.nextInt(directions.length)];
 				}
             }
         }
@@ -160,11 +164,11 @@ public strictfp class RunCarrier {
             }
         }
 	    // Also try to move *randomly*.
-	    Direction dir = directions[currentDirectionInd];
+	    Direction dir = currentDirection;
 	    if (rc.canMove(dir)) {
 	        rc.move(dir);
 	    } else if (rc.getMovementCooldownTurns() == 0) {
-	        currentDirectionInd = rng.nextInt(directions.length);
+	        currentDirection = directions[rng.nextInt(directions.length)];
 	    }
     }
 }

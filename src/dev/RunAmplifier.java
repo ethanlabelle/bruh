@@ -11,11 +11,11 @@ public strictfp class RunAmplifier {
      */
     static void runAmplifier(RobotController rc) throws GameActionException {
         // Move randomly
-        Direction dir = directions[currentDirectionInd];
+        Direction dir = currentDirection;
         if (rc.canMove(dir)) {
             rc.move(dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
-            currentDirectionInd = rng.nextInt(directions.length);
+            currentDirection = directions[rng.nextInt(directions.length)];
         }
     }
 }
