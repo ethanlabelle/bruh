@@ -31,6 +31,7 @@ public strictfp class RunLauncher {
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			navigateTo(rc, defLoc);
+            Communication.clearObsoleteEnemies(rc);
 		}
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
