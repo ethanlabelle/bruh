@@ -18,12 +18,39 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
+    static final int minimum_health = 100;
+    static final int maximum_health = RobotType.LAUNCHER.health;
+    static boolean isHealing = false;
+    static MapLocation healingIsland = null;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
         
         attackEnemies(rc);
         
+        // leaves after healing
+        if (isHealing && rc.getHealth() >= maximum_health) {
+            isHealing = false;
+            healingIsland = null;
+        }
+
+        // check if need to go to island
+        if (isHealing || rc.getHealth() < minimum_health) {
+            isHealing = true;
+            if (healingIsland == null) {
+                healingIsland = getClosestControlledIsland(rc);
+            }
+            if (healingIsland != null) {
+                rc.setIndicatorString("trying to heal!!");
+                MapLocation me = rc.getLocation();
+                if ((myTeam == Team.A && board[me.x][me.y] == M_AISL) || (myTeam == Team.B && board[me.x][me.y] == M_BISL)) {
+                    return;
+                }
+                navigateTo(rc, healingIsland);
+                return;
+            }
+        }
+
         if ((rc.getRoundNum() / 150) % 2 == 0) {
             if (rc.getLocation().distanceSquaredTo(HQLOC) < 35)
                 navigateTo(rc, center);
