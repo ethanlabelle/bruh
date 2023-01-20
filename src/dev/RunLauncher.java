@@ -21,44 +21,45 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
-
+        
         attackEnemies(rc);
         
-        if (at_hq || at_well) {
+        if (at_well) {
             return;
         }
-
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			navigateTo(rc, defLoc);
+            Communication.clearObsoleteEnemies(rc);
 		}
+
+        if (wellLoc != null && turnCount < 100) {
+            navigateTo(rc, HQLOC);
+        }
         
         if ((rc.getRoundNum() / 150) % 2 == 0) {
-			if (rc.getLocation().distanceSquaredTo(HQLOC) < 35) 
-            	navigateTo(rc, center);
+            navigateTo(rc, center);
             return;
         }
 
-
-        // protectWell(rc);
 
         if (move_randomly) {
             moveLastResort(rc);
             return;
         }
         
+        //// want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
-            if (adjacentTo(rc, EnemyHQLOC)) {
-                at_hq = true;
+            if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
                 return;
             }
             navigateTo(rc, EnemyHQLOC);
             checkForFriends(rc, EnemyHQLOC);
         }
-        else{
-            travelToPossibleHQ(rc);
-        }
+        //else{
+        //    travelToPossibleHQ(rc);
+        //}
 		
         attackEnemies(rc);
         
@@ -77,8 +78,8 @@ public strictfp class RunLauncher {
         }
         if (rc.canSenseLocation(possibleEnemyLOC)) {
             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, 2, myTeam);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 6) {
+            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
+            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
                 EnemyHQLOC = possibleEnemyLOC;
                 return;
             }
@@ -162,13 +163,13 @@ public strictfp class RunLauncher {
     }
 
     static void moveLastResort(RobotController rc) throws GameActionException {
-        Direction last_dir = directions[currentDirectionInd];
+        Direction last_dir = currentDirection;
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                currentDirectionInd = (currentDirectionInd + 3) % directions.length;
-                last_dir = directions[currentDirectionInd];
+                currentDirection = currentDirection.rotateRight().rotateRight().rotateRight();
+                last_dir = currentDirection;
                 if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;
@@ -180,10 +181,18 @@ public strictfp class RunLauncher {
     static void checkForFriends(RobotController rc, MapLocation hq_loc) throws GameActionException {
         if(rc.canSenseLocation(hq_loc)){
             RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
-            if(friends.length >= 8){
+            if(friends.length >= 4){
                 EnemyHQLOC = undefined_loc;
             }
         }
+    }
+
+    static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared, double epsilon) {
+        return distanceSquared + epsilon > loc1.distanceSquaredTo(loc2);
+    }
+    static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared) {
+        // TODO: modify epsilon
+        return justOutside(loc1, loc2, distanceSquared, .5);
     }
 }
 
