@@ -24,26 +24,20 @@ public strictfp class RunLauncher {
         
         attackEnemies(rc);
         
-        if (wellLoc != null && turnCount < 100) {
-            navigateTo(rc, HQLOC);
-        }
-        
         if ((rc.getRoundNum() / 150) % 2 == 0) {
             if (rc.getLocation().distanceSquaredTo(HQLOC) < 35)
-                bugRandom(rc, center);
+                navigateTo(rc, center);
             return;
         }
 
-        if (rc.getID() % 5 == 0) {
-		    // look for targets to defend
-		    MapLocation defLoc = Communication.getClosestEnemy(rc);
-		    if (defLoc != null) {
-		    	navigateTo(rc, defLoc);
-                Communication.clearObsoleteEnemies(rc);
-                attackEnemies(rc);
-                return;
-		    }
-        }
+		// look for targets to defend
+		MapLocation defLoc = Communication.getClosestEnemy(rc);
+		if (defLoc != null) {
+			navigateTo(rc, defLoc);
+            Communication.clearObsoleteEnemies(rc);
+            attackEnemies(rc);
+            return;
+		}
 
         if (move_randomly) {
             moveLastResort(rc);
@@ -61,14 +55,6 @@ public strictfp class RunLauncher {
             travelToPossibleHQ(rc);
         }
 
-		// look for targets to defend
-		MapLocation defLoc = Communication.getClosestEnemy(rc);
-		if (defLoc != null) {
-			navigateTo(rc, defLoc);
-            Communication.clearObsoleteEnemies(rc);
-		}
-
-		
         attackEnemies(rc);
         
     }
@@ -122,16 +108,22 @@ public strictfp class RunLauncher {
                 return robot1.health - robot2.health;
             }
         });
+		boolean shot = false;
+		MapLocation toAttack = null;
         if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
+            toAttack = enemies[0].location;
             for (RobotInfo enemy: enemies) {
                 toAttack = enemy.location;
                 if (rc.canAttack(toAttack)){
                     rc.attack(toAttack);
+					shot = true;
 					break;
                 }
             }
         }
+		if (shot) {
+			tryMove(rc, oppositeDirection(rc.getLocation().directionTo(toAttack)));
+		}
     }
 
     static void protectWell(RobotController rc) throws GameActionException {
@@ -198,31 +190,4 @@ public strictfp class RunLauncher {
     static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared, double epsilon) {
         return distanceSquared + epsilon > loc1.distanceSquaredTo(loc2);
     }
-    static boolean justOutside (MapLocation loc1, MapLocation loc2, int distanceSquared) {
-        // TODO: modify epsilon
-        return justOutside(loc1, loc2, distanceSquared, .5);
-    }
 }
-
-        // RobotInfo[] hqs = Arrays.stream(nearby_robots).filter(robot -> robot.type == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam).toArray(RobotInfo[]::new);
-        // int min_dist = 7200;
-        // RobotInfo closest_hq = null;
-        // if (hqs.length >= 1) {
-        //     closest_hq = hqs[0];
-        //     for (RobotInfo hq: hqs) {
-        //         int dist = hq.location.distanceSquaredTo(me);
-        //         if (dist < min_dist) {
-        //             min_dist = dist;
-        //             closest_hq = hq;
-        //         }
-        //     }
-        //     int distance_to_hq = me.distanceSquaredTo(closest_hq.location);
-        //     if (distance_to_hq == 1 || distance_to_hq == 2){
-        //         at_hq = true;
-        //         return;
-        //     }
-        //     Direction dir = me.directionTo(closest_hq.location);
-        //     if (rc.canMove(dir)) {
-        //         rc.move(dir);
-        //     }
-        // }

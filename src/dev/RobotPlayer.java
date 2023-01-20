@@ -59,7 +59,7 @@ public strictfp class RobotPlayer {
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
 	static final short M_HIDDEN = 0b1111;
-	static short[][] board = new short[60][60];
+	static short[][] board;
 
 	// pathfinding state
 	static Direction currentDirection;
@@ -105,9 +105,9 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
 		
 		// TODO: clean up initialization
-		
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
+		board = new short[width][height];
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
@@ -274,8 +274,7 @@ public strictfp class RobotPlayer {
 		for (int id : islands) {
             MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
 			Team team = rc.senseTeamOccupyingIsland(id);
-            if (rc.getType() == RobotType.AMPLIFIER)
-                Communication.updateIslandInfo(rc, id);
+           	Communication.updateIslandInfo(rc, id);
 			for (MapLocation loc : islandLocs) {
 				if (team == Team.A) {
 					board[loc.x][loc.y] = M_AISL;
@@ -474,7 +473,7 @@ public strictfp class RobotPlayer {
 		// 3.      When the goal is reached, stop.
 
 		int dist = rc.getLocation().distanceSquaredTo(loc);
-		if (dist <= 2) {
+		if (dist < 1) {
 			return;
 		}
 
@@ -611,8 +610,9 @@ public strictfp class RobotPlayer {
             if (loc != null) {
                 rc.buildRobot(RobotType.LAUNCHER, loc);
 				i++;
-            }
-			Clock.yield();
+            } else {
+				Clock.yield();
+			}
 		}	
 		i = 0;
 		while (i < 4) {
@@ -621,8 +621,9 @@ public strictfp class RobotPlayer {
             if (loc != null) {
                 rc.buildRobot(RobotType.CARRIER, loc);
 				i++;
-            }
-			Clock.yield();
+            } else {
+				Clock.yield();
+			}
 		}	
 	}
 	

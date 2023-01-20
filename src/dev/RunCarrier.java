@@ -123,54 +123,43 @@ public strictfp class RunCarrier {
     
     static void carryAnchor(RobotController rc) throws GameActionException {
         // If I have an anchor singularly focus on getting it to the first island I see
-//        int[] islands = rc.senseNearbyIslands();
-//        //List<MapLocation> islandLocs = new ArrayList<>();
-//        for (int id : islands) {
-//            maplocation[] thisislandlocs = rc.sensenearbyislandlocations(id);
-//        //    islandLocs.addAll(Arrays.asList(thisIslandLocs));
-//			Team team = rc.senseTeamOccupyingIsland(id);
-//            if (team == Team.NEUTRAL) {
-//                for (MapLocation loc: thisIslandLocs) {
-//                    if (me.equals(loc) && rc.canPlaceAnchor()) {
-//                        rc.setIndicatorString("Huzzah, placed anchor!");
-//                        rc.placeAnchor();
-//                        Clock.yield();
-//                        Communication.updateIslandInfo(rc, id);
-//                        return;
-//                    }
-//                }
-//            }
-//        }
-        //if (islandLocs.size() > 0) {
-        //    for (int i = 0; i < islandLocs.size(); i++) {
-        //        if (rc.senseAnchor(rc.senseIsland(islandLocs.get(i))) == null) {
-        //            MapLocation islandLocation = islandLocs.get(i);
-        //            if (rc.canPlaceAnchor()) {
-        //                rc.setIndicatorString("Huzzah, placed anchor!");
-        //                rc.placeAnchor();
-        //            } else {
-        //            	rc.setIndicatorString("Moving my anchor towards " + islandLocation);
-	    //				Direction dir = rc.getLocation().directionTo(islandLocation);
-        //            	if (rc.canMove(dir)) {
-        //            	    rc.move(dir);
-        //            	}
-	    //			}
-        //            break;
-        //        }
-        //    }
-        //}
+        int[] islands = rc.senseNearbyIslands();
+        for (int id : islands) {
+            MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
+			Team team = rc.senseTeamOccupyingIsland(id);
+			MapLocation islLoc = null;
+            if (team == Team.NEUTRAL) {
+				boolean onIsland = false;
+                for (MapLocation loc: thisIslandLocs) {
+					if (me.equals(loc))
+						onIsland = true;
+					islLoc = loc;
+                }
+				if (onIsland && rc.canPlaceAnchor()) {
+                   	rc.setIndicatorString("Huzzah, placed anchor!");
+                   	rc.placeAnchor();
+                   	Clock.yield();
+                   	Communication.updateIslandInfo(rc, id);
+                   	return;
+				
+				} else {
+					navigateTo(rc, islLoc);
+				}
+            }
+        }
 
         MapLocation neutralIslandLoc = null;
         int id;
-        for (id = 0; id < GameConstants.MAX_NUMBER_ISLANDS; id++) {
-            if (Communication.readTeamHoldingIsland(rc, id) == Team.NEUTRAL && Communication.readIslandLocation(rc, id) != null) {
+        for (id = 1; id < GameConstants.MAX_NUMBER_ISLANDS; id++) {
+			Team team = Communication.readTeamHoldingIsland(rc, id);
+			MapLocation islLoc = Communication.readIslandLocation(rc, id);
+			if (team.equals(Team.NEUTRAL) && islLoc != null) {
                 neutralIslandLoc = Communication.readIslandLocation(rc, id);
-                break;
+               	break;
             }
         }
         if (neutralIslandLoc != null) {
-            bugRandom(rc, neutralIslandLoc);
-            int[] islands = rc.senseNearbyIslands();
+            navigateTo(rc, neutralIslandLoc);
             for (int i: islands) {
                 if (i == id) {
 			        Team team = rc.senseTeamOccupyingIsland(id);

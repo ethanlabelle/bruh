@@ -33,9 +33,8 @@ class Communication {
 
     private static final int TOTAL_BITS = 16;
     private static final int MAPLOC_BITS = 12;
-    private static final int TEAM_BITS = 2;
-    private static final int HEALTH_BITS = 2;
-    private static final int HEALTH_SIZE = (int) Math.ceil(Anchor.ACCELERATING.totalHealth / 8.0);
+    private static final int TEAM_BITS = 4;
+    private static final int TEAM_MASK = 0b1111;
 
 
     private static List<Message> messagesQueue = new ArrayList<>();
@@ -91,7 +90,7 @@ class Communication {
             }
         }
         // Remember reading is cheaper than writing so we don't want to write without knowing if it's helpful
-        int idx = id + STARTING_ISLAND_IDX;
+        int idx = id + STARTING_ISLAND_IDX - 1;
         int oldIslandValue = rc.readSharedArray(idx);
         int updatedIslandValue = bitPackIslandInfo(rc, idx, closestIslandLoc);
         if (oldIslandValue != updatedIslandValue) {
@@ -100,43 +99,30 @@ class Communication {
         }
     }
 
-    static int bitPackIslandInfo(RobotController rc, int islandId, MapLocation closestLoc) {
+    static int bitPackIslandInfo(RobotController rc, int islandIdx, MapLocation closestLoc) throws GameActionException {
         int islandInt = locationToInt(rc, closestLoc);
         islandInt = islandInt << (TOTAL_BITS - MAPLOC_BITS);
-        try {
-            Team teamHolding = rc.senseTeamOccupyingIsland(islandId);
-            islandInt += teamHolding.ordinal() << (TOTAL_BITS - MAPLOC_BITS - TEAM_BITS);
-            int islandHealth = rc.senseAnchorPlantedHealth(islandId);
-            int healthEncoding = (int) Math.ceil((double) islandHealth / HEALTH_SIZE);
-            islandInt += healthEncoding;
-            return islandInt;
-        } catch (GameActionException e) {
-            return islandInt;
-        }
+        Team teamHolding = rc.senseTeamOccupyingIsland(islandIdx + 1 - STARTING_ISLAND_IDX); // idx in shared array
+        islandInt += teamHolding.ordinal();
+        return islandInt;
     }
 
-    static Team readTeamHoldingIsland(RobotController rc, int islandId) {
-        try {
-            islandId = islandId + STARTING_ISLAND_IDX;
-            int islandInt = rc.readSharedArray(islandId);
-            int healthMask = 0b111;
-            int health = islandInt & healthMask;
-            int team = (islandInt >> HEALTH_BITS) % 0b1;
-            if (health > 0) {
-                return Team.values()[team];
-            }
-        } catch (GameActionException e) {} 
-        return Team.NEUTRAL;
+    static Team readTeamHoldingIsland(RobotController rc, int islandId) throws GameActionException {
+        islandId = islandId + STARTING_ISLAND_IDX - 1;
+        int islandInt = rc.readSharedArray(islandId);
+		if (islandInt == 0) {
+        	return Team.NEUTRAL;
+		}
+        int team = (islandInt & TEAM_MASK);
+        return Team.values()[team];
     }
 
-    static MapLocation readIslandLocation(RobotController rc, int islandId) {
-        try {
-            islandId = islandId + STARTING_ISLAND_IDX;
-            int islandInt = rc.readSharedArray(islandId);
-            int idx = islandInt >> (HEALTH_BITS + TEAM_BITS);
-            return intToLocation(rc, idx);
-        } catch (GameActionException e) {} 
-        return null;
+    static MapLocation readIslandLocation(RobotController rc, int islandId) throws GameActionException {
+        islandId = islandId + STARTING_ISLAND_IDX - 1;
+        int islandInt = rc.readSharedArray(islandId);
+        int idx = islandInt >> TEAM_BITS;
+        MapLocation loc = intToLocation(rc, idx);
+        return loc;
     }
 
 	static int getHQInd(MapLocation HQ) throws GameActionException {
@@ -208,19 +194,6 @@ class Communication {
         	messagesQueue.add(msg);
 		}
     }
-
-    static int readMaxIslandHealth(RobotController rc, int islandId) {
-        try {
-            islandId = islandId + STARTING_ISLAND_IDX;
-            int islandInt = rc.readSharedArray(islandId);
-            int healthMask = 0b111;
-            int health = islandInt & healthMask;
-            return health*HEALTH_SIZE;
-        } catch (GameActionException e) {
-            return -1;
-        } 
-    }
-
 
     static void clearObsoleteEnemies(RobotController rc) {
         for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {

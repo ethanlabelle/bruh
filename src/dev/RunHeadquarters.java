@@ -8,10 +8,10 @@ import static dev.RobotPlayer.*;
 
 public strictfp class RunHeadquarters {
 
-	static final int LAUNCHER_MOD = 30;
+	static final int LAUNCHER_MOD = 10;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 10;
-	static final int MAX_CARRIERS = 20;
+	static final int CARRIER_MOD = 5;
+	static final int MAX_CARRIERS = 10;
 	static final int EXCESS = 160;
 	static int launcherCount = 0;
 	static int carrierCount = 0;
@@ -36,7 +36,7 @@ public strictfp class RunHeadquarters {
 
 
         // Pick a direction to build in.
-        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0 && rc.getRoundNum() > 250) {
+        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0) {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor!");
@@ -66,7 +66,7 @@ public strictfp class RunHeadquarters {
 		}
 
         // Let's try to build a carrier.
-		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS) || rc.getRoundNum() <= 250) {
+		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD)) {
         	rc.setIndicatorString("Trying to build a carrier");
         	loc = getSpawnLocation(rc, RobotType.CARRIER);
         	if (loc != null) {

@@ -31,26 +31,26 @@ public strictfp class RunAmplifier {
             return;
 		}
 
-        if (turnCount < 500) {
-            MapLocation neutralIslandLoc = null;
-            for (int i = 0; i < GameConstants.MAX_NUMBER_ISLANDS; i++) {
-                if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
-                    neutralIslandLoc = Communication.readIslandLocation(rc, i);
-                    System.out.println(Communication.readTeamHoldingIsland(rc, i) + " " + neutralIslandLoc);
-                    break;
-                }
-            }
-            if (neutralIslandLoc != null)
-                navigateTo(rc, neutralIslandLoc);
-            else {
-                MapLocation wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
-                if (wellLoc != null)
-                    navigateTo(rc, wellLoc);
-                else
-                    navigateTo(rc, HQLOC);
-            }
-            return;
-        }
+        //if (turnCount < 500) {
+        //    MapLocation neutralIslandLoc = null;
+        //    for (int i = 0; i < GameConstants.MAX_NUMBER_ISLANDS; i++) {
+        //        if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
+        //            neutralIslandLoc = Communication.readIslandLocation(rc, i);
+        //            System.out.println(Communication.readTeamHoldingIsland(rc, i) + " " + neutralIslandLoc);
+        //            break;
+        //        }
+        //    }
+        //    if (neutralIslandLoc != null)
+        //        navigateTo(rc, neutralIslandLoc);
+        //    else {
+        //        MapLocation wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
+        //        if (wellLoc != null)
+        //            navigateTo(rc, wellLoc);
+        //        else
+        //            navigateTo(rc, HQLOC);
+        //    }
+        //    return;
+        //}
 
         // Move randomly
         Direction dir = currentDirection;
