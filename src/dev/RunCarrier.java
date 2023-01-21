@@ -11,6 +11,8 @@ import static dev.RobotPlayer.*;
 public strictfp class RunCarrier {
     static RobotInfo[] enemyRobots;
     static MapLocation me;
+    static MapLocation[] bannedWells = new MapLocation[5];
+    static int banCounter = 0;
     /**
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -38,13 +40,13 @@ public strictfp class RunCarrier {
         }
 		
         MapLocation pWellLoc;
-		if (rc.getID() % 2 == 0) {
+		if (rc.getID() % 4 == 0) {
 		    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 		} 
 		else {
 			pWellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
 		}
-        if (pWellLoc != null) {
+        if (pWellLoc != null && !onBanList(pWellLoc)) {
             wellLoc = pWellLoc;
         }
 
@@ -57,6 +59,17 @@ public strictfp class RunCarrier {
                     " MN: " + rc.getResourceAmount(ResourceType.MANA) +
                     " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
             foundWell = true;
+            // if there are too many carriers about this well, forget and ban well
+            if (getTotalResources(rc) == 40) {
+                RobotInfo[] robotInfos = rc.senseNearbyRobots(me, 4, myTeam);
+		        RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
+                rc.setIndicatorString("" + friends.length);
+                if (friends.length > 4) {
+                    bannedWells[banCounter] = wellLoc;
+                    wellLoc = null;
+                    banCounter++;
+                }
+            }
 		}
 
         // If at a well, keep collecting until full.
@@ -187,5 +200,13 @@ public strictfp class RunCarrier {
 	            currentDirection = directions[rng.nextInt(directions.length)];
 	        }
         }
+    }
+
+    static boolean onBanList(MapLocation wellLoc) throws GameActionException {
+        for (int i = 0; i < bannedWells.length; i++) {
+            if (bannedWells[i] != null && bannedWells[i].equals(wellLoc))
+                return true;
+        }
+        return false;
     }
 }

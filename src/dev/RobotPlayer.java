@@ -252,17 +252,19 @@ public strictfp class RobotPlayer {
 			switch (wellInfo.getResourceType()) {
 				case MANA:
 					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
-					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
-						Communication.updateManaWellLocation(rc, loc, HQLOC);
-						if (rc.getID() % 2 != 0)
+                    if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+				        Communication.updateManaWellLocation(rc, loc, HQLOC);
+					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
+						if (rc.getID() % 4 != 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
 				case ADAMANTIUM:
 					arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
-					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC)) {
-						Communication.updateAdaWellLocation(rc, loc, HQLOC);
-						if (rc.getID() % 2 == 0)
+                    if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+					    Communication.updateAdaWellLocation(rc, loc, HQLOC);
+					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
+						if (rc.getID() % 4 == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
