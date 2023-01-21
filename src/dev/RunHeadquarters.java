@@ -11,7 +11,7 @@ public strictfp class RunHeadquarters {
 	static final int LAUNCHER_MOD = 10;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
 	static final int CARRIER_MOD = 5;
-	static final int MAX_CARRIERS = 10;
+	static final int MAX_CARRIERS = 25;
 	static final int EXCESS = 160;
 	static int launcherCount = 0;
 	static int carrierCount = 0;

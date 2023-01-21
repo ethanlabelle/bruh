@@ -82,7 +82,9 @@ public strictfp class RobotPlayer {
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
+	static int navCount = 0;
 	static Team myTeam;
+	static Team enemyTeam;
 	
 	static void printBoard() {
 		String out = "";
@@ -113,6 +115,7 @@ public strictfp class RobotPlayer {
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
+		enemyTeam = myTeam.opponent();
 		if (rc.getType() != RobotType.LAUNCHER) {
 			currentDirection = directions[rng.nextInt(directions.length)];
 		}
@@ -257,7 +260,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 				        Communication.updateManaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 4 != 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 2 != 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
@@ -266,7 +269,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 					    Communication.updateAdaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 4 == 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 2 == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
@@ -475,7 +478,7 @@ public strictfp class RobotPlayer {
 		//  If the leave point is closer to the goal than the hit point, leave the wall, and move towards the goal again.
 		// Otherwise, continue following the wall.
 		// 3.      When the goal is reached, stop.
-
+		navCount++;
 		int dist = rc.getLocation().distanceSquaredTo(loc);
 		if (dist < 1) {
 			return;
@@ -490,6 +493,7 @@ public strictfp class RobotPlayer {
 			yIntercept = startPoint.y - slope * startPoint.x;
 			hitPoint = null;
 			wallMode = false;
+			navCount = 0;
 		}
 		Direction goalDir = rc.getLocation().directionTo(goalLoc);
 		// head towards goal
@@ -552,7 +556,7 @@ public strictfp class RobotPlayer {
 			}
 		}
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-        if (!touchingObstacle(rc))
+        if (!touchingObstacle(rc) || navCount > 10)
             goalLoc = null;
 	}
 
@@ -649,6 +653,25 @@ public strictfp class RobotPlayer {
 		for (int index = 0; index < GameConstants.MAX_NUMBER_ISLANDS; index ++) {
 			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
+				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
+				if (currDist < bestDist) {
+					bestDist = currDist;
+					bestLoc = currLoc;
+				}
+			}
+		}
+		return bestLoc;
+	}
+
+	static MapLocation getClosestEnemyIsland (RobotController rc) throws GameActionException {
+		// this will find the closest loc
+		int bestDist = maxDistSquared;
+		MapLocation bestLoc = null;
+		for (int index = 0; index < GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+			if (readTeamHoldingIsland(rc, index).equals(enemyTeam)) {
+				MapLocation currLoc = readIslandLocation(rc, index);
+				if (currLoc == null)
+					continue;
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
 				if (currDist < bestDist) {
 					bestDist = currDist;

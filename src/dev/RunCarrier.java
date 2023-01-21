@@ -40,7 +40,7 @@ public strictfp class RunCarrier {
         }
 		
         MapLocation pWellLoc;
-		if (rc.getID() % 4 == 0) {
+		if (rc.getID() % 2 == 0) {
 		    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 		} 
 		else {
@@ -64,7 +64,7 @@ public strictfp class RunCarrier {
                 RobotInfo[] robotInfos = rc.senseNearbyRobots(me, 4, myTeam);
 		        RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
                 rc.setIndicatorString("" + friends.length);
-                if (friends.length > 4) {
+                if (friends.length > 6) {
                     bannedWells[banCounter] = wellLoc;
                     wellLoc = null;
                     banCounter++;
@@ -158,6 +158,16 @@ public strictfp class RunCarrier {
 				} else {
 					navigateTo(rc, islLoc);
 				}
+            }
+            else if (team == enemyTeam) {
+                boolean onIsland = false;
+                for (MapLocation loc: thisIslandLocs) {
+					if (me.equals(loc))
+						onIsland = true;
+					islLoc = loc;
+                }
+                
+                if (onIsland) return;
             }
         }
 
