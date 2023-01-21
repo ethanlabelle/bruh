@@ -2,6 +2,8 @@ package dev;
 
 import battlecode.common.*;
 
+import static dev.Communication.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -639,5 +641,21 @@ public strictfp class RobotPlayer {
 
 	static float abs(float x) {
 		return x < 0 ? -x : x;
+	}
+	static MapLocation getClosestControlledIsland (RobotController rc) throws GameActionException {
+		// this will find the closest loc
+		int bestDist = maxDistSquared;
+		MapLocation bestLoc = null;
+		for (int index = 0; index < GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
+				MapLocation currLoc = readIslandLocation(rc, index);
+				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
+				if (currDist < bestDist) {
+					bestDist = currDist;
+					bestLoc = currLoc;
+				}
+			}
+		}
+		return bestLoc;
 	}
 }
