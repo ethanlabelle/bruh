@@ -105,7 +105,6 @@ public strictfp class RobotPlayer {
      **/
 	@SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-		
 		// TODO: clean up initialization
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
@@ -237,7 +236,6 @@ public strictfp class RobotPlayer {
 			    if (myTeam != team && EnemyHQLOC == null){
 			    	EnemyHQLOC = loc;
 			    }
-                break;
             }
         }
 
@@ -652,7 +650,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = 0; index < GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
 			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
@@ -669,7 +667,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = 0; index < GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
 			if (readTeamHoldingIsland(rc, index).equals(enemyTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				if (currLoc == null)

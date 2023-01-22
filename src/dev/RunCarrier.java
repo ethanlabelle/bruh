@@ -11,7 +11,8 @@ import static dev.RobotPlayer.*;
 public strictfp class RunCarrier {
     static RobotInfo[] enemyRobots;
     static MapLocation me;
-    static MapLocation[] bannedWells = new MapLocation[5];
+    static final int BAN_LIST_SIZE = 4;
+    static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     /**
      * Run a single turn for a Carrier.
@@ -67,7 +68,7 @@ public strictfp class RunCarrier {
                 if (friends.length > 6) {
                     bannedWells[banCounter] = wellLoc;
                     wellLoc = null;
-                    banCounter++;
+                    banCounter = banCounter++ % BAN_LIST_SIZE;
                 }
             }
 		}
@@ -157,6 +158,7 @@ public strictfp class RunCarrier {
 				
 				} else {
 					navigateTo(rc, islLoc);
+                    return;
 				}
             }
             else if (team == enemyTeam) {
@@ -173,7 +175,7 @@ public strictfp class RunCarrier {
 
         MapLocation neutralIslandLoc = null;
         int id;
-        for (id = 1; id < GameConstants.MAX_NUMBER_ISLANDS; id++) {
+        for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
 			Team team = Communication.readTeamHoldingIsland(rc, id);
 			MapLocation islLoc = Communication.readIslandLocation(rc, id);
 			if (team.equals(Team.NEUTRAL) && islLoc != null) {
