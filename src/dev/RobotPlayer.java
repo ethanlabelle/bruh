@@ -41,8 +41,6 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
-	static final int MAX_FRIENDS = 5;
-
 	// constants for local map
 	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits
 	static final short M_EMPTY = 0b0000;
@@ -202,7 +200,7 @@ public strictfp class RobotPlayer {
     }
 
 	// Fills out the static board array for RobotPlayer board 
-	// TODO: Approximate bytecode use
+	// About 3000 bytecode or so 
 	// TODO: Clouds, currents 
 	// TODO: HIDDEN tiles on init
 	static void updateMap(RobotController rc) throws GameActionException {
@@ -211,51 +209,46 @@ public strictfp class RobotPlayer {
 		islands = rc.senseNearbyIslands(); // 200 bytecode
 		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
 
-		for (MapInfo mapInf : mapInfos) {
+        int length = mapInfos.length;
+        for (int i = length; --i >= 0;) {
+            MapInfo mapInf = mapInfos[i];
 			MapLocation loc = mapInf.getMapLocation();
-			if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) { // <= 180 bytecode (5 * tiles in radius (at most 36))
+			if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) {
 				board[loc.x][loc.y] = M_STORM;
 			}
 		}
 
-		// search for HQs
-		// save location of HQ
-        RobotInfo[] hqs = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
-		for (RobotInfo hq : hqs) {
-			MapLocation loc = hq.getLocation();
-			Team team = hq.getTeam();
-			if (board[loc.x][loc.y] == 0b0000) {
-				if (team == Team.A) {
-					board[loc.x][loc.y] = M_AHQ;	
-				} else {
-					board[loc.x][loc.y] = M_BHQ;	
-				}
-			}
-			if (myTeam == team && turnCount == 0) {
-				HQLOC = loc;
-			}
-			if (myTeam != team && EnemyHQLOC == null){
-				EnemyHQLOC = loc;
-			}
-		}
+        length = robotInfos.length;
+        for (int i = length; --i >= 0;) {
+            RobotInfo robot = robotInfos[i];
+            if (robot.getType() == RobotType.HEADQUARTERS) {
+			    MapLocation loc = robot.getLocation();
+			    Team team = robot.getTeam();
+			    if (board[loc.x][loc.y] == 0b0000) {
+			    	if (team == Team.A) {
+			    		board[loc.x][loc.y] = M_AHQ;	
+			    	} else {
+			    		board[loc.x][loc.y] = M_BHQ;	
+			    	}
+			    }
+			    if (myTeam == team && turnCount == 0) {
+			    	HQLOC = loc;
+			    }
+			    if (myTeam != team && EnemyHQLOC == null){
+			    	EnemyHQLOC = loc;
+			    }
+                break;
+            }
+        }
 
-		RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-		for (WellInfo wellInfo : nearbyWells) {
+        length = nearbyWells.length;
+		for (int i = length; --i >= 0;) {
+            WellInfo wellInfo = nearbyWells[i];
+			MapLocation arrayLoc;
 			MapLocation loc = wellInfo.getMapLocation();
 			switch (wellInfo.getResourceType()) {
 				case MANA:
 					board[loc.x][loc.y] = M_MANA;
-					break;
-				case ADAMANTIUM:
-					board[loc.x][loc.y] = M_ADA;
-					break;
-				case ELIXIR:	
-					board[loc.x][loc.y] = M_ELIX;
-					break;
-			}
-			MapLocation arrayLoc;
-			switch (wellInfo.getResourceType()) {
-				case MANA:
 					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 				        Communication.updateManaWellLocation(rc, loc, HQLOC);
@@ -272,25 +265,34 @@ public strictfp class RobotPlayer {
 						if (rc.getID() % 2 == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
+					board[loc.x][loc.y] = M_ADA;
 					break;
-				default:
+				case ELIXIR:	
+					board[loc.x][loc.y] = M_ELIX;
 					break;
 			}
-		}
+        }
 
-		for (int id : islands) {
+        length = islands.length;
+		for (int i = length; --i >= 0;) {
+            int id = islands[i];
             MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
 			Team team = rc.senseTeamOccupyingIsland(id);
            	Communication.updateIslandInfo(rc, id);
-			for (MapLocation loc : islandLocs) {
-				if (team == Team.A) {
-					board[loc.x][loc.y] = M_AISL;
-				} else if (team == Team.B) {
-					board[loc.x][loc.y] = M_BISL;
-				} else {
-					board[loc.x][loc.y] = M_NISL;
-				}
-			}
+            int _length = islandLocs.length;
+			for (int j = _length; --j >= 0;) {
+                MapLocation loc = islandLocs[j];
+                switch (team) {
+                    case A:
+                        board[loc.x][loc.y] = M_AISL;
+                        break;
+                    case B:
+                        board[loc.x][loc.y] = M_BISL;
+                        break;
+                    default:
+                        board[loc.x][loc.y] = M_NISL;
+                }
+            }
 		}
         Communication.tryWriteMessages(rc);
 	}
