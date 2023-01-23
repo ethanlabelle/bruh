@@ -27,7 +27,6 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         updateMap(rc);
-        
         attackEnemies(rc);
 
         // attack enemy islands
@@ -108,30 +107,30 @@ public strictfp class RunLauncher {
         return dist == 1 || dist == 2;
     }
 
+    // the new attackEnemies function uses less bytecode
     static void attackEnemies(RobotController rc) throws GameActionException {
-        Team opponent = RobotPlayer.myTeam.opponent();
-        RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
-        // sort by health and put launcher types first in the array
+        RobotInfo[] enemies = getEnemies(rc);
+        if (enemies.length == 0) {
+            return;
+        }
+        // sort by descending health and put launcher types last in the array
         Arrays.sort(enemies, (robot1, robot2) -> {
             if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
-                return -1;
-            } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
                 return 1;
+            } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
+                return -1;
             } else {
-                return robot1.health - robot2.health;
+                return robot2.health - robot1.health;
             }
         });
 		boolean shot = false;
 		MapLocation toAttack = null;
-        if (enemies.length > 0) {
-            toAttack = enemies[0].location;
-            for (RobotInfo enemy: enemies) {
-                toAttack = enemy.location;
-                if (rc.canAttack(toAttack)){
-                    rc.attack(toAttack);
-					shot = true;
-					break;
-                }
+        for (int i = enemies.length; --i >= 0;) {
+            toAttack = enemies[i].location;
+            if (rc.canAttack(toAttack)){
+                rc.attack(toAttack);
+                shot = true;
+                break;
             }
         }
 		if (shot) {
@@ -139,13 +138,31 @@ public strictfp class RunLauncher {
 		}
         // if we didn't shoot, move towards the enemy of lowest health and attack it
         else if (!shot && enemies.length > 0 && rc.getActionCooldownTurns() == 0) {
-            toAttack = enemies[0].location;
+            toAttack = enemies[enemies.length - 1].location;
             tryMove(rc, rc.getLocation().directionTo(toAttack));
             if (rc.canAttack(toAttack)){
                 rc.attack(toAttack);
             }
         }
     }
+
+    static RobotInfo[] getEnemies(RobotController rc) throws GameActionException {
+        RobotInfo[] enemyInfos = rc.senseNearbyRobots(-1, enemyTeam);
+        int n = 0;
+        for (int i = enemyInfos.length; --i >= 0;) {
+            if (enemyInfos[i].type != RobotType.HEADQUARTERS) {
+                n++;
+            }
+        }
+        RobotInfo[] enemies = new RobotInfo[n];
+        for (int i = enemyInfos.length; --i >= 0;) {
+            if (enemyInfos[i].type != RobotType.HEADQUARTERS) {
+                enemies[--n] = enemyInfos[i];
+            }
+        }
+        return enemies;
+    }
+
 
     static void attackEnemyIsland(RobotController rc) throws GameActionException {
         if (enemyIsland == null) {

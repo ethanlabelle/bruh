@@ -650,7 +650,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
 			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
@@ -667,7 +667,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
+		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
 			if (readTeamHoldingIsland(rc, index).equals(enemyTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				if (currLoc == null)
