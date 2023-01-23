@@ -20,13 +20,10 @@ public strictfp class RunCarrier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
-        //System.out.println(""+wellLoc);
         updateMap(rc);
-        //System.out.println(""+wellLoc);
 
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        rc.setIndicatorString(""+wellLoc);
 
 		// Try out the carriers attack
         if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
@@ -58,23 +55,6 @@ public strictfp class RunCarrier {
         foundWell = false;
         // Try to gather from squares around us.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
-			//rc.collectResource(wellLoc, -1);
-            //rc.setIndicatorString("Collecting, now have, AD:" +
-            //        rc.getResourceAmount(ResourceType.ADAMANTIUM) +
-            //        " MN: " + rc.getResourceAmount(ResourceType.MANA) +
-            //        " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
-            //foundWell = true;
-            //// if there are too many carriers about this well, forget and ban well
-            //if (getTotalResources(rc) == 40) {
-            //    RobotInfo[] robotInfos = rc.senseNearbyRobots(me, 4, myTeam);
-		    //    RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-            //    rc.setIndicatorString("" + friends.length);
-            //    if (friends.length > 6) {
-            //        bannedWells[banCounter] = wellLoc;
-            //        wellLoc = null;
-            //        banCounter = banCounter++ % BAN_LIST_SIZE;
-            //    }
-            //}
             mine(rc);
 		}
 
@@ -239,12 +219,10 @@ public strictfp class RunCarrier {
 		    RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
             rc.setIndicatorString("" + friends.length);
             if (friends.length > 6) {
-                //System.out.println("banning well " + wellLoc);
                 bannedWells[banCounter] = wellLoc;
                 wellLoc = null;
                 banCounter = banCounter++ % BAN_LIST_SIZE;
             }
-            //System.out.println(""+wellLoc);
             return;
         }
         for (int i = 0; i < directions.length; i++) {
