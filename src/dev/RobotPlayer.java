@@ -212,10 +212,11 @@ public strictfp class RobotPlayer {
         for (int i = length; --i >= 0;) {
             MapInfo mapInf = mapInfos[i];
 			MapLocation loc = mapInf.getMapLocation();
-			if(board[loc.x][loc.y] == M_HIDDEN && (!rc.sensePassability(loc)) ) {
-				board[loc.x][loc.y] = M_STORM;
-			} else {
-				board[loc.x][loc.y] = M_EMPTY;
+			if (board[loc.x][loc.y] == M_HIDDEN) {
+				if (!rc.sensePassability(loc))
+					board[loc.x][loc.y] = M_STORM;
+				else
+					board[loc.x][loc.y] = M_EMPTY;
 			}
 		}
 
@@ -497,6 +498,7 @@ public strictfp class RobotPlayer {
 			wallMode = false;
 			navCount = 0;
 		}
+        rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
 		Direction goalDir = rc.getLocation().directionTo(goalLoc);
 		// head towards goal
 		if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
