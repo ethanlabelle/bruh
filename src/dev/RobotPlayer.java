@@ -43,7 +43,7 @@ public strictfp class RobotPlayer {
 
 	// constants for local map
 	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits
-	static final short M_EMPTY = 0b0000;
+	static final short M_HIDDEN = 0b0000;
 	static final short M_CLOUD = 0b0001;
 	static final short M_STORM = 0b0010;
 	static final short M_CURW = 0b0011;
@@ -58,7 +58,7 @@ public strictfp class RobotPlayer {
 	static final short M_ELIX = 0b1100;
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
-	static final short M_HIDDEN = 0b1111;
+	static final short M_EMPTY = 0b1111;
 	static short[][] board;
 
 	// pathfinding state
@@ -212,9 +212,10 @@ public strictfp class RobotPlayer {
         for (int i = length; --i >= 0;) {
             MapInfo mapInf = mapInfos[i];
 			MapLocation loc = mapInf.getMapLocation();
-			//if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) {
-			if(board[loc.x][loc.y] == 0b0000 && (!rc.sensePassability(loc)) ) {
+			if(board[loc.x][loc.y] == M_HIDDEN && (!rc.sensePassability(loc)) ) {
 				board[loc.x][loc.y] = M_STORM;
+			} else {
+				board[loc.x][loc.y] = M_EMPTY;
 			}
 		}
 
@@ -224,13 +225,13 @@ public strictfp class RobotPlayer {
             if (robot.getType() == RobotType.HEADQUARTERS) {
 			    MapLocation loc = robot.getLocation();
 			    Team team = robot.getTeam();
-			    if (board[loc.x][loc.y] == 0b0000) {
+			    //if (board[loc.x][loc.y] == M_HIDDEN) {
 			    	if (team == Team.A) {
 			    		board[loc.x][loc.y] = M_AHQ;	
 			    	} else {
 			    		board[loc.x][loc.y] = M_BHQ;	
 			    	}
-			    }
+			    //}
 			    if (myTeam == team) {
 			    	HQLOC = loc;
 			    }
