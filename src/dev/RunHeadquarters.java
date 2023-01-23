@@ -42,8 +42,7 @@ public strictfp class RunHeadquarters {
 		if (enemies.length > MAX_ENEMIES) {
 			RobotType [] robotBuild = getBuild (rc);
 			if (robotBuild != null) {
-				int numRobots = robotBuild.length;
-				for (int index = 0; index < numRobots; index ++) {
+				for (int index = 0; index < SPAWN_AMOUNT; index ++) {
 					rc.buildRobot(robotBuild[index], getSpawnLocation(rc, robotBuild[index]));
 				}
 			}
