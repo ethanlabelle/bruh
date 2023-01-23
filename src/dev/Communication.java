@@ -37,7 +37,7 @@ class Communication {
     private static final int TEAM_MASK = 0b1111;
 
 
-	private static final int MESSAGE_QUEUE_SIZE = 100;
+	private static final int MESSAGE_QUEUE_SIZE = 500;
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	private static int head = 0;
 	private static int tail = 0;
