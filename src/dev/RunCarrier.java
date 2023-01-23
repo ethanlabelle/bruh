@@ -229,7 +229,7 @@ public strictfp class RunCarrier {
             MapLocation miningLoc = wellLoc.add(directions[i]);
 			if (!rc.onTheMap(miningLoc))
 				continue;
-            if (!miningLoc.equals(me) && board[miningLoc.x][miningLoc.y] != M_STORM && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER && rc.canMove(me.directionTo(miningLoc))) {
+            if (!miningLoc.equals(me) && board[miningLoc.x][miningLoc.y] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER && rc.canMove(me.directionTo(miningLoc))) {
                 rc.move(me.directionTo(miningLoc));
                 return;
             }
