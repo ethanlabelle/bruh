@@ -66,7 +66,7 @@ public strictfp class RunHeadquarters {
 		}
 
         // Let's try to build a carrier.
-		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD)) {
+		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD) || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS) {
         	rc.setIndicatorString("Trying to build a carrier");
         	loc = getSpawnLocation(rc, RobotType.CARRIER);
         	if (loc != null) {

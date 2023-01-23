@@ -212,7 +212,8 @@ public strictfp class RobotPlayer {
         for (int i = length; --i >= 0;) {
             MapInfo mapInf = mapInfos[i];
 			MapLocation loc = mapInf.getMapLocation();
-			if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) {
+			//if((!rc.sensePassability(loc) || mapInf.getCurrentDirection() != Direction.CENTER) && board[loc.x][loc.y] == 0b0000) {
+			if(board[loc.x][loc.y] == 0b0000 && (!rc.sensePassability(loc)) ) {
 				board[loc.x][loc.y] = M_STORM;
 			}
 		}
