@@ -251,7 +251,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 				        Communication.updateManaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 2 != 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 3 != 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
@@ -260,7 +260,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 					    Communication.updateAdaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 2 == 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 3 == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					board[loc.x][loc.y] = M_ADA;
@@ -556,7 +556,7 @@ public strictfp class RobotPlayer {
 			}
 		}
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-        if (!touchingObstacle(rc) || navCount > 10)
+        if (!touchingObstacle(rc) || navCount > 50)
             goalLoc = null;
 	}
 
