@@ -16,6 +16,10 @@ public strictfp class RunHeadquarters {
 	static int launcherCount = 0;
 	static int carrierCount = 0;
 
+	// number of enemy robots for lockdown
+	static final int MAX_ENEMIES = 4;
+	static final int SPAWN_AMOUNT = 5;
+
     /**
      * Run a single turn for a Headquarters.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -34,6 +38,16 @@ public strictfp class RunHeadquarters {
 		Communication.tryWriteMessages(rc);
 		Communication.clearObsoleteEnemies(rc);
 
+		// if max enemies are reached wait to build robots
+		if (enemies.length > MAX_ENEMIES) {
+			RobotType [] robotBuild = getBuild (rc);
+			if (robotBuild != null) {
+				for (int index = 0; index < SPAWN_AMOUNT; index ++) {
+					rc.buildRobot(robotBuild[index], getSpawnLocation(rc, robotBuild[index]));
+				}
+			}
+			return;
+		}
 
         // Pick a direction to build in.
         if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0) {
@@ -76,4 +90,27 @@ public strictfp class RunHeadquarters {
         	}
 		}
     }
+	// max out elixir for destabilizers then go to launchers, perhaps better implementation later
+	static RobotType [] getBuild (RobotController rc) {
+		int numDestabilizers = rc.getResourceAmount(ResourceType.ELIXIR) / RobotType.DESTABILIZER.buildCostElixir;
+		if (numDestabilizers >= SPAWN_AMOUNT) {
+			RobotType [] holder = new RobotType [SPAWN_AMOUNT];
+			for (int index = 0; index < SPAWN_AMOUNT; index ++) {
+				holder[index] = RobotType.DESTABILIZER;
+			}
+			return holder;
+		}
+		int numLaunchers = rc.getResourceAmount(ResourceType.MANA) / RobotType.LAUNCHER.buildCostMana;
+		if (numDestabilizers + numLaunchers >= SPAWN_AMOUNT) {
+			RobotType [] holder = new RobotType [SPAWN_AMOUNT];
+			for (int index = 0; index < numDestabilizers; index ++) {
+				holder[index] = RobotType.DESTABILIZER;
+			}
+			for (int index = numDestabilizers; index < SPAWN_AMOUNT; index ++) {
+				holder[index] = RobotType.LAUNCHER;
+			}
+			return holder;
+		}
+		return null;
+	}
 }

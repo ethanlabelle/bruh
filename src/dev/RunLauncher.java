@@ -26,9 +26,9 @@ public strictfp class RunLauncher {
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
 
     static void runLauncher(RobotController rc) throws GameActionException {
-        updateMap(rc);
-        
         attackEnemies(rc);
+
+        updateMap(rc);
 
         // attack enemy islands
         attackEnemyIsland(rc);
