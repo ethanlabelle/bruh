@@ -24,6 +24,8 @@ public strictfp class RunLauncher {
     static MapLocation healingIsland = null;
     static MapLocation enemyIsland = null;
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
+    static RobotInfo[] enemies;
+    static MapLocation me;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
@@ -74,12 +76,12 @@ public strictfp class RunLauncher {
        	me = rc.getLocation();
        	if (enemies != null && enemies.length > 0) {
        	    int i = enemies.length;
-       	    for (;--i >= 0;) {
+       	    while (--i >= 0) {
        	                RobotInfo robot = enemies[i];
        	        if (robot.getType() == RobotType.HEADQUARTERS) {
        	                        tryMove(rc, me.directionTo(robot.location).opposite());
        	                        break;
-       	                }
+       	        }
        	    }
        	}
     }
@@ -122,7 +124,7 @@ public strictfp class RunLauncher {
 
     static void attackEnemies(RobotController rc) throws GameActionException {
         Team opponent = RobotPlayer.myTeam.opponent();
-        RobotInfo[] enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
+        enemies = Arrays.stream(rc.senseNearbyRobots(-1, opponent)).filter(robot -> robot.type != RobotType.HEADQUARTERS).toArray(RobotInfo[]::new);
         // sort by health and put launcher types first in the array
         Arrays.sort(enemies, (robot1, robot2) -> {
             if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
@@ -164,7 +166,7 @@ public strictfp class RunLauncher {
             enemyIsland = getClosestEnemyIsland(rc);
         }
         if (enemyIsland != null) {
-            MapLocation me = rc.getLocation();
+            me = rc.getLocation();
             short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
             if (board[me.x][me.y] == islandNum || board[me.x][me.y] == M_NISL) {
                 enemyIsland = null;
@@ -175,7 +177,7 @@ public strictfp class RunLauncher {
     }
 
     static void protectWell(RobotController rc) throws GameActionException {
-        MapLocation me = rc.getLocation();
+        me = rc.getLocation();
 
         if (nearbyWells.length >= 1) {
             WellInfo closest_well = nearbyWells[0];
@@ -254,7 +256,7 @@ public strictfp class RunLauncher {
             }
             if (healingIsland != null) {
                 rc.setIndicatorString("trying to heal!!");
-                MapLocation me = rc.getLocation();
+                me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x][me.y] == islandNum) {
                     bugRandom(rc, healingIsland);
