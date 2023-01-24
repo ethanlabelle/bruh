@@ -31,10 +31,6 @@ public strictfp class RunLauncher {
         if (turnCount != 0)
             updateMap(rc);
 
-
-        if (turnCount != 0)
-            updateMap(rc);
-
         // attack enemy islands
         attackEnemyIsland(rc);
         
