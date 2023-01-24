@@ -26,8 +26,11 @@ public strictfp class RunLauncher {
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
 
     static void runLauncher(RobotController rc) throws GameActionException {
-        updateMap(rc);
         attackEnemies(rc);
+        
+        if (turnCount != 0)
+            updateMap(rc);
+
 
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -35,12 +38,12 @@ public strictfp class RunLauncher {
         // leaves after healing
         healingStrategy(rc);
 
-        if (rc.getRoundNum() < 150) {
-            if (rc.getLocation().distanceSquaredTo(HQLOC) < 35)
-                navigateTo(rc, center);
-            // wiggle(rc);
-            return;
-        }
+        // if (rc.getRoundNum() < 150) {
+        //     if (rc.getLocation().distanceSquaredTo(HQLOC) < 35)
+        //         navigateTo(rc, center);
+        //     // wiggle(rc);
+        //     return;
+        // }
 
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
@@ -127,7 +130,7 @@ public strictfp class RunLauncher {
 		MapLocation toAttack = null;
         for (int i = enemies.length; --i >= 0;) {
             toAttack = enemies[i].location;
-            if (rc.canAttack(toAttack)){
+            if (rc.canAttack(toAttack) && enemies[i].getType() == RobotType.LAUNCHER) {
                 rc.attack(toAttack);
                 shot = true;
                 break;
