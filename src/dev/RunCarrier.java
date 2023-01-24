@@ -123,36 +123,38 @@ public strictfp class RunCarrier {
         int[] islands = rc.senseNearbyIslands();
         for (int id : islands) {
             MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-			Team team = rc.senseTeamOccupyingIsland(id);
-			MapLocation islLoc = null;
-            if (team == Team.NEUTRAL) {
-				boolean onIsland = false;
-                for (MapLocation loc: thisIslandLocs) {
-					if (me.equals(loc))
-						onIsland = true;
-					islLoc = loc;
-                }
-				if (onIsland && rc.canPlaceAnchor()) {
-                   	rc.setIndicatorString("Huzzah, placed anchor!");
-                   	rc.placeAnchor();
-                   	Clock.yield();
-                   	Communication.updateIslandInfo(rc, id);
-                   	return;
-				
-				} else {
-					navigateTo(rc, islLoc);
-				}
-            }
-            else if (team == enemyTeam) {
-                boolean onIsland = false;
-                for (MapLocation loc: thisIslandLocs) {
-					if (me.equals(loc))
-						onIsland = true;
-					islLoc = loc;
-                }
-                
-                if (onIsland) return;
-            }
+			if (thisIslandLocs.length > 0) {
+				Team team = rc.senseTeamOccupyingIsland(id);
+				MapLocation islLoc = null;
+            	if (team == Team.NEUTRAL) {
+					boolean onIsland = false;
+            	    for (MapLocation loc: thisIslandLocs) {
+						if (me.equals(loc))
+							onIsland = true;
+						islLoc = loc;
+            	    }
+					if (onIsland && rc.canPlaceAnchor()) {
+            	       	rc.setIndicatorString("Huzzah, placed anchor!");
+            	       	rc.placeAnchor();
+            	       	Clock.yield();
+            	       	Communication.updateIslandInfo(rc, id);
+            	       	return;
+					
+					} else {
+						navigateTo(rc, islLoc);
+					}
+            	}
+            	else if (team == enemyTeam) {
+            	    boolean onIsland = false;
+            	    for (MapLocation loc: thisIslandLocs) {
+						if (me.equals(loc))
+							onIsland = true;
+						islLoc = loc;
+            	    }
+            	    
+            	    if (onIsland) return;
+            	}
+			}
         }
 
         MapLocation neutralIslandLoc = null;
@@ -169,19 +171,21 @@ public strictfp class RunCarrier {
             navigateTo(rc, neutralIslandLoc);
             for (int i: islands) {
                 if (i == id) {
-			        Team team = rc.senseTeamOccupyingIsland(id);
                     MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-                    if (team == Team.NEUTRAL) {
-                        for (MapLocation loc: thisIslandLocs) {
-                            if (me.equals(loc) && rc.canPlaceAnchor()) {
-                                rc.setIndicatorString("Huzzah, placed anchor!");
-                                rc.placeAnchor();
-                                Clock.yield();
-                                Communication.updateIslandInfo(rc, id);
-                                return;
-                            }
-                        }
-                    }
+					if (thisIslandLocs.length > 0) {
+			        	Team team = rc.senseTeamOccupyingIsland(id);
+                    	if (team == Team.NEUTRAL) {
+                    	    for (MapLocation loc: thisIslandLocs) {
+                    	        if (me.equals(loc) && rc.canPlaceAnchor()) {
+                    	            rc.setIndicatorString("Huzzah, placed anchor!");
+                    	            rc.placeAnchor();
+                    	            Clock.yield();
+                    	            Communication.updateIslandInfo(rc, id);
+                    	            return;
+                    	        }
+                    	    }
+                    	}
+					}
                 }
             }
         }
