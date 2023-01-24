@@ -15,6 +15,8 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
+    static final int CARRIER_DIFF_MOD = 3;
+
     /**
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -25,14 +27,11 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
-		// Try out the carriers attack
         if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
             carrierAttack(rc);
         }
-
-        // run away from enemy launchers
+       
 		if (enemyRobots.length > 0) {
-			Communication.reportEnemy(rc, rc.getLocation());
             runAway(rc);
 		}
 
@@ -42,13 +41,13 @@ public strictfp class RunCarrier {
         }
 		
         MapLocation pWellLoc;
-		if (rc.getID() % 3 == 0) {
+		if (rc.getID() % CARRIER_DIFF_MOD == 0) {
 		    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 		} 
 		else {
 			pWellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
 		}
-        if (pWellLoc != null && !onBanList(pWellLoc)) {
+        if (wellLoc == null && pWellLoc != null && !onBanList(pWellLoc)) {
             wellLoc = pWellLoc;
         }
 
@@ -142,7 +141,6 @@ public strictfp class RunCarrier {
 				
 				} else {
 					navigateTo(rc, islLoc);
-                    return;
 				}
             }
             else if (team == enemyTeam) {

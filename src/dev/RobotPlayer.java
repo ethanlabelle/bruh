@@ -59,7 +59,7 @@ public strictfp class RobotPlayer {
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
 	static final short M_EMPTY = 0b1111;
-	static short[][] board;
+	static byte[][] board;
 
 	// pathfinding state
 	static Direction currentDirection;
@@ -108,7 +108,7 @@ public strictfp class RobotPlayer {
 		// TODO: clean up initialization
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
-		board = new short[width][height];
+		board = new byte[width][height];
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
@@ -147,7 +147,6 @@ public strictfp class RobotPlayer {
 			Communication.updateHeadquarterInfo(rc);
 		} else {
 			Communication.updateHeadquarterInfo(rc);
-			updateMap(rc);
 		}
 
 
@@ -226,13 +225,11 @@ public strictfp class RobotPlayer {
             if (robot.getType() == RobotType.HEADQUARTERS) {
 			    MapLocation loc = robot.getLocation();
 			    Team team = robot.getTeam();
-			    //if (board[loc.x][loc.y] == M_HIDDEN) {
-			    	if (team == Team.A) {
-			    		board[loc.x][loc.y] = M_AHQ;	
-			    	} else {
-			    		board[loc.x][loc.y] = M_BHQ;	
-			    	}
-			    //}
+			    if (team == Team.A) {
+			    	board[loc.x][loc.y] = M_AHQ;	
+			    } else {
+			    	board[loc.x][loc.y] = M_BHQ;	
+			    }
 			    if (myTeam == team) {
 			    	HQLOC = loc;
 			    }
@@ -254,7 +251,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 				        Communication.updateManaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 3 != 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
@@ -263,7 +260,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 					    Communication.updateAdaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % 3 == 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					board[loc.x][loc.y] = M_ADA;
