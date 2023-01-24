@@ -652,8 +652,9 @@ public strictfp class RobotPlayer {
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
 		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
-			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
-				MapLocation currLoc = readIslandLocation(rc, index);
+			int id = index + 1;
+			if (readTeamHoldingIsland(rc, id).equals(myTeam)) {
+				MapLocation currLoc = readIslandLocation(rc, id);
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
 				if (currDist < bestDist) {
 					bestDist = currDist;
@@ -669,8 +670,9 @@ public strictfp class RobotPlayer {
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
 		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
-			if (readTeamHoldingIsland(rc, index).equals(enemyTeam)) {
-				MapLocation currLoc = readIslandLocation(rc, index);
+			int id = index + 1;
+			if (readTeamHoldingIsland(rc, id).equals(enemyTeam)) {
+				MapLocation currLoc = readIslandLocation(rc, id);
 				if (currLoc == null)
 					continue;
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
