@@ -62,6 +62,7 @@ public strictfp class RunCarrier {
             return;
         }
 
+
 		// try to deposite resources
         if (getTotalResources(rc) == 40) {
             navigateTo(rc, HQLOC);
@@ -82,19 +83,6 @@ public strictfp class RunCarrier {
             if (wellLoc != null) {
                 navigateTo(rc, wellLoc);
             } else {
-				enemyRobots = rc.senseNearbyRobots(-1, enemyTeam); 
-				me = rc.getLocation();
-	   			if (enemyRobots != null && enemyRobots.length > 0) {
-	   			    int i = enemyRobots.length;
-	   			    for (;--i >= 0;) {
-						RobotInfo robot = enemyRobots[i];
-	   			    	if (robot.getType() == RobotType.HEADQUARTERS) {
-							tryMove(rc, me.directionTo(robot.location).opposite());
-							break;
-						}
-	   			    }
-	   			}
-
 				// Also try to move *randomly*.
 				Direction dir = currentDirection;
 				if (rc.canMove(dir)) {
@@ -162,6 +150,7 @@ public strictfp class RunCarrier {
 						onIsland = true;
 					islLoc = loc;
                 }
+                
                 if (onIsland) return;
             }
         }

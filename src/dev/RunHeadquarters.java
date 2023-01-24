@@ -68,7 +68,7 @@ public strictfp class RunHeadquarters {
             }
         }
         // Let's try to build a launcher.
-		if ((launcherCount < LAUNCHER_MOD && rc.getResourceAmount(ResourceType.MANA) > 2 * RobotType.LAUNCHER.buildCostMana) || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
+		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS || rc.getRoundNum() <= 250) {
             rc.setIndicatorString("Trying to build a launcher");
             //launcherCount += buildNLaunchers(rc, 2);
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
