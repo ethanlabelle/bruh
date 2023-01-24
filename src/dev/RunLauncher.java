@@ -60,17 +60,28 @@ public strictfp class RunLauncher {
         
         // want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
-            if (justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-                return;
+            if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
+            	navigateTo(rc, EnemyHQLOC);
+            	checkForFriends(rc, EnemyHQLOC);
             }
-            navigateTo(rc, EnemyHQLOC);
-            checkForFriends(rc, EnemyHQLOC);
         } else{
             travelToPossibleHQ(rc);
         }
 
         attackEnemies(rc);
-        
+
+		enemies = rc.senseNearbyRobots(-1, enemyTeam);
+       	me = rc.getLocation();
+       	if (enemies != null && enemies.length > 0) {
+       	    int i = enemies.length;
+       	    for (;--i >= 0;) {
+       	                RobotInfo robot = enemies[i];
+       	        if (robot.getType() == RobotType.HEADQUARTERS) {
+       	                        tryMove(rc, me.directionTo(robot.location).opposite());
+       	                        break;
+       	                }
+       	    }
+       	}
     }
 
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
