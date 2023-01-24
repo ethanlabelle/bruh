@@ -1,8 +1,8 @@
-package dev;
+package v16;
 
 import battlecode.common.*;
 
-import static dev.Communication.*;
+import static v16.Communication.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,7 +59,7 @@ public strictfp class RobotPlayer {
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
 	static final short M_EMPTY = 0b1111;
-	static byte[][] board;
+	static short[][] board;
 
 	// pathfinding state
 	static Direction currentDirection;
@@ -108,7 +108,7 @@ public strictfp class RobotPlayer {
 		// TODO: clean up initialization
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
-		board = new byte[width][height];
+		board = new short[width][height];
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
@@ -147,6 +147,7 @@ public strictfp class RobotPlayer {
 			Communication.updateHeadquarterInfo(rc);
 		} else {
 			Communication.updateHeadquarterInfo(rc);
+			updateMap(rc);
 		}
 
 
@@ -225,11 +226,13 @@ public strictfp class RobotPlayer {
             if (robot.getType() == RobotType.HEADQUARTERS) {
 			    MapLocation loc = robot.getLocation();
 			    Team team = robot.getTeam();
-			    if (team == Team.A) {
-			    	board[loc.x][loc.y] = M_AHQ;	
-			    } else {
-			    	board[loc.x][loc.y] = M_BHQ;	
-			    }
+			    //if (board[loc.x][loc.y] == M_HIDDEN) {
+			    	if (team == Team.A) {
+			    		board[loc.x][loc.y] = M_AHQ;	
+			    	} else {
+			    		board[loc.x][loc.y] = M_BHQ;	
+			    	}
+			    //}
 			    if (myTeam == team) {
 			    	HQLOC = loc;
 			    }
@@ -251,7 +254,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 				        Communication.updateManaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 3 != 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					break;
@@ -260,7 +263,7 @@ public strictfp class RobotPlayer {
                     if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 					    Communication.updateAdaWellLocation(rc, loc, HQLOC);
 					if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-						if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.onBanList(loc))
+						if (rc.getID() % 3 == 0 && !RunCarrier.onBanList(loc))
 							wellLoc = loc;
 					}
 					board[loc.x][loc.y] = M_ADA;
@@ -651,7 +654,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
+		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
 			if (readTeamHoldingIsland(rc, index).equals(myTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
@@ -668,7 +671,7 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = maxDistSquared;
 		MapLocation bestLoc = null;
-		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
+		for (int index = 1; index <= GameConstants.MAX_NUMBER_ISLANDS; index ++) {
 			if (readTeamHoldingIsland(rc, index).equals(enemyTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, index);
 				if (currLoc == null)
