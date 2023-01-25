@@ -15,7 +15,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 3;
+    static final int CARRIER_DIFF_MOD = 5;
 
     /**
      * Run a single turn for a Carrier.
