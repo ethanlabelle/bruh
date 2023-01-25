@@ -31,7 +31,7 @@ public strictfp class RunAmplifier {
             return;
 		}
 
-        if (turnCount < 250) {
+        if (turnCount < 100) {
             MapLocation neutralIslandLoc = null;
             for (int i = 1; i <= GameConstants.MAX_NUMBER_ISLANDS; i++) {
                 if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
@@ -41,14 +41,6 @@ public strictfp class RunAmplifier {
             }
             if (neutralIslandLoc != null)
                 navigateTo(rc, neutralIslandLoc);
-            else {
-                MapLocation wellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
-                if (wellLoc != null)
-                    navigateTo(rc, wellLoc);
-                else
-                    navigateTo(rc, HQLOC);
-            }
-            return;
         }
 
         // Move randomly
