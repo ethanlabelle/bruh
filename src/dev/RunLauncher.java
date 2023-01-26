@@ -24,23 +24,9 @@ public strictfp class RunLauncher {
     static MapLocation healingIsland = null;
     static MapLocation enemyIsland = null;
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
-    static MapLocation [] enemyHQs = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-    static RobotInfo [] enemies;
-    public static MapLocation [] verticalEnemies = null;
-    public static MapLocation [] horizontalEnemies = null;
-    public static MapLocation [] rotationalEnemies = null;
-    public static boolean canVertical = true;
-    public static boolean canHorizontal = true;
-    public static boolean canRotational = true;
 
     static void runLauncher(RobotController rc) throws GameActionException {
-
         attackEnemies(rc);
-
-        // updates to see if can eleminate one of the semetrees
-        updateHorizontal();
-        updateVertical();
-        updateRotational();
         
         if (turnCount != 0)
             updateMap(rc);
@@ -77,7 +63,7 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
 
-        enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
         MapLocation me = rc.getLocation();
         if (enemies != null && enemies.length > 0) {
             int i = enemies.length;
@@ -129,7 +115,7 @@ public strictfp class RunLauncher {
 
     // the new attackEnemies function uses less bytecode
     static void attackEnemies(RobotController rc) throws GameActionException {
-        enemies = getEnemies(rc);
+        RobotInfo[] enemies = getEnemies(rc);
         if (enemies.length == 0) {
             return;
         }
@@ -174,7 +160,7 @@ public strictfp class RunLauncher {
                 n++;
             }
         }
-        enemies = new RobotInfo[n];
+        RobotInfo[] enemies = new RobotInfo[n];
         for (int i = enemyInfos.length; --i >= 0;) {
             if (enemyInfos[i].type != RobotType.HEADQUARTERS) {
                 enemies[--n] = enemyInfos[i];
@@ -297,105 +283,5 @@ public strictfp class RunLauncher {
             rc.move(oscillatDirection);
         }
     }
-        // quick check to see if poss vertical
-        if (!canVertical) {
-            return;
-        }
-        // check to see if possible vertical enemies are found
-        if (verticalEnemies == null) {
-            MapLocation [] otherLoc = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-            for (int index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-                if (Communication.headquarterLocs[index] == null) {
-                    break;
-                }
-            otherLoc[index] = new MapLocation(abs(Communication.headquarterLocs[index].x + 1 - width), Communication.headquarterLocs[index].y);
-            }
-            verticalEnemies = otherLoc;
-        }
-        // checks the validaty of the assessment
-        MapLocation [] HQs = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-        int index = 0;
-        for (RobotInfo enemy : enemies) {
-            if (enemy.type == RobotType.HEADQUARTERS) {
-                HQs[index] = enemy.location;
-                index ++;
-            }
-        }
-        for (index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-            if (HQs[index] == null) {
-                break;
-            }
-            if (!Arrays.asList(verticalEnemies).contains(HQs[index])) {
-                verticalEnemies = null;
-                canVertical = false;
-                break;
-            }
-        }
-    }
-    public static void updateHorizontal () {
-        if (!canHorizontal) {
-            return;
-        }
-        if (horizontalEnemies == null) {
-            MapLocation [] otherLoc = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-            for (int index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-                if (Communication.headquarterLocs[index] == null) {
-                    break;
-                }
-                otherLoc[index] = new MapLocation(Communication.headquarterLocs[index].x, abs(Communication.headquarterLocs[index].y + 1 - height));
-            }
-            horizontalEnemies = otherLoc;
-        }
-        MapLocation [] HQs = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-        int index = 0;
-        for (RobotInfo enemy : enemies) {
-            if (enemy.type == RobotType.HEADQUARTERS) {
-                HQs[index] = enemy.location;
-                index ++;
-            }
-        }
-        for (index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-            if (HQs[index] == null) {
-                break;
-            }
-            if (!Arrays.asList(horizontalEnemies).contains(HQs[index])) {
-                horizontalEnemies = null;
-                canHorizontal = false;
-                break;
-            }
-        }
-    }
-    public static void updateRotational () {
-        if (!canRotational) {
-            return;
-        }
-        if (rotationalEnemies == null) {
-            MapLocation [] otherLoc = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-            for (int index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-                if (Communication.headquarterLocs[index] == null) {
-                    break;
-                }
-                otherLoc[index] = new MapLocation(abs(Communication.headquarterLocs[index].x + 1 - width), abs(Communication.headquarterLocs[index].y + 1 - height));
-            }
-            rotationalEnemies = otherLoc;
-        }
-        MapLocation [] HQs = new MapLocation [GameConstants.MAX_STARTING_HEADQUARTERS];
-        int index = 0;
-        for (RobotInfo enemy : enemies) {
-            if (enemy.type == RobotType.HEADQUARTERS) {
-                HQs[index] = enemy.location;
-                index ++;
-            }
-        }
-        for (index = 0; index < GameConstants.MAX_STARTING_HEADQUARTERS; index ++) {
-            if (HQs[index] == null) {
-                break;
-            }
-            if (!Arrays.asList(rotationalEnemies).contains(HQs[index])) {
-                rotationalEnemies = null;
-                canRotational = false;
-                break;
-            }
-        }
-    }
+    
 }

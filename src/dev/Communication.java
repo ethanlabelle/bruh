@@ -41,7 +41,7 @@ class Communication {
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	private static int head = 0;
 	private static int tail = 0;
-    public static MapLocation[] headquarterLocs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
+    private static MapLocation[] headquarterLocs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
 
 	static void add(Message m) throws GameActionException {
 		if (messagesQueue[tail] == null)
