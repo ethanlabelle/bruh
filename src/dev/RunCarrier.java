@@ -27,10 +27,6 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
-        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
-            carrierAttack(rc);
-        }
-       
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
             return;

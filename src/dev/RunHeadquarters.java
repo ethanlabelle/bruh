@@ -32,8 +32,13 @@ public strictfp class RunHeadquarters {
 		RobotInfo[] enemies = Arrays.stream(robotInfos).filter(robot -> robot.team != myTeam).toArray(RobotInfo[]::new);	
 
 		if (enemies.length > 0) {
-			Communication.reportEnemy(rc, rc.getLocation());
+            for (RobotInfo robot: enemies) {
+                if (robot.type == RobotType.LAUNCHER) {
+			        Communication.reportEnemy(rc, rc.getLocation());
+                }
+            }
 		}
+
 		// write to shared array outstanding messages
 		Communication.tryWriteMessages(rc);
 		Communication.clearObsoleteEnemies(rc);

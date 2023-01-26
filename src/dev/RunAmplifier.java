@@ -37,8 +37,12 @@ public strictfp class RunAmplifier {
 
         // run away from enemy launchers
 		if (enemyRobots.length > 0) {
-			Communication.reportEnemy(rc, rc.getLocation());
-            runAway(rc);
+            for (RobotInfo robot: enemyRobots) {
+                if (robot.type == RobotType.LAUNCHER) {
+			        Communication.reportEnemy(rc, rc.getLocation());
+                    runAway(rc);
+                }
+            }
 		}
 
 		// look for targets to defend
