@@ -7,6 +7,8 @@ import static dev.RobotPlayer.*;
 public strictfp class RunAmplifier {
     static MapLocation me;
     static RobotInfo[] enemyRobots;
+    static RobotInfo[] friendlyRobots;
+
     /**
      * Run a single turn for a Amplifier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -15,7 +17,23 @@ public strictfp class RunAmplifier {
         updateMap(rc);
 
         me = rc.getLocation();
-        enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
+        friendlyRobots = rc.senseNearbyRobots(-1, myTeam);
+
+        // run away from friendly amplifiers
+        if (friendlyRobots.length > 0) {
+            me = rc.getLocation();
+            MapLocation dest = me;
+            int i = friendlyRobots.length;
+            while (--i >= 0) {
+                if (friendlyRobots[i].type == RobotType.AMPLIFIER) {
+                    dest = dest.add(me.directionTo(friendlyRobots[i].location).opposite());
+                }
+            }
+            if (!dest.equals(me)) {
+                tryMove(rc, me.directionTo(dest));
+            }
+        }
 
         // run away from enemy launchers
 		if (enemyRobots.length > 0) {
