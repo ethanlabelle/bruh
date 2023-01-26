@@ -4,6 +4,8 @@ import java.util.List;
 
 import java.util.ArrayList;
 
+import java.util.HashSet;
+
 import battlecode.common.*;
 
 class Message {
@@ -41,7 +43,9 @@ class Communication {
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	private static int head = 0;
 	private static int tail = 0;
-    private static MapLocation[] headquarterLocs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
+    public static MapLocation[] headquarterLocs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
+    // a set of headquarterLocs
+    public static HashSet<MapLocation> headquarterLocsSet = new HashSet<MapLocation>();
 
 	static void add(Message m) throws GameActionException {
 		if (messagesQueue[tail] == null)
@@ -83,6 +87,7 @@ class Communication {
             if (rc.readSharedArray(i) == 0) {
                 rc.writeSharedArray(i, locationToInt(rc, me));
 				headquarterLocs[i] = me;
+                headquarterLocsSet.add(me);
                 break;
             }
         }
@@ -90,7 +95,9 @@ class Communication {
 
     static void updateHeadquarterInfo(RobotController rc) throws GameActionException {
         for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
-       	    headquarterLocs[i] = (intToLocation(rc, rc.readSharedArray(i)));
+            MapLocation loc = intToLocation(rc, rc.readSharedArray(i));
+       	    headquarterLocs[i] = loc;
+            headquarterLocsSet.add(loc);
        	    if (rc.readSharedArray(i) == 0) {
        	        break;
        	    }

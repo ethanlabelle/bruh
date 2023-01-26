@@ -116,32 +116,42 @@ public strictfp class RunLauncher {
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
-            int id = fake_id;
-            if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
-            else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
-            else
-                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
-        }
-        if (rc.canSenseLocation(possibleEnemyLOC)) {
-            RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
-                EnemyHQLOC = possibleEnemyLOC;
-                return;
+            MapLocation closest_predicted = null;
+            int min_dist = 7200;
+            MapLocation me = rc.getLocation();
+            for(int i = Communication.headquarterLocs.length; --i >= 0;) {
+                MapLocation curr_hq = Communication.headquarterLocs[i];
+                if (curr_hq == null)
+                    continue;
+                MapLocation guess_loc = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+                // guess on rotational symmetry
+                if (me.distanceSquaredTo(guess_loc) < min_dist && !Communication.headquarterLocsSet.contains(guess_loc)) {
+                    min_dist = me.distanceSquaredTo(guess_loc);
+                    closest_predicted = guess_loc;
+                }
             }
-            else{
-                possibleEnemyLOC = null;
-                EnemyHQLOC = undefined_loc;
-                fake_id += 1;
-                if(fake_id == 6){
-                    move_randomly = true;
+            possibleEnemyLOC = closest_predicted;
+        }
+        //     else{
+            //         possibleEnemyLOC = null;
+            //         EnemyHQLOC = undefined_loc;
+            //         fake_id += 1;
+        //         if(fake_id == 6){
+        //             move_randomly = true;
+        //         }
+        //     }
+        // }
+        if (possibleEnemyLOC != null) {
+            navigateTo(rc, possibleEnemyLOC);
+            if (rc.canSenseLocation(possibleEnemyLOC)) {
+                RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+                if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
+                    EnemyHQLOC = possibleEnemyLOC;
+                    possibleEnemyLOC = null;
+                    return;
                 }
             }
         }
-        if(possibleEnemyLOC != null)
-            navigateTo(rc, possibleEnemyLOC);
     }
 
     static boolean adjacentTo(RobotController rc, MapLocation loc) throws GameActionException {
