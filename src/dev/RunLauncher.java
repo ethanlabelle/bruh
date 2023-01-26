@@ -34,14 +34,20 @@ public strictfp class RunLauncher {
         else
             HQLOC = rc.getLocation();
         MapLocation leader_loc = getLeader(rc);
+
+        if (!swarm) {
+            swarm = friends.length >= 2;
+        }
         
-        // if this launcher is not a leader or doesn't have enough friends
-        if (!leader_loc.equals(rc.getLocation()) || friends.length < 2) {
-            runFollower(rc, leader_loc);
-            return;
+        // if this launcher is not a leader
+        if ((!leader_loc.equals(rc.getLocation()) || !swarm)) {
+            Direction dir = rc.getLocation().directionTo(leader_loc);
+            if (rc.canMove(dir)) {
+                runFollower(rc, leader_loc);
+                return;
+            }
         }
 
-    
 
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -136,14 +142,17 @@ public strictfp class RunLauncher {
     static void attackEnemies(RobotController rc) throws GameActionException {
         RobotInfo[] enemies = getEnemies(rc);
         if (enemies.length == 0) {
-            // sense nearby clouds and attack a location in there
-            MapLocation[] clouds = rc.senseNearbyCloudLocations();
-            for (int i = clouds.length; --i >= 0;) {
-                if (rc.canAttack(clouds[i])) {
-                    rc.attack(clouds[i]);
-                    break;
+            if (!rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                for (int i = clouds.length; --i >= 0;) {
+                    if (rc.canAttack(clouds[i])) {
+                        rc.attack(clouds[i]);
+                        break;
+                    }
                 }
             }
+            return;
         }
         // sort by descending health and put launcher types last in the array
         Arrays.sort(enemies, (robot1, robot2) -> {
