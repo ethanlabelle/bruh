@@ -15,7 +15,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 5;
+    static final int CARRIER_DIFF_MOD = 6;
 
     /**
      * Run a single turn for a Carrier.
@@ -55,6 +55,15 @@ public strictfp class RunCarrier {
         // Try to gather from squares around us.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
+		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 4) {
+            RobotInfo[] robotInfos = rc.senseNearbyRobots(me, 2, myTeam);
+		    RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
+            rc.setIndicatorString("" + friends.length);
+            if (friends.length > 3) {
+                bannedWells[banCounter] = wellLoc;
+                wellLoc = null;
+                banCounter = banCounter++ % BAN_LIST_SIZE;
+            }
 		}
 
         // If at a well, keep collecting until full.
@@ -236,5 +245,8 @@ public strictfp class RunCarrier {
                 return;
             }
         } 
+		if (rc.canMove(me.directionTo(wellLoc))) {
+			rc.move(me.directionTo(wellLoc));
+		}
     }
 }

@@ -18,8 +18,8 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = 30;
-    static final int maximum_health = RobotType.LAUNCHER.health / 2;
+    static final int minimum_health = RobotType.LAUNCHER.health/2;
+    static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;
     static MapLocation enemyIsland = null;
@@ -31,11 +31,11 @@ public strictfp class RunLauncher {
         if (turnCount != 0)
             updateMap(rc);
 
-        // attack enemy islands
-        attackEnemyIsland(rc);
-        
         // leaves after healing
-        healingStrategy(rc);
+        if (healingStrategy(rc)) {
+			attackEnemies(rc);
+			return;	
+		}
 
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
@@ -45,6 +45,9 @@ public strictfp class RunLauncher {
             attackEnemies(rc);
             return;
 		}
+
+        // attack enemy islands
+        attackEnemyIsland(rc);
 
         if (move_randomly) {
             moveLastResort(rc);
@@ -250,7 +253,7 @@ public strictfp class RunLauncher {
         return distanceSquared + epsilon > loc1.distanceSquaredTo(loc2);
     }
 
-    static void healingStrategy(RobotController rc) throws GameActionException {
+    static boolean healingStrategy(RobotController rc) throws GameActionException {
         // leave if healed
         if (isHealing && rc.getHealth() >= maximum_health) {
             isHealing = false;
@@ -269,12 +272,13 @@ public strictfp class RunLauncher {
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x][me.y] == islandNum) {
                     bugRandom(rc, healingIsland);
-                    return;
+                    return true;
                 }
                 navigateTo(rc, healingIsland);
-                return;
+                return true;
             }
         }
+		return false;
     }
 
     static void wiggle(RobotController  rc) throws GameActionException {

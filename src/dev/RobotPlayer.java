@@ -506,7 +506,17 @@ public strictfp class RobotPlayer {
                 currentDirection = currentDirection.rotateLeft().rotateLeft();
 			    hitPoint = rc.getLocation();
             } else {
-                bugRandom(rc, goalLoc);
+				// still follow RHR in crowds but dont enter wall mode
+				rhr(rc);
+				rc.setIndicatorString("crowd mode");
+				//int i = directions.length;
+				//while (--i >= 0) {
+                //	currentDirection = currentDirection.rotateLeft();
+				//	if (tryMove(rc, currentDirection)) {
+				//		break;
+				//	}
+				//}
+				//rc.setIndicatorString("crowd mode");
             }
 		}
 		
@@ -527,38 +537,89 @@ public strictfp class RobotPlayer {
 			}
 
 			// follow obstacle using right hand rule
-			boolean frontRight = senseFrontRight(rc);
-			boolean front = senseFront(rc);
-            boolean right = senseRight(rc);
-			if (!right) {
-				Direction moveDirection = currentDirection.rotateRight().rotateRight();
-				if (tryMove(rc, moveDirection)) {
-                    currentDirection = moveDirection;
-                    rc.setIndicatorString("turning right " + currentDirection);
-                } else if (rc.getMovementCooldownTurns() == 0) {
-                    rc.setIndicatorString("could not turn right " + moveDirection);
-                    bugRandom(rc, goalLoc);
-                }
-            } else if (!frontRight) {
-				Direction moveDirection = currentDirection.rotateRight();
-				if (tryMove(rc, moveDirection)) {
-                    currentDirection = moveDirection;
-                    rc.setIndicatorString("turning front right " + currentDirection);
-                } else if (rc.getMovementCooldownTurns() == 0){
-                    rc.setIndicatorString("could not turn front right " + moveDirection);
-                    bugRandom(rc, goalLoc);
-                }
-			} else if (!front) {
-                if (tryMove(rc, currentDirection))
-                    rc.setIndicatorString("moving forward " + currentDirection);
-			} else {
-				turnLeft();
-                rc.setIndicatorString("turning left " + currentDirection);
-			}
+			boolean moved = rhr(rc);
+			//if (!moved && rc.getMovementCooldownTurns() == 0) {
+			//	int i = directions.length;
+			//	while (--i >= 0) {
+            //    	currentDirection = currentDirection.rotateLeft();
+			//		if (tryMove(rc, currentDirection)) {
+			//			break;
+			//		}
+			//	}
+			//	rc.setIndicatorString("crowd mode");
+			//}
+			//boolean frontRight = senseFrontRight(rc);
+			//boolean front = senseFront(rc);
+            //boolean right = senseRight(rc);
+			//if (!right) {
+			//	Direction moveDirection = currentDirection.rotateRight().rotateRight();
+			//	if (tryMove(rc, moveDirection)) {
+            //        currentDirection = moveDirection;
+            //        rc.setIndicatorString("turning right " + currentDirection);
+            //    } else if (rc.getMovementCooldownTurns() == 0) {
+            //        rc.setIndicatorString("could not turn right " + moveDirection);
+            //        bugRandom(rc, goalLoc);
+            //    }
+            //} else if (!frontRight) {
+			//	Direction moveDirection = currentDirection.rotateRight();
+			//	if (tryMove(rc, moveDirection)) {
+            //        currentDirection = moveDirection;
+            //        rc.setIndicatorString("turning front right " + currentDirection);
+            //    } else if (rc.getMovementCooldownTurns() == 0){
+            //        rc.setIndicatorString("could not turn front right " + moveDirection);
+            //        bugRandom(rc, goalLoc);
+            //    }
+			//} else if (!front) {
+            //    if (tryMove(rc, currentDirection))
+            //        rc.setIndicatorString("moving forward " + currentDirection);
+			//} else {
+			//	turnLeft();
+            //    rc.setIndicatorString("turning left " + currentDirection);
+			//}
+
 		}
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-        if (!touchingObstacle(rc) || navCount > 50)
+        if (!touchingObstacle(rc) || navCount > 100) {
             goalLoc = null;
+			return;
+		}
+	}
+
+	static boolean rhr(RobotController rc) throws GameActionException {
+		// follow obstacle using right hand rule
+		boolean frontRight = senseFrontRight(rc);
+		boolean front = senseFront(rc);
+        boolean right = senseRight(rc);
+		boolean moved = false;
+		if (!right) {
+			Direction moveDirection = currentDirection.rotateRight().rotateRight();
+			if (tryMove(rc, moveDirection)) {
+                currentDirection = moveDirection;
+				moved = true;
+                rc.setIndicatorString("turning right " + currentDirection);
+            } else if (rc.getMovementCooldownTurns() == 0) {
+                rc.setIndicatorString("could not turn right " + moveDirection);
+                //bugRandom(rc, goalLoc);
+            }
+        } else if (!frontRight) {
+			Direction moveDirection = currentDirection.rotateRight();
+			if (tryMove(rc, moveDirection)) {
+                currentDirection = moveDirection;
+				moved = true;
+                rc.setIndicatorString("turning front right " + currentDirection);
+            } else if (rc.getMovementCooldownTurns() == 0){
+                rc.setIndicatorString("could not turn front right " + moveDirection);
+                //bugRandom(rc, goalLoc);
+            }
+		} else if (!front) {
+            if (tryMove(rc, currentDirection))
+				moved = true;
+                rc.setIndicatorString("moving forward " + currentDirection);
+		} else {
+			turnLeft();
+            rc.setIndicatorString("turning left " + currentDirection);
+		}
+		return moved;
 	}
 
 	static boolean onMLine(MapLocation loc) {
@@ -613,7 +674,7 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 3) {
+		while (i < 4) {
             rc.setIndicatorString("Trying to build a launcher");
 			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
             if (loc != null) {
@@ -624,7 +685,7 @@ public strictfp class RobotPlayer {
 			}
 		}	
 		i = 0;
-		while (i < 4) {
+		while (i < 2) {
             rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
             if (loc != null) {
