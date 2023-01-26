@@ -613,11 +613,11 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 3) {
-            rc.setIndicatorString("Trying to build a launcher");
-			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+		while (i < 4) {
+            rc.setIndicatorString("Trying to build a carrier");
+			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
             if (loc != null) {
-                rc.buildRobot(RobotType.LAUNCHER, loc);
+                rc.buildRobot(RobotType.CARRIER, loc);
 				i++;
             } else {
 				Clock.yield();
@@ -625,10 +625,10 @@ public strictfp class RobotPlayer {
 		}	
 		i = 0;
 		while (i < 4) {
-            rc.setIndicatorString("Trying to build a carrier");
-			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
+            rc.setIndicatorString("Trying to build a launcher");
+			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
             if (loc != null) {
-                rc.buildRobot(RobotType.CARRIER, loc);
+                rc.buildRobot(RobotType.LAUNCHER, loc);
 				i++;
             } else {
 				Clock.yield();
