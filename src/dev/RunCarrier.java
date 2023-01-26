@@ -31,10 +31,6 @@ public strictfp class RunCarrier {
             carrierAttack(rc);
         }
        
-		if (enemyRobots.length > 0) {
-            runAway(rc);
-		}
-
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
             return;

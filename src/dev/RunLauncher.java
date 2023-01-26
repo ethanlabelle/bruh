@@ -273,8 +273,17 @@ public strictfp class RunLauncher {
                 MapLocation me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x][me.y] == islandNum) {
-                    bugRandom(rc, healingIsland);
-                    return;
+                    if (rc.canSenseLocation(healingIsland)) {
+                        int islandId = rc.senseIsland(healingIsland);
+                        MapLocation[] islandLocs = rc.senseNearbyIslandLocations(islandId);
+                        for (MapLocation islandLoc : islandLocs) {
+                            if (rc.canMove(me.directionTo(islandLoc))) {
+                                rc.move(me.directionTo(islandLoc));
+                                return;
+                            }
+                        }
+                        return;
+                    }
                 }
                 navigateTo(rc, healingIsland);
                 return;

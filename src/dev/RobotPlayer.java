@@ -80,7 +80,6 @@ public strictfp class RobotPlayer {
 	
 	// general robot state
     static int turnCount = 0; // number of turns robot has been alive
-	static int navCount = 0;
 	static Team myTeam;
 	static Team enemyTeam;
 	
@@ -478,7 +477,6 @@ public strictfp class RobotPlayer {
 		//  If the leave point is closer to the goal than the hit point, leave the wall, and move towards the goal again.
 		// Otherwise, continue following the wall.
 		// 3.      When the goal is reached, stop.
-		navCount++;
 		int dist = rc.getLocation().distanceSquaredTo(loc);
 		if (dist < 1) {
 			return;
@@ -493,7 +491,6 @@ public strictfp class RobotPlayer {
 			yIntercept = startPoint.y - slope * startPoint.x;
 			hitPoint = null;
 			wallMode = false;
-			navCount = 0;
 		}
         rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
 		Direction goalDir = rc.getLocation().directionTo(goalLoc);
@@ -557,7 +554,7 @@ public strictfp class RobotPlayer {
 			}
 		}
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-        if (!touchingObstacle(rc) || navCount > 50)
+        if (!touchingObstacle(rc))
             goalLoc = null;
 	}
 
@@ -589,6 +586,14 @@ public strictfp class RobotPlayer {
 		WellInfo [] wells = rc.senseNearbyWells();
 		if (unit == RobotType.CARRIER) {
 			if (wells.length > 0) {
+                for (WellInfo well : wells) {
+                    if (well.getResourceType() == ResourceType.MANA) {
+				        MapLocation closeWell = getClosestLocation(rc, well.getMapLocation(), unit);
+				        if (closeWell != null) {
+				        	return closeWell;
+				        }
+                    }
+                }
 				MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation(), unit);
 				if (closeWell != null) {
 					return closeWell;
@@ -613,7 +618,7 @@ public strictfp class RobotPlayer {
 
 	static void setup(RobotController rc) throws GameActionException {
 		int i = 0;
-		while (i < 4) {
+		while (i < 2) {
             rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
             if (loc != null) {
@@ -624,7 +629,29 @@ public strictfp class RobotPlayer {
 			}
 		}	
 		i = 0;
-		while (i < 4) {
+		while (i < 2) {
+            rc.setIndicatorString("Trying to build a launcher");
+			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+            if (loc != null) {
+                rc.buildRobot(RobotType.LAUNCHER, loc);
+				i++;
+            } else {
+				Clock.yield();
+			}
+		}	
+		i = 0;
+		while (i < 2) {
+            rc.setIndicatorString("Trying to build a carrier");
+			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
+            if (loc != null) {
+                rc.buildRobot(RobotType.CARRIER, loc);
+				i++;
+            } else {
+				Clock.yield();
+			}
+		}	
+		i = 0;
+		while (i < 2) {
             rc.setIndicatorString("Trying to build a launcher");
 			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
             if (loc != null) {
