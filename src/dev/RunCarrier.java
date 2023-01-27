@@ -5,6 +5,7 @@ import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.LinkedList;
 
 import static dev.RobotPlayer.*;
 
@@ -16,6 +17,8 @@ public strictfp class RunCarrier {
     static int banCounter = 0;
     static boolean foundWell = false;
     static final int CARRIER_DIFF_MOD = 5;
+    static List<MapLocation> bfsQ = new LinkedList<>();
+    static MapLocation exploreGoal;
 
     /**
      * Run a single turn for a Carrier.
@@ -44,6 +47,10 @@ public strictfp class RunCarrier {
         }
 
         foundWell = false;
+		// find resources
+        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
+            navigateTo(rc, wellLoc);
+        }
         // Try to gather from squares around us.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
@@ -70,25 +77,8 @@ public strictfp class RunCarrier {
             if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD)) {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
-        } else {
-			// find resources
-            if (wellLoc != null) {
-                navigateTo(rc, wellLoc);
-            } else {
-				// Also try to move *randomly*.
-				Direction dir = currentDirection;
-				if (rc.canMove(dir)) {
-				    rc.move(dir);
-				} else if (rc.getMovementCooldownTurns() == 0) {
-				    currentDirection = directions[rng.nextInt(directions.length)];
-				}
-				dir = currentDirection;
-				if (rc.canMove(dir)) {
-				    rc.move(dir);
-				} else if (rc.getMovementCooldownTurns() == 0) {
-				    currentDirection = directions[rng.nextInt(directions.length)];
-				}
-            }
+        } else if (wellLoc == null) {
+        	exploreBFS(rc);
         }
     }
 
@@ -228,5 +218,42 @@ public strictfp class RunCarrier {
                 return;
             }
         } 
+    }
+
+    static void exploreBFS(RobotController rc) throws GameActionException {
+        if (exploreGoal == null)
+            exploreGoal = me;
+       	navigateTo(rc, exploreGoal);
+        if (me.distanceSquaredTo(exploreGoal) <= 1) {
+            getUnexploredTiles(rc);
+            while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
+                exploreGoal = bfsQ.remove(0);
+        	    if (exploreGoal != null) {
+        	        rc.setIndicatorDot(exploreGoal, 255, 0, 0);
+        	        navigateTo(rc, exploreGoal);
+        	    }
+        	}
+		}
+    }
+
+    static void getUnexploredTiles(RobotController rc) throws GameActionException {
+		int rad = 7;
+        int[] coord = {me.x + rad, me.y + rad, me.x - rad, me.y - rad, me.x + rad, me.y - rad, me.x - rad, me.y + rad};
+        try {
+            if (board[coord[0]][coord[1]] == 0)
+                bfsQ.add(new MapLocation(coord[0], coord[1]));
+        } catch (ArrayIndexOutOfBoundsException e) {}
+        try {
+            if (board[coord[4]][coord[5]] == 0)
+                bfsQ.add(new MapLocation(coord[4], coord[5]));
+        } catch (ArrayIndexOutOfBoundsException e) {}
+        try {
+            if (board[coord[2]][coord[3]] == 0)
+                bfsQ.add(new MapLocation(coord[2], coord[3]));
+        } catch (ArrayIndexOutOfBoundsException e) {}
+        try {
+            if (board[coord[6]][coord[7]] == 0)
+                bfsQ.add(new MapLocation(coord[6], coord[7]));
+        } catch (ArrayIndexOutOfBoundsException e) {}
     }
 }
