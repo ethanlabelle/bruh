@@ -495,7 +495,7 @@ public strictfp class RobotPlayer {
 			wallMode = false;
 			navCount = 0;
 		}
-        rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
+        //rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
 		Direction goalDir = rc.getLocation().directionTo(goalLoc);
 		// head towards goal
 		if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
@@ -512,7 +512,7 @@ public strictfp class RobotPlayer {
 		
 
 		if (wallMode) {
-            rc.setIndicatorLine(startPoint, goalLoc, 255, 0, 0);
+            //rc.setIndicatorLine(startPoint, goalLoc, 255, 0, 0);
 
 			// check if we are on the line
 
@@ -556,7 +556,7 @@ public strictfp class RobotPlayer {
                 rc.setIndicatorString("turning left " + currentDirection);
 			}
 		}
-        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
+        //rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
         if (!touchingObstacle(rc) || navCount > 50)
             goalLoc = null;
 	}
