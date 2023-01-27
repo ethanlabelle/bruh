@@ -146,6 +146,7 @@ public strictfp class RobotPlayer {
 			Communication.updateHeadquarterInfo(rc);
 		} else {
 			Communication.updateHeadquarterInfo(rc);
+            HQLOC = Communication.getClosestHeadquarters(rc);
 		}
 
 
@@ -250,7 +251,7 @@ public strictfp class RobotPlayer {
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateManaWellLocation(rc, loc, HQLOC);
 						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-							if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.onBanList(loc))
+							if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.onBanList(loc) && !RunCarrier.earlyAda))
 								wellLoc = loc;
 						}
 						break;
@@ -259,7 +260,7 @@ public strictfp class RobotPlayer {
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateAdaWellLocation(rc, loc, HQLOC);
 						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-							if (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.onBanList(loc))
+							if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.onBanList(loc) && !RunCarrier.earlyMana))
 								wellLoc = loc;
 						}
 						board[loc.x][loc.y] = M_ADA;
@@ -619,14 +620,14 @@ public strictfp class RobotPlayer {
 		static void setup(RobotController rc) throws GameActionException {
 			int i = 0;
 			while (i < 4) {
-            rc.setIndicatorString("Trying to build a launcher");
-			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-            if (loc != null) {
-                rc.buildRobot(RobotType.LAUNCHER, loc);
-				i++;
-            } else {
-				Clock.yield();
-			}
+                rc.setIndicatorString("Trying to build a launcher");
+			    MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+                if (loc != null) {
+                    rc.buildRobot(RobotType.LAUNCHER, loc);
+			    	i++;
+                } else {
+			    	Clock.yield();
+			    }
 			}	
 			i = 0;
 			while (i < 4) {

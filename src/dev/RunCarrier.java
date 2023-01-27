@@ -16,20 +16,29 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 5;
+    static final int CARRIER_DIFF_MOD = 4;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
+    static boolean earlyAda = false;
+    static boolean earlyMana = false;
 
     /**
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() == 2) {
+            earlyAda = true;
+        } else if (rc.getRoundNum() == 3 && !earlyAda) {
+            earlyMana = true;
+        }
+
         updateMap(rc);
         Communication.clearObsoleteEnemies(rc);
 
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+
 
         // report enemy launchers 
 		if (enemyRobots.length > 0) {
@@ -46,7 +55,7 @@ public strictfp class RunCarrier {
         }
 		
         MapLocation pWellLoc;
-		if (rc.getID() % CARRIER_DIFF_MOD == 0) {
+		if (!earlyMana && (rc.getID() % CARRIER_DIFF_MOD == 0 || earlyAda)) {
 		    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
 		} 
 		else {
@@ -74,6 +83,7 @@ public strictfp class RunCarrier {
 
 		// try to deposite resources
         if (getTotalResources(rc) == 40) {
+            HQLOC = Communication.getClosestHeadquarters(rc);
             navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
             if (rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM))) {
@@ -88,7 +98,17 @@ public strictfp class RunCarrier {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
         } else if (wellLoc == null) {
-        	exploreBFS(rc);
+            if (turnCount < 100)
+        	    exploreBFS(rc);
+            else {
+                // Move randomly
+                Direction dir = currentDirection;
+                if (rc.canMove(dir)) {
+                    rc.move(dir);
+                } else if (rc.getMovementCooldownTurns() == 0) {
+                    currentDirection = directions[rng.nextInt(directions.length)];
+                }
+            }
         }
     }
 

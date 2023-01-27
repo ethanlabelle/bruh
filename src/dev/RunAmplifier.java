@@ -20,6 +20,16 @@ public strictfp class RunAmplifier {
         enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
         friendlyRobots = rc.senseNearbyRobots(-1, myTeam);
 
+        // run away from enemy launchers
+		if (enemyRobots.length > 0) {
+            for (RobotInfo robot: enemyRobots) {
+                if (robot.type == RobotType.LAUNCHER) {
+			        Communication.reportEnemy(rc, rc.getLocation());
+                    runAway(rc);
+                }
+            }
+		}
+
         // run away from friendly amplifiers
         if (friendlyRobots.length > 0) {
             me = rc.getLocation();
@@ -34,16 +44,6 @@ public strictfp class RunAmplifier {
                 tryMove(rc, me.directionTo(dest));
             }
         }
-
-        // run away from enemy launchers
-		if (enemyRobots.length > 0) {
-            for (RobotInfo robot: enemyRobots) {
-                if (robot.type == RobotType.LAUNCHER) {
-			        Communication.reportEnemy(rc, rc.getLocation());
-                    runAway(rc);
-                }
-            }
-		}
 
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
