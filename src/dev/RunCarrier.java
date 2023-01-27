@@ -247,19 +247,29 @@ public strictfp class RunCarrier {
     static void exploreBFS(RobotController rc) throws GameActionException {
         if (exploreGoal == null)
             exploreGoal = me;
-        if (board[exploreGoal.x][exploreGoal.y] != 0) {
+       	navigateTo(rc, exploreGoal);
+        if (me.distanceSquaredTo(exploreGoal) <= 1) {
             getUnexploredTiles(rc);
             while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
                 exploreGoal = bfsQ.remove(0);
-            if (exploreGoal != null) {
-                rc.setIndicatorDot(exploreGoal, 255, 0, 0);
-                navigateTo(rc, exploreGoal);
-            }
-        }
+        	    if (exploreGoal != null) {
+        	        rc.setIndicatorDot(exploreGoal, 255, 0, 0);
+        	        navigateTo(rc, exploreGoal);
+        	    }
+        	}
+		}
     }
 
     static void getUnexploredTiles(RobotController rc) throws GameActionException {
         int[] coord = {me.x, me.y, me.x, me.y, me.x, me.y, me.x, me.y};
+        coord[0]++;
+        coord[1]++;
+        coord[2]--;
+        coord[3]--;
+        coord[4]++;
+        coord[5]--;
+        coord[6]--;
+        coord[7]++;
         coord[0]++;
         coord[1]++;
         coord[2]--;

@@ -1,0 +1,1 @@
+[server]                      dev (A) wins (round 2000)
