@@ -228,11 +228,9 @@ public strictfp class RunCarrier {
             getUnexploredTiles(rc);
             while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
                 exploreGoal = bfsQ.remove(0);
-        	    if (exploreGoal != null) {
-        	        rc.setIndicatorDot(exploreGoal, 255, 0, 0);
-        	        navigateTo(rc, exploreGoal);
-        	    }
+        	    rc.setIndicatorDot(exploreGoal, 255, 0, 0);
         	}
+       		navigateTo(rc, exploreGoal);
 		}
     }
 

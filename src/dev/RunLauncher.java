@@ -86,7 +86,22 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        RobotInfo[] enemies = getEnemies(rc);
+        if (enemies.length == 0) {
+            if (!rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                for (int i = clouds.length; --i >= 0;) {
+                    if (rc.canAttack(clouds[i])) {
+                        rc.attack(clouds[i]);
+                        break;
+                    }
+                }
+            }
+            return;
+        }
+
+        enemies = rc.senseNearbyRobots(-1, enemyTeam);
         MapLocation me = rc.getLocation();
         if (enemies != null && enemies.length > 0) {
             int i = enemies.length;
@@ -167,19 +182,19 @@ public strictfp class RunLauncher {
     // the new attackEnemies function uses less bytecode
     static void attackEnemies(RobotController rc) throws GameActionException {
         RobotInfo[] enemies = getEnemies(rc);
-        if (enemies.length == 0) {
-            if (!rc.senseCloud(rc.getLocation())) {
-                // sense nearby clouds and attack a location in there
-                MapLocation[] clouds = rc.senseNearbyCloudLocations();
-                for (int i = clouds.length; --i >= 0;) {
-                    if (rc.canAttack(clouds[i])) {
-                        rc.attack(clouds[i]);
-                        break;
-                    }
-                }
-            }
-            return;
-        }
+        //if (enemies.length == 0) {
+        //    if (!rc.senseCloud(rc.getLocation())) {
+        //        // sense nearby clouds and attack a location in there
+        //        MapLocation[] clouds = rc.senseNearbyCloudLocations();
+        //        for (int i = clouds.length; --i >= 0;) {
+        //            if (rc.canAttack(clouds[i])) {
+        //                rc.attack(clouds[i]);
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    return;
+        //}
         // sort by descending health and put launcher types last in the array
         Arrays.sort(enemies, (robot1, robot2) -> {
             if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
