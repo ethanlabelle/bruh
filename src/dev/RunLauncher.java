@@ -24,12 +24,30 @@ public strictfp class RunLauncher {
     static MapLocation healingIsland = null;
     static MapLocation enemyIsland = null;
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
+    static RobotInfo[] friends;
+    static boolean swarm = false;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
-        
         if (turnCount != 0)
             updateMap(rc);
+        else
+            HQLOC = rc.getLocation();
+        MapLocation leader_loc = getLeader(rc);
+
+        if (!swarm) {
+            swarm = friends.length >= 2;
+        }
+        
+        // if this launcher is not a leader
+        if ((!leader_loc.equals(rc.getLocation()) || !swarm)) {
+            Direction dir = rc.getLocation().directionTo(leader_loc);
+            if (rc.canMove(dir)) {
+                runFollower(rc, leader_loc);
+                return;
+            }
+        }
+
 
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -82,35 +100,63 @@ public strictfp class RunLauncher {
         }
     }
 
+    static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
+        navigateTo(rc, leader_loc);
+        attackEnemies(rc);
+    }
+
+    static MapLocation getLeader(RobotController rc) throws GameActionException {
+        friends = getNearbyTeamLaunchers(rc);
+        int smallest_id = rc.getID();
+        MapLocation leader_loc = rc.getLocation();
+        for (int i = friends.length; --i >= 0;) {
+            if (friends[i].ID < smallest_id) {
+                smallest_id = friends[i].ID;
+                leader_loc = friends[i].location;
+            }
+        }
+        return leader_loc;
+    }
+
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
-            int id = fake_id;
-            if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
-            else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
-            else
-                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
-        }
-        if (rc.canSenseLocation(possibleEnemyLOC)) {
-            RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
-                EnemyHQLOC = possibleEnemyLOC;
-                return;
+            MapLocation closest_predicted = null;
+            int min_dist = 7200;
+            MapLocation me = rc.getLocation();
+            for(int i = Communication.headquarterLocs.length; --i >= 0;) {
+                MapLocation curr_hq = Communication.headquarterLocs[i];
+                if (curr_hq == null)
+                    continue;
+                MapLocation guess_loc = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+                // guess on rotational symmetry
+                if (me.distanceSquaredTo(guess_loc) < min_dist && !Communication.headquarterLocsSet.contains(guess_loc)) {
+                    min_dist = me.distanceSquaredTo(guess_loc);
+                    closest_predicted = guess_loc;
+                }
             }
-            else{
-                possibleEnemyLOC = null;
-                EnemyHQLOC = undefined_loc;
-                fake_id += 1;
-                if(fake_id == 6){
-                    move_randomly = true;
+            possibleEnemyLOC = closest_predicted;
+        }
+        //     else{
+            //         possibleEnemyLOC = null;
+            //         EnemyHQLOC = undefined_loc;
+            //         fake_id += 1;
+        //         if(fake_id == 6){
+        //             move_randomly = true;
+        //         }
+        //     }
+        // }
+        if (possibleEnemyLOC != null) {
+            navigateTo(rc, possibleEnemyLOC);
+            if (rc.canSenseLocation(possibleEnemyLOC)) {
+                RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+                if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
+                    EnemyHQLOC = possibleEnemyLOC;
+                    possibleEnemyLOC = null;
+                    return;
                 }
             }
         }
-        if(possibleEnemyLOC != null)
-            navigateTo(rc, possibleEnemyLOC);
     }
 
     static boolean adjacentTo(RobotController rc, MapLocation loc) throws GameActionException {
@@ -122,6 +168,16 @@ public strictfp class RunLauncher {
     static void attackEnemies(RobotController rc) throws GameActionException {
         RobotInfo[] enemies = getEnemies(rc);
         if (enemies.length == 0) {
+            if (!rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                for (int i = clouds.length; --i >= 0;) {
+                    if (rc.canAttack(clouds[i])) {
+                        rc.attack(clouds[i]);
+                        break;
+                    }
+                }
+            }
             return;
         }
         // sort by descending health and put launcher types last in the array
@@ -296,6 +352,23 @@ public strictfp class RunLauncher {
         if (rc.canMove(oscillatDirection)) {
             rc.move(oscillatDirection);
         }
+    }
+
+    static RobotInfo[] getNearbyTeamLaunchers(RobotController rc) throws GameActionException {
+        RobotInfo[] nearbyTeamLaunchers = robotInfos;
+        int n = 0;
+        for (int i = nearbyTeamLaunchers.length; --i >= 0;) {
+            if (nearbyTeamLaunchers[i].type == RobotType.LAUNCHER && nearbyTeamLaunchers[i].team == myTeam) {
+                n++;
+            }
+        }
+        RobotInfo[] teamLaunchers = new RobotInfo[n];
+        for (int i = nearbyTeamLaunchers.length; --i >= 0;) {
+            if (nearbyTeamLaunchers[i].type == RobotType.LAUNCHER && nearbyTeamLaunchers[i].team == myTeam) {
+                teamLaunchers[--n] = nearbyTeamLaunchers[i];
+            }
+        }
+        return teamLaunchers;
     }
     
 }
