@@ -94,6 +94,8 @@ class Communication {
     }
 
     static void updateHeadquarterInfo(RobotController rc) throws GameActionException {
+		int minDist = 7200;
+		MapLocation closestHQ = null;
         for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
             MapLocation loc = intToLocation(rc, rc.readSharedArray(i));
        	    headquarterLocs[i] = loc;
@@ -101,7 +103,12 @@ class Communication {
        	    if (rc.readSharedArray(i) == 0) {
        	        break;
        	    }
+			if (headquarterLocs[i].distanceSquaredTo(rc.getLocation()) < minDist) {
+				minDist = headquarterLocs[i].distanceSquaredTo(rc.getLocation());
+				closestHQ = headquarterLocs[i];
+			}
        	}
+		RobotPlayer.HQLOC = closestHQ;
     }
 
     static void tryWriteMessages(RobotController rc) throws GameActionException {

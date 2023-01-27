@@ -26,9 +26,19 @@ public strictfp class RunCarrier {
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
         updateMap(rc);
+        Communication.clearObsoleteEnemies(rc);
 
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+
+        // report enemy launchers 
+		if (enemyRobots.length > 0) {
+            for (RobotInfo robot: enemyRobots) {
+                if (robot.type == RobotType.LAUNCHER) {
+			        Communication.reportEnemy(rc, rc.getLocation());
+                }
+            }
+		}
 
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
@@ -223,7 +233,8 @@ public strictfp class RunCarrier {
     static void exploreBFS(RobotController rc) throws GameActionException {
         if (exploreGoal == null)
             exploreGoal = me;
-       	navigateTo(rc, exploreGoal);
+		else
+       		navigateTo(rc, exploreGoal);
         if (me.distanceSquaredTo(exploreGoal) <= 1) {
             getUnexploredTiles(rc);
             while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
