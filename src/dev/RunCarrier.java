@@ -245,17 +245,21 @@ public strictfp class RunCarrier {
     }
 
     static void exploreBFS(RobotController rc) throws GameActionException {
-        getUnexploredTiles(rc);
-        while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0))
-            exploreGoal = bfsQ.remove(0);
-        if (exploreGoal != null) {
-            rc.setIndicatorDot(exploreGoal, 255, 0, 0);
-            navigateTo(rc, exploreGoal);
+        if (exploreGoal == null)
+            exploreGoal = me;
+        if (board[exploreGoal.x][exploreGoal.y] != 0) {
+            getUnexploredTiles(rc);
+            while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
+                exploreGoal = bfsQ.remove(0);
+            if (exploreGoal != null) {
+                rc.setIndicatorDot(exploreGoal, 255, 0, 0);
+                navigateTo(rc, exploreGoal);
+            }
         }
     }
 
     static void getUnexploredTiles(RobotController rc) throws GameActionException {
-        int[] coord = {me.x+1, me.y+1, me.x-1, me.y-1, me.x+1, me.y-1, me.x-1, me.y+1};
+        int[] coord = {me.x, me.y, me.x, me.y, me.x, me.y, me.x, me.y};
         coord[0]++;
         coord[1]++;
         coord[2]--;
@@ -288,102 +292,6 @@ public strictfp class RunCarrier {
         coord[5]--;
         coord[6]--;
         coord[7]++;
-        coord[0]++;
-        coord[1]++;
-        coord[2]--;
-        coord[3]--;
-        coord[4]++;
-        coord[5]--;
-        coord[6]--;
-        coord[7]++;
-        try {
-            if (board[coord[0]][coord[1]] == 0)
-                bfsQ.add(new MapLocation(coord[0], coord[1]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[4]][coord[5]] == 0)
-                bfsQ.add(new MapLocation(coord[4], coord[5]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[2]][coord[3]] == 0)
-                bfsQ.add(new MapLocation(coord[2], coord[3]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[6]][coord[7]] == 0)
-                bfsQ.add(new MapLocation(coord[6], coord[7]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        coord[0]++;
-        coord[1]++;
-        coord[2]--;
-        coord[3]--;
-        coord[4]++;
-        coord[5]--;
-        coord[6]--;
-        coord[7]++;
-        try {
-            if (board[coord[0]][coord[1]] == 0)
-                bfsQ.add(new MapLocation(coord[0], coord[1]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[4]][coord[5]] == 0)
-                bfsQ.add(new MapLocation(coord[4], coord[5]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[2]][coord[3]] == 0)
-                bfsQ.add(new MapLocation(coord[2], coord[3]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[6]][coord[7]] == 0)
-                bfsQ.add(new MapLocation(coord[6], coord[7]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        coord[0]++;
-        coord[1]++;
-        coord[2]--;
-        coord[3]--;
-        coord[4]++;
-        coord[5]--;
-        coord[6]--;
-        coord[7]++;
-        try {
-            if (board[coord[0]][coord[1]] == 0)
-                bfsQ.add(new MapLocation(coord[0], coord[1]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[4]][coord[5]] == 0)
-                bfsQ.add(new MapLocation(coord[4], coord[5]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[2]][coord[3]] == 0)
-                bfsQ.add(new MapLocation(coord[2], coord[3]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[6]][coord[7]] == 0)
-                bfsQ.add(new MapLocation(coord[6], coord[7]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        coord[0]++;
-        coord[1]++;
-        coord[2]--;
-        coord[3]--;
-        coord[4]++;
-        coord[5]--;
-        coord[6]--;
-        coord[7]++;
-        try {
-            if (board[coord[0]][coord[1]] == 0)
-                bfsQ.add(new MapLocation(coord[0], coord[1]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[4]][coord[5]] == 0)
-                bfsQ.add(new MapLocation(coord[4], coord[5]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[2]][coord[3]] == 0)
-                bfsQ.add(new MapLocation(coord[2], coord[3]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
-        try {
-            if (board[coord[6]][coord[7]] == 0)
-                bfsQ.add(new MapLocation(coord[6], coord[7]));
-        } catch (ArrayIndexOutOfBoundsException e) {}
         coord[0]++;
         coord[1]++;
         coord[2]--;
