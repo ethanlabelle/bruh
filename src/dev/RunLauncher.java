@@ -86,22 +86,7 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
 
-        RobotInfo[] enemies = getEnemies(rc);
-        if (enemies.length == 0) {
-            if (!rc.senseCloud(rc.getLocation())) {
-                // sense nearby clouds and attack a location in there
-                MapLocation[] clouds = rc.senseNearbyCloudLocations();
-                for (int i = clouds.length; --i >= 0;) {
-                    if (rc.canAttack(clouds[i])) {
-                        rc.attack(clouds[i]);
-                        break;
-                    }
-                }
-            }
-            return;
-        }
-
-        enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
         MapLocation me = rc.getLocation();
         if (enemies != null && enemies.length > 0) {
             int i = enemies.length;
@@ -112,6 +97,28 @@ public strictfp class RunLauncher {
                     break;
                 }
             }
+        }
+
+        enemies = getEnemies(rc);
+        if (enemies.length == 0) {
+            if (rc.isActionReady() && !rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                boolean shot = false;
+                for (int i = clouds.length; --i >= 0;) {
+                    int j;
+                    if (i == 0) {
+                        j = i;
+                    } else {
+                        j = rng.nextInt(i);
+                    }
+                    if (rc.canAttack(clouds[j])) {
+                        rc.attack(clouds[j]);
+                        break;
+                    }
+                }
+            }
+            return;
         }
     }
 
