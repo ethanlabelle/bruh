@@ -2,7 +2,6 @@ package dev;
 
 import battlecode.common.*;
 import java.util.Arrays;
-import java.util.Random;
 
 import static dev.RobotPlayer.*;
 
@@ -38,7 +37,9 @@ public strictfp class RunLauncher {
         if (!swarm) {
             swarm = friends.length >= 2;
         }
-        
+        if (leader_loc.equals(rc.getLocation()) && friends.length < 3 && friends.length > 0) {
+            tryMove(rc, rc.getLocation().directionTo(friends[0].location));
+        } 
         // if this launcher is not a leader
         if ((!leader_loc.equals(rc.getLocation()) || !swarm)) {
             Direction dir = rc.getLocation().directionTo(leader_loc);
@@ -66,11 +67,13 @@ public strictfp class RunLauncher {
 			navigateTo(rc, defLoc);
             Communication.clearObsoleteEnemies(rc);
             attackEnemies(rc);
+            cloudShot(rc);
             return;
 		}
 
         if (move_randomly) {
             moveLastResort(rc);
+            cloudShot(rc);
             return;
         }
         
@@ -98,28 +101,7 @@ public strictfp class RunLauncher {
                 }
             }
         }
-
-        enemies = getEnemies(rc);
-        if (enemies.length == 0) {
-            if (rc.isActionReady() && !rc.senseCloud(rc.getLocation())) {
-                // sense nearby clouds and attack a location in there
-                MapLocation[] clouds = rc.senseNearbyCloudLocations();
-                boolean shot = false;
-                for (int i = clouds.length; --i >= 0;) {
-                    int j;
-                    if (i == 0) {
-                        j = i;
-                    } else {
-                        j = rng.nextInt(i);
-                    }
-                    if (rc.canAttack(clouds[j])) {
-                        rc.attack(clouds[j]);
-                        break;
-                    }
-                }
-            }
-            return;
-        }
+        cloudShot(rc);
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
@@ -146,7 +128,7 @@ public strictfp class RunLauncher {
             MapLocation closest_predicted = null;
             int min_dist = 7200;
             MapLocation me = rc.getLocation();
-            if (width*height < 1000 || rc.getID() % 2 == 0) {
+            if (width*height < 1000 || rc.getID() % 4 != 0) {
                 MapLocation curr_hq = HQLOC;
                 closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
             } else {
@@ -185,49 +167,39 @@ public strictfp class RunLauncher {
 
     // the new attackEnemies function uses less bytecode
     static void attackEnemies(RobotController rc) throws GameActionException {
-        RobotInfo[] enemies = getEnemies(rc);
-        //if (enemies.length == 0) {
-        //    if (!rc.senseCloud(rc.getLocation())) {
-        //        // sense nearby clouds and attack a location in there
-        //        MapLocation[] clouds = rc.senseNearbyCloudLocations();
-        //        for (int i = clouds.length; --i >= 0;) {
-        //            if (rc.canAttack(clouds[i])) {
-        //                rc.attack(clouds[i]);
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    return;
-        //}
-        // sort by descending health and put launcher types last in the array
-        Arrays.sort(enemies, (robot1, robot2) -> {
-            if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
-                return 1;
-            } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
-                return -1;
-            } else {
-                return robot2.health - robot1.health;
+        if (rc.isActionReady()) {
+            RobotInfo[] enemies = getEnemies(rc);
+            // sort by descending health and put launcher types last in the array
+            Arrays.sort(enemies, (robot1, robot2) -> {
+                if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
+                    return 1;
+                } else if (robot1.type != RobotType.LAUNCHER && robot2.type == RobotType.LAUNCHER) {
+                    return -1;
+                } else {
+                    return robot2.health - robot1.health;
+                }
+            });
+            // System.out.println(enemies.length + " " + rc.getLocation());
+            boolean shot = false;
+            MapLocation toAttack = null;
+            for (int i = enemies.length; --i >= 0;) {
+                toAttack = enemies[i].location;
+                if (rc.canAttack(toAttack) && enemies[i].getType() == RobotType.LAUNCHER) {
+                    rc.attack(toAttack);
+                    shot = true;
+                    break;
+                }
             }
-        });
-		boolean shot = false;
-		MapLocation toAttack = null;
-        for (int i = enemies.length; --i >= 0;) {
-            toAttack = enemies[i].location;
-            if (rc.canAttack(toAttack) && enemies[i].getType() == RobotType.LAUNCHER) {
-                rc.attack(toAttack);
-                shot = true;
-                break;
+            if (shot) {
+                tryMove(rc, oppositeDirection(rc.getLocation().directionTo(toAttack)));
             }
-        }
-		if (shot) {
-			tryMove(rc, oppositeDirection(rc.getLocation().directionTo(toAttack)));
-		}
-        // if we didn't shoot, move towards the enemy of lowest health and attack it
-        else if (!shot && enemies.length > 0 && rc.getActionCooldownTurns() == 0) {
-            toAttack = enemies[enemies.length - 1].location;
-            tryMove(rc, rc.getLocation().directionTo(toAttack));
-            if (rc.canAttack(toAttack)){
-                rc.attack(toAttack);
+            // if we didn't shoot, move towards the enemy of lowest health and attack it
+            else if (!shot && enemies.length > 0 && rc.getActionCooldownTurns() == 0) {
+                toAttack = enemies[enemies.length - 1].location;
+                tryMove(rc, rc.getLocation().directionTo(toAttack));
+                if (rc.canAttack(toAttack)){
+                    rc.attack(toAttack);
+                }
             }
         }
     }
@@ -390,4 +362,26 @@ public strictfp class RunLauncher {
         return teamLaunchers;
     }
     
+    static void cloudShot(RobotController rc) throws GameActionException {
+        RobotInfo[] enemies = getEnemies(rc);
+        if (enemies.length == 0) {
+            if (rc.isActionReady() && !rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                for (int i = clouds.length; --i >= 0;) {
+                    int j;
+                    if (i == 0) {
+                        j = i;
+                    } else {
+                        j = rng.nextInt(i);
+                    }
+                    if (rc.canAttack(clouds[j])) {
+                        rc.attack(clouds[j]);
+                        break;
+                    }
+                }
+            }
+            return;
+        }
+    }
 }

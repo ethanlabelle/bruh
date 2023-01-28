@@ -4,14 +4,7 @@ import battlecode.common.*;
 
 import static dev.Communication.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -68,6 +61,7 @@ public strictfp class RobotPlayer {
 	static int checkPointSquared = maxDistSquared;
 	static int width;
 	static int height;
+	static int navCount = 0;
 
 	// map state
 	static MapLocation HQLOC;
@@ -269,6 +263,8 @@ public strictfp class RobotPlayer {
 						break;
 					case ELIXIR:	
 						board[loc.x][loc.y] = M_ELIX;
+						break;
+					default:
 						break;
 				}
 			}
@@ -494,7 +490,9 @@ public strictfp class RobotPlayer {
 				yIntercept = startPoint.y - slope * startPoint.x;
 				hitPoint = null;
 				wallMode = false;
+				navCount = 0;
 			}
+			navCount++;
 			rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
 			Direction goalDir = rc.getLocation().directionTo(goalLoc);
 			// head towards goal
@@ -506,7 +504,15 @@ public strictfp class RobotPlayer {
 					currentDirection = currentDirection.rotateLeft().rotateLeft();
 					hitPoint = rc.getLocation();
 				} else {
-					bugRandom(rc, goalLoc);
+					//bugRandom(rc, goalLoc);
+					Direction a = currentDirection.rotateLeft().rotateLeft();
+					if (rc.canMove(a))
+						rc.move(a);
+					else {
+						a = currentDirection.rotateRight().rotateRight();
+						if (rc.canMove(a))
+							rc.move(a);
+					}
 				}
 			}
 			
@@ -557,7 +563,7 @@ public strictfp class RobotPlayer {
 				}
 			}
 			rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-			if (!touchingObstacle(rc))
+			if (!touchingObstacle(rc) || navCount > 50)
 				goalLoc = null;
 		}
 
@@ -585,7 +591,6 @@ public strictfp class RobotPlayer {
 		}
 
 		static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
-			// TODO: add target well
 			WellInfo [] wells = rc.senseNearbyWells();
 			if (unit == RobotType.CARRIER) {
 				if (wells.length > 0) {
@@ -631,18 +636,6 @@ public strictfp class RobotPlayer {
 			    	Clock.yield();
 			    }
 			}	
-			//i = 0;
-			//while (i < 1) {
-        	//    rc.setIndicatorString("Trying to build a carrier");
-			//	MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
-        	//    if (loc != null) {
-        	//        rc.buildRobot(RobotType.CARRIER, loc);
-			//		i++;
-        	//    } else {
-			//		Clock.yield();
-			//	}
-			//}	
-            //Clock.yield();
 			i = 0;
 			while (i < 4) {
         	    rc.setIndicatorString("Trying to build a carrier");

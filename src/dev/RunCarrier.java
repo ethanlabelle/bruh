@@ -2,8 +2,6 @@ package dev;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -16,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 4;
+    static final int CARRIER_DIFF_MOD = 5;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -39,6 +37,13 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
+        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
+            carrierAttack(rc);
+        }
+       
+		if (enemyRobots.length > 0) {
+            runAway(rc);
+		}
 
         // report enemy launchers 
 		if (enemyRobots.length > 0) {
