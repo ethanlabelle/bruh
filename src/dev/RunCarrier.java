@@ -46,13 +46,13 @@ public strictfp class RunCarrier {
 		}
 
         // report enemy launchers 
-		if (enemyRobots.length > 0) {
-            for (RobotInfo robot: enemyRobots) {
-                if (robot.type == RobotType.LAUNCHER) {
-			        Communication.reportEnemy(rc, rc.getLocation());
-                }
-            }
-		}
+		// if (enemyRobots.length > 0) {
+        //     for (RobotInfo robot: enemyRobots) {
+        //         if (robot.type == RobotType.LAUNCHER) {
+		// 	        Communication.reportEnemy(rc, rc.getLocation());
+        //         }
+        //     }
+		// }
 
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
@@ -114,6 +114,10 @@ public strictfp class RunCarrier {
             if (rc.getRoundNum() < 100)
         	    exploreBFS(rc);
             else {
+                short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
+                if (board[me.x][me.y] == islandNum) {
+                    return;
+                }
                 // Move randomly
                 Direction dir = currentDirection;
                 if (rc.canMove(dir)) {

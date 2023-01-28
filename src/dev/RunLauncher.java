@@ -363,25 +363,41 @@ public strictfp class RunLauncher {
     }
     
     static void cloudShot(RobotController rc) throws GameActionException {
-        RobotInfo[] enemies = getEnemies(rc);
-        if (enemies.length == 0) {
-            if (rc.isActionReady() && !rc.senseCloud(rc.getLocation())) {
-                // sense nearby clouds and attack a location in there
-                MapLocation[] clouds = rc.senseNearbyCloudLocations();
-                for (int i = clouds.length; --i >= 0;) {
-                    int j;
-                    if (i == 0) {
-                        j = i;
-                    } else {
-                        j = rng.nextInt(i);
+        if (rc.isActionReady()) {
+            RobotInfo[] enemies = getEnemies(rc);
+            if (enemies.length == 0) {
+                if (!rc.senseCloud(rc.getLocation())) {
+                    // sense nearby clouds and attack a location in there
+                    MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                    for (int i = clouds.length; --i >= 0;) {
+                        int j;
+                        if (i == 0) {
+                            j = i;
+                        } else {
+                            j = rng.nextInt(i);
+                        }
+                        if (rc.canAttack(clouds[j])) {
+                            rc.attack(clouds[j]);
+                            break;
+                        }
                     }
-                    if (rc.canAttack(clouds[j])) {
-                        rc.attack(clouds[j]);
-                        break;
+                } else {
+                    MapLocation attackLoc;
+                    switch(currentDirection) {
+                        case NORTHWEST:
+                        case SOUTHWEST:
+                        case NORTHEAST:
+                        case SOUTHEAST:
+                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection);
+                            break;
+                        default:
+                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection).add(currentDirection);
+                    }
+                    if (rc.canAttack(attackLoc)) {
+                        rc.attack(attackLoc);
                     }
                 }
             }
-            return;
         }
     }
 }

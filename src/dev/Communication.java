@@ -1,11 +1,7 @@
 package dev;
 
-import java.util.List;
-
-import java.util.ArrayList;
 
 import java.util.HashSet;
-
 import battlecode.common.*;
 
 class Message {
@@ -24,7 +20,6 @@ class Communication {
 
     private static final int OUTDATED_TURNS_AMOUNT = 30;
     private static final int AREA_RADIUS = RobotType.CARRIER.visionRadiusSquared;
-	private static final int ARRAY_SIZE = 64;
 	private static final int N_SAVED_WELLS = GameConstants.MAX_STARTING_HEADQUARTERS;
 
     // Maybe you want to change this based on exact amounts which you can get on turn 1
