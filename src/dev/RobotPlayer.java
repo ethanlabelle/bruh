@@ -251,7 +251,8 @@ public strictfp class RobotPlayer {
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateManaWellLocation(rc, loc, HQLOC);
 						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-							if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.onBanList(loc) && !RunCarrier.earlyAda))
+                            if (!RunCarrier.onBanList(loc))
+							    if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.earlyAda))
 								wellLoc = loc;
 						}
 						break;
@@ -260,8 +261,9 @@ public strictfp class RobotPlayer {
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateAdaWellLocation(rc, loc, HQLOC);
 						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
-							if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.onBanList(loc) && !RunCarrier.earlyMana))
-								wellLoc = loc;
+                            if (!RunCarrier.onBanList(loc))
+							    if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.earlyMana))
+							    	wellLoc = loc;
 						}
 						board[loc.x][loc.y] = M_ADA;
 						break;
@@ -629,6 +631,18 @@ public strictfp class RobotPlayer {
 			    	Clock.yield();
 			    }
 			}	
+			//i = 0;
+			//while (i < 1) {
+        	//    rc.setIndicatorString("Trying to build a carrier");
+			//	MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
+        	//    if (loc != null) {
+        	//        rc.buildRobot(RobotType.CARRIER, loc);
+			//		i++;
+        	//    } else {
+			//		Clock.yield();
+			//	}
+			//}	
+            //Clock.yield();
 			i = 0;
 			while (i < 4) {
         	    rc.setIndicatorString("Trying to build a carrier");

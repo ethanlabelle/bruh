@@ -18,7 +18,7 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = 41;
+    static final int minimum_health = 20;
     static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;
@@ -146,28 +146,25 @@ public strictfp class RunLauncher {
             MapLocation closest_predicted = null;
             int min_dist = 7200;
             MapLocation me = rc.getLocation();
-            for(int i = Communication.headquarterLocs.length; --i >= 0;) {
-                MapLocation curr_hq = Communication.headquarterLocs[i];
-                if (curr_hq == null)
-                    continue;
-                MapLocation guess_loc = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-                // guess on rotational symmetry
-                if (me.distanceSquaredTo(guess_loc) < min_dist && !Communication.headquarterLocsSet.contains(guess_loc)) {
-                    min_dist = me.distanceSquaredTo(guess_loc);
-                    closest_predicted = guess_loc;
+            if (width*height < 1000 || rc.getID() % 2 == 0) {
+                MapLocation curr_hq = HQLOC;
+                closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+            } else {
+                for(int i = Communication.headquarterLocs.length; --i >= 0;) {
+                    MapLocation curr_hq = Communication.headquarterLocs[i];
+                    if (curr_hq == null)
+                        continue;
+                    MapLocation guess_loc = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+                    // guess on rotational symmetry
+                    if (me.distanceSquaredTo(guess_loc) < min_dist && !Communication.headquarterLocsSet.contains(guess_loc)) {
+                        min_dist = me.distanceSquaredTo(guess_loc);
+                        closest_predicted = guess_loc;
+                    }
                 }
             }
             possibleEnemyLOC = closest_predicted;
         }
-        //     else{
-            //         possibleEnemyLOC = null;
-            //         EnemyHQLOC = undefined_loc;
-            //         fake_id += 1;
-        //         if(fake_id == 6){
-        //             move_randomly = true;
-        //         }
-        //     }
-        // }
+
         if (possibleEnemyLOC != null) {
             navigateTo(rc, possibleEnemyLOC);
             if (rc.canSenseLocation(possibleEnemyLOC)) {

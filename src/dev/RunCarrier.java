@@ -12,7 +12,7 @@ import static dev.RobotPlayer.*;
 public strictfp class RunCarrier {
     static RobotInfo[] enemyRobots;
     static MapLocation me;
-    static final int BAN_LIST_SIZE = 4;
+    static final int BAN_LIST_SIZE = 10;
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
@@ -70,10 +70,18 @@ public strictfp class RunCarrier {
         if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
             navigateTo(rc, wellLoc);
         }
-        // Try to gather from squares around us.
+
+        // Try to gather from assigned well.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
-		}
+		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 8 && getTotalResources(rc) < 40) {
+            rc.setIndicatorString(wellLoc + " is full? " + isWellFull(rc, wellLoc) + " " + banCounter);
+            if (isWellFull(rc, wellLoc)) {
+                bannedWells[banCounter] = wellLoc;
+                wellLoc = null;
+                banCounter = ++banCounter % BAN_LIST_SIZE;
+            }
+        }
 
         // If at a well, keep collecting until full.
         if (foundWell && getTotalResources(rc) < 40) {
@@ -98,7 +106,7 @@ public strictfp class RunCarrier {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
         } else if (wellLoc == null) {
-            if (turnCount < 100)
+            if (rc.getRoundNum() < 100)
         	    exploreBFS(rc);
             else {
                 // Move randomly
@@ -229,14 +237,6 @@ public strictfp class RunCarrier {
         foundWell = true;
         // if there are too many carriers about this well, forget and ban well
         if (getTotalResources(rc) == 40) {
-            RobotInfo[] robotInfos = rc.senseNearbyRobots(me, 4, myTeam);
-		    RobotInfo[] friends = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-            rc.setIndicatorString("" + friends.length);
-            if (friends.length > 6) {
-                bannedWells[banCounter] = wellLoc;
-                wellLoc = null;
-                banCounter = banCounter++ % BAN_LIST_SIZE;
-            }
             return;
         }
         for (int i = 0; i < directions.length; i++) {
@@ -248,6 +248,28 @@ public strictfp class RunCarrier {
                 return;
             }
         } 
+        if (rc.canMove(me.directionTo(wellLoc))) {
+            rc.move(me.directionTo(wellLoc));
+        }
+    }
+
+    static boolean isWellFull(RobotController rc, MapLocation well) throws GameActionException {
+        int spots = 0;
+        int taken = 0;
+        for (int i = 0; i < directions.length; i++) {
+            MapLocation miningLoc = wellLoc.add(directions[i]);
+			if (!rc.onTheMap(miningLoc))
+				continue;
+            // good tile for mining
+            if (board[miningLoc.x][miningLoc.y] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER) {
+                spots++;
+            } else {
+                continue;
+            }
+            if (rc.canSenseRobotAtLocation(miningLoc))
+                taken++;
+        } 
+        return spots == taken; 
     }
 
     static void exploreBFS(RobotController rc) throws GameActionException {
