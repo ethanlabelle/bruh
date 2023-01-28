@@ -45,15 +45,6 @@ public strictfp class RunCarrier {
             runAway(rc);
 		}
 
-        // report enemy launchers 
-		// if (enemyRobots.length > 0) {
-        //     for (RobotInfo robot: enemyRobots) {
-        //         if (robot.type == RobotType.LAUNCHER) {
-		// 	        Communication.reportEnemy(rc, rc.getLocation());
-        //         }
-        //     }
-		// }
-
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
             return;
@@ -79,7 +70,7 @@ public strictfp class RunCarrier {
         // Try to gather from assigned well.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
-		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 8 && getTotalResources(rc) < 40) {
+		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
             rc.setIndicatorString(wellLoc + " is full? " + isWellFull(rc, wellLoc) + " " + banCounter);
             if (isWellFull(rc, wellLoc)) {
                 bannedWells[banCounter] = wellLoc;
