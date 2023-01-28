@@ -37,7 +37,7 @@ public strictfp class RunLauncher {
         if (!swarm) {
             swarm = friends.length >= 2;
         }
-        if (leader_loc.equals(rc.getLocation()) && friends.length < 3 && friends.length > 0) {
+        if ((!swarm || leader_loc.equals(rc.getLocation()) && friends.length < 4) && friends.length > 0) {
             tryMove(rc, rc.getLocation().directionTo(friends[0].location));
         } 
         // if this launcher is not a leader
@@ -180,7 +180,6 @@ public strictfp class RunLauncher {
                     return robot2.health - robot1.health;
                 }
             });
-            // System.out.println(enemies.length + " " + rc.getLocation());
             boolean shot = false;
             MapLocation toAttack = null;
             for (int i = enemies.length; --i >= 0;) {
@@ -377,7 +376,7 @@ public strictfp class RunLauncher {
                         } else {
                             j = rng.nextInt(i);
                         }
-                        if (rc.canAttack(clouds[j])) {
+                        if (!(rc.getLocation().distanceSquaredTo(clouds[j]) <= 4) && rc.canAttack(clouds[j])) {
                             rc.attack(clouds[j]);
                             break;
                         }
