@@ -37,13 +37,9 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
-        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
-            carrierAttack(rc);
-        }
-       
-		if (enemyRobots.length > 0) {
-            runAway(rc);
-		}
+        // if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
+        //     carrierAttack(rc);
+        // } 
 
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
@@ -109,6 +105,9 @@ public strictfp class RunCarrier {
                 if (board[me.x][me.y] == islandNum) {
                     return;
                 }
+                if (enemyRobots.length > 0) {
+                    runAway(rc);
+		        }
                 // Move randomly
                 Direction dir = currentDirection;
                 if (rc.canMove(dir)) {

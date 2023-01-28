@@ -65,7 +65,7 @@ public strictfp class RunHeadquarters {
 
 		MapLocation loc;
         //if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
-        if (turnCount % 50 == 0) {
+        if (turnCount % 75 == 0) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);

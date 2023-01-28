@@ -17,7 +17,7 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = 20;
+    static final int minimum_health = RobotType.LAUNCHER.health/2;
     static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;
@@ -42,6 +42,7 @@ public strictfp class RunLauncher {
         } 
         // if this launcher is not a leader
         if ((!leader_loc.equals(rc.getLocation()) || !swarm)) {
+            healingStrategy(rc);
             Direction dir = rc.getLocation().directionTo(leader_loc);
             if (rc.canMove(dir)) {
                 runFollower(rc, leader_loc);
@@ -128,7 +129,7 @@ public strictfp class RunLauncher {
             MapLocation closest_predicted = null;
             int min_dist = 7200;
             MapLocation me = rc.getLocation();
-            if (width*height < 1000 || rc.getID() % 4 != 0) {
+            if (rc.getID() % 2 == 0) {
                 MapLocation curr_hq = HQLOC;
                 closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
             } else {
