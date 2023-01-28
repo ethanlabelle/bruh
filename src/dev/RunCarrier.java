@@ -37,9 +37,13 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
-        // if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
-        //     carrierAttack(rc);
-        // } 
+        if (enemyRobots.length > 0 && getTotalResources(rc) >= 5) {
+            carrierAttack(rc);
+        }
+
+        if (enemyRobots.length > 0) {
+            runAway(rc);
+        }
 
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
@@ -48,12 +52,12 @@ public strictfp class RunCarrier {
 		
         MapLocation pWellLoc;
 		if (!earlyMana && (rc.getID() % CARRIER_DIFF_MOD == 0 || earlyAda)) {
-		    pWellLoc = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
+		    pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
 		} 
 		else {
-			pWellLoc = Communication.getClosestWell(rc, ResourceType.MANA);
+			pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
 		}
-        if (wellLoc == null && pWellLoc != null && !onBanList(pWellLoc)) {
+        if (wellLoc == null && pWellLoc != null) {
             wellLoc = pWellLoc;
         }
 
@@ -104,10 +108,7 @@ public strictfp class RunCarrier {
                 short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
                 if (board[me.x][me.y] == islandNum) {
                     return;
-                }
-                if (enemyRobots.length > 0) {
-                    runAway(rc);
-		        }
+                }    
                 // Move randomly
                 Direction dir = currentDirection;
                 if (rc.canMove(dir)) {

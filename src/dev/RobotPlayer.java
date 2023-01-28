@@ -244,7 +244,8 @@ public strictfp class RobotPlayer {
 						arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateManaWellLocation(rc, loc, HQLOC);
-						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
+						Communication.addManaWell(rc, loc);
+						if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
                             if (!RunCarrier.onBanList(loc))
 							    if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.earlyAda))
 								wellLoc = loc;
@@ -254,7 +255,7 @@ public strictfp class RobotPlayer {
 						arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateAdaWellLocation(rc, loc, HQLOC);
-						if (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC)) {
+						if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
                             if (!RunCarrier.onBanList(loc))
 							    if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.earlyMana))
 							    	wellLoc = loc;

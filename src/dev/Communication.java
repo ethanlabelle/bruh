@@ -26,7 +26,8 @@ class Communication {
     static final int STARTING_ISLAND_IDX = GameConstants.MAX_STARTING_HEADQUARTERS;
     private static final int MANA_WELL_IDX = GameConstants.MAX_NUMBER_ISLANDS + GameConstants.MAX_STARTING_HEADQUARTERS;
     private static final int ADA_WELL_IDX = MANA_WELL_IDX + N_SAVED_WELLS; 
-    private static final int STARTING_ENEMY_IDX = ADA_WELL_IDX + N_SAVED_WELLS; 
+    private static final int EXTRA_MANA_IDX = ADA_WELL_IDX + N_SAVED_WELLS;
+    private static final int STARTING_ENEMY_IDX = EXTRA_MANA_IDX + N_SAVED_WELLS;
 
     private static final int TOTAL_BITS = 16;
     private static final int MAPLOC_BITS = 12;
@@ -118,8 +119,32 @@ class Communication {
         // Can always write (0, 0), so just checks are we in range to write
         if (rc.canWriteSharedArray(0, 0)) {
             while (queueSize() > 0 ) {
-                Message msg = pop(); // Take from front or back?
-                if (rc.canWriteSharedArray(msg.idx, msg.value)) {
+                Message msg = pop();
+                if (msg.idx == EXTRA_MANA_IDX) {
+                    // first check if this well is a duplicate 
+                    boolean isDup = false;
+                    for (int i = MANA_WELL_IDX; i < MANA_WELL_IDX + N_SAVED_WELLS; i++) {
+                        int value = rc.readSharedArray(i);
+                        if (value == msg.value)
+                            isDup = true; 
+                    }
+                    for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
+                        int value = rc.readSharedArray(i);
+                        if (value == msg.value)
+                            isDup = true; 
+                    }
+                    if (isDup)
+                        continue;
+                    // find a good spot
+                    // TODO: allow writing to empty spots if we have less than four headquarters
+                    for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
+                        int value = rc.readSharedArray(i);
+                        if (value == 0 && rc.canWriteSharedArray(i, msg.value)) {
+                            rc.writeSharedArray(i, msg.value);
+                            break;
+                        }
+                    }
+                } else if (rc.canWriteSharedArray(msg.idx, msg.value)) {
                     rc.writeSharedArray(msg.idx, msg.value);
                 }
             }
@@ -206,6 +231,31 @@ class Communication {
         return answer;
     }
 
+    static MapLocation getClosestUnbannedWell(RobotController rc, ResourceType resource) throws GameActionException {
+		int start = MANA_WELL_IDX;
+		if (resource == ResourceType.ADAMANTIUM) {
+			start = ADA_WELL_IDX;
+		}
+        MapLocation answer = null;
+        int value;
+        MapLocation m;
+        for (int i = start; i < start + N_SAVED_WELLS; i++) {
+            value = rc.readSharedArray(i);
+            m = intToLocation(rc, value);
+            if (m != null && !RunCarrier.onBanList(m) && (answer == null || rc.getLocation().distanceSquaredTo(m) < rc.getLocation().distanceSquaredTo(answer)))
+                answer = m;
+        }
+        if (start == MANA_WELL_IDX) {
+            for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
+                value = rc.readSharedArray(i);
+                m = intToLocation(rc, value);
+                if (m != null && !RunCarrier.onBanList(m) && (answer == null || rc.getLocation().distanceSquaredTo(m) < rc.getLocation().distanceSquaredTo(answer)))
+                    answer = m;
+            }
+        }
+        return answer;
+    }
+
 	static MapLocation readManaWellLocation(RobotController rc, MapLocation HQ) throws GameActionException {
 		int i = getHQInd(HQ);
 		if (i != -1) {
@@ -235,6 +285,12 @@ class Communication {
         	Message msg = new Message(MANA_WELL_IDX + i, wellLocInt, RobotPlayer.turnCount);
         	add(msg);
 		}
+    }
+
+    static void addManaWell(RobotController rc, MapLocation wellLoc) throws GameActionException {
+        int wellLocInt = locationToInt(rc, wellLoc);
+        Message msg = new Message(EXTRA_MANA_IDX, wellLocInt, RobotPlayer.turnCount);
+        add(msg);
     }
 
     static void updateAdaWellLocation(RobotController rc, MapLocation wellLoc, MapLocation HQ) throws GameActionException {
