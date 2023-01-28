@@ -194,7 +194,6 @@ public strictfp class RobotPlayer {
 		// Fills out the static board array for RobotPlayer board 
 		// About 3000 bytecode or so 
 		// TODO: Clouds, currents 
-		// TODO: HIDDEN tiles on init
 		static void updateMap(RobotController rc) throws GameActionException {
 			mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
 			robotInfos = rc.senseNearbyRobots();
@@ -303,28 +302,31 @@ public strictfp class RobotPlayer {
 			}
 		}
 
-		static boolean hasObstacle(RobotController rc, MapLocation loc) throws GameActionException {
+		static boolean hasObstacle(RobotController rc, Direction dir) throws GameActionException {
+			MapLocation loc = rc.getLocation().add(dir);
 			if (!rc.onTheMap(loc))
 				return true;
 			int tile = board[loc.x][loc.y];
 			if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
 				return true;
+			MapInfo tileInfo = rc.senseMapInfo(loc);
+			if (tileInfo.getCurrentDirection() == dir.opposite())
+				return true;
 			return false;
 		}    
 		
 		static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
-			MapLocation me = rc.getLocation();
-			if (!hasObstacle(rc, me.add(dir)) && rc.canMove(dir)) {
+			if (!hasObstacle(rc, dir) && rc.canMove(dir)) {
 				rc.move(dir);
 				return true;
 			} else {
 				Direction right = dir.rotateRight();
-				if (!hasObstacle(rc, me.add(dir)) && rc.canMove(right)) {
+				if (!hasObstacle(rc, dir) && rc.canMove(right)) {
 					rc.move(right);
 					return true;
 				}
 				Direction left = dir.rotateLeft();
-				if (!hasObstacle(rc, me.add(dir)) && rc.canMove(left)) {
+				if (!hasObstacle(rc, dir) && rc.canMove(left)) {
 					rc.move(left);
 					return true;
 				}
@@ -373,19 +375,16 @@ public strictfp class RobotPlayer {
 
 		static boolean senseRight(RobotController rc) throws GameActionException {
 			Direction senseDir = currentDirection.rotateRight().rotateRight(); 
-			MapLocation tile = rc.getLocation().add(senseDir);
-			return hasObstacle(rc, tile);
+			return hasObstacle(rc, senseDir);
 		}
 
 		static boolean senseFrontRight(RobotController rc) throws GameActionException {
 			Direction senseDir = currentDirection.rotateRight(); 
-			MapLocation tile = rc.getLocation().add(senseDir);
-			return hasObstacle(rc, tile);
+			return hasObstacle(rc, senseDir);
 		}
 
 		static boolean senseFront(RobotController rc) throws GameActionException {
-			MapLocation tile = rc.getLocation().add(currentDirection);
-			return hasObstacle(rc, tile);
+			return hasObstacle(rc, currentDirection);
 		}
 
 		static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
@@ -446,9 +445,8 @@ public strictfp class RobotPlayer {
 			}
 		}
 		static boolean touchingObstacle(RobotController rc) throws GameActionException {
-			MapLocation me = rc.getLocation();
 			Direction rightHandDir = currentDirection.rotateRight().rotateRight();
-			return hasObstacle(rc, me.add(rightHandDir)) || hasObstacle(rc, me.add(rightHandDir.rotateRight())) || hasObstacle(rc, me.add(rightHandDir.rotateLeft()));
+			return hasObstacle(rc, rightHandDir) || hasObstacle(rc, rightHandDir.rotateRight()) || hasObstacle(rc, rightHandDir.rotateLeft());
 		}
 
 		static MapLocation startPoint;
@@ -499,8 +497,7 @@ public strictfp class RobotPlayer {
 			// head towards goal
 			if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
 				// if we're in this block, we couldn't move in the direction of the goal
-				MapLocation pathTile = rc.getLocation().add(goalDir);
-				if (hasObstacle(rc, pathTile)) {
+				if (hasObstacle(rc, goalDir)) {
 					wallMode = true;
 					currentDirection = currentDirection.rotateLeft().rotateLeft();
 					hitPoint = rc.getLocation();

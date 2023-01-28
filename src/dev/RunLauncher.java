@@ -34,23 +34,21 @@ public strictfp class RunLauncher {
             HQLOC = rc.getLocation();
         MapLocation leader_loc = getLeader(rc);
 
-        if (!swarm) {
-            swarm = friends.length >= 2;
-        }
-        if ((!swarm || leader_loc.equals(rc.getLocation()) && friends.length < 4) && friends.length > 0) {
+        if ((leader_loc.equals(rc.getLocation()) && friends.length < 4) && friends.length > 0) {
             tryMove(rc, rc.getLocation().directionTo(friends[0].location));
         } 
         // if this launcher is not a leader
-        if ((!leader_loc.equals(rc.getLocation()) || !swarm)) {
+        if (!leader_loc.equals(rc.getLocation())) {
             healingStrategy(rc);
             Direction dir = rc.getLocation().directionTo(leader_loc);
             if (rc.canMove(dir)) {
                 runFollower(rc, leader_loc);
-                return;
             }
         }
 
-
+        if (getEnemies(rc).length > 0) {
+            Communication.reportEnemy(rc, rc.getLocation());
+        }
         // attack enemy islands
         attackEnemyIsland(rc);
 
@@ -107,7 +105,6 @@ public strictfp class RunLauncher {
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
         navigateTo(rc, leader_loc);
-        attackEnemies(rc);
     }
 
     static MapLocation getLeader(RobotController rc) throws GameActionException {
@@ -129,7 +126,7 @@ public strictfp class RunLauncher {
             MapLocation closest_predicted = null;
             int min_dist = 7200;
             MapLocation me = rc.getLocation();
-            if (rc.getID() % 2 == 0) {
+            if (width*height < 1000 || rc.getID() % 2 == 0) {
                 MapLocation curr_hq = HQLOC;
                 closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
             } else {
@@ -156,6 +153,8 @@ public strictfp class RunLauncher {
                     EnemyHQLOC = possibleEnemyLOC;
                     possibleEnemyLOC = null;
                     return;
+                } else {
+                    move_randomly = true;
                 }
             }
         }

@@ -41,7 +41,7 @@ public strictfp class RunCarrier {
             carrierAttack(rc);
         }
 
-        if (enemyRobots.length > 0) {
+        if (enemyRobots.length > 0 && getTotalResources(rc) < 5) {
             runAway(rc);
         }
 
@@ -266,7 +266,7 @@ public strictfp class RunCarrier {
             } else {
                 continue;
             }
-            if (rc.canSenseRobotAtLocation(miningLoc))
+            if (rc.canSenseRobotAtLocation(miningLoc) && rc.senseRobotAtLocation(miningLoc).team == myTeam)
                 taken++;
         } 
         return spots == taken; 

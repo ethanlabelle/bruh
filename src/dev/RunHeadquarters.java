@@ -20,6 +20,8 @@ public strictfp class RunHeadquarters {
 	static final int MAX_ENEMIES = 4;
 	static final int SPAWN_AMOUNT = 5;
 
+	static boolean hasSpawnedAmplifier = false;
+
     /**
      * Run a single turn for a Headquarters.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -65,16 +67,17 @@ public strictfp class RunHeadquarters {
 
 		MapLocation loc;
         //if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
-        if (turnCount % 75 == 0) {
+        if (turnCount % 100 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);
+				hasSpawnedAmplifier = true;
                 //launcherCount++;
                 return;
             }
         }
         // Let's try to build a launcher.
-		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS || rc.getRoundNum() <= 250) {
+		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
             rc.setIndicatorString("Trying to build a launcher");
             //launcherCount += buildNLaunchers(rc, 2);
         	loc = getSpawnLocation(rc, RobotType.LAUNCHER);
