@@ -52,7 +52,7 @@ public strictfp class RobotPlayer {
 	static final short M_AHQ = 0b1101;
 	static final short M_BHQ = 0b1110;
 	static final short M_EMPTY = 0b1111;
-	static byte[][] board;
+	static byte[] board;
 
 	// pathfinding state
 	static Direction currentDirection;
@@ -79,9 +79,9 @@ public strictfp class RobotPlayer {
 	
 	static void printBoard() {
 		String out = "";
-		for (int i = 0; i < board.length; i++) {
-			for (int j = 0; j < board[i].length; j++) {
-				out = out + board[i][j] + " ";
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				out = out + board[i + j * width] + " ";
 			}
 			out = out + "\n";
 		}
@@ -102,7 +102,7 @@ public strictfp class RobotPlayer {
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
 		rng = new Random(rc.getID());
-		board = new byte[width][height];
+		board = new byte[width * height];
 
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
@@ -183,9 +183,6 @@ public strictfp class RobotPlayer {
 				} finally {
 					// Signify we've done everything we want to do, thereby ending our turn.
 					// This will make our code wait until the next turn, and then perform this loop again.
-					if (Clock.getBytecodeNum() > 100 && Clock.getBytecodeNum() < 1000) {
-						System.out.println("hmmmmmmm");
-					}
 					Clock.yield();
 				}
 				// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
@@ -207,11 +204,11 @@ public strictfp class RobotPlayer {
 			for (int i = length; --i >= 0;) {
 				MapInfo mapInf = mapInfos[i];
 				MapLocation loc = mapInf.getMapLocation();
-				if (board[loc.x][loc.y] == M_HIDDEN) {
+				if (board[loc.x + loc.y * width] == M_HIDDEN) {
 					if (!rc.sensePassability(loc))
-						board[loc.x][loc.y] = M_STORM;
+						board[loc.x + loc.y * width] = M_STORM;
 					else
-						board[loc.x][loc.y] = M_EMPTY;
+						board[loc.x + loc.y * width] = M_EMPTY;
 				}
 			}
 
@@ -222,9 +219,9 @@ public strictfp class RobotPlayer {
 					MapLocation loc = robot.getLocation();
 					Team team = robot.getTeam();
 					if (team == Team.A) {
-						board[loc.x][loc.y] = M_AHQ;	
+						board[loc.x + loc.y * width] = M_AHQ;	
 					} else {
-						board[loc.x][loc.y] = M_BHQ;	
+						board[loc.x + loc.y * width] = M_BHQ;	
 					}
 					if (myTeam == team) {
 						HQLOC = loc;
@@ -242,7 +239,7 @@ public strictfp class RobotPlayer {
 				MapLocation loc = wellInfo.getMapLocation();
 				switch (wellInfo.getResourceType()) {
 					case MANA:
-						board[loc.x][loc.y] = M_MANA;
+						board[loc.x + loc.y * width] = M_MANA;
 						arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateManaWellLocation(rc, loc, HQLOC);
@@ -262,10 +259,10 @@ public strictfp class RobotPlayer {
 							    if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.earlyMana))
 							    	wellLoc = loc;
 						}
-						board[loc.x][loc.y] = M_ADA;
+						board[loc.x + loc.y * width] = M_ADA;
 						break;
 					case ELIXIR:	
-						board[loc.x][loc.y] = M_ELIX;
+						board[loc.x + loc.y * width] = M_ELIX;
 						break;
 					default:
 						break;
@@ -283,13 +280,13 @@ public strictfp class RobotPlayer {
 					MapLocation loc = islandLocs[j];
 					switch (team) {
 						case A:
-							board[loc.x][loc.y] = M_AISL;
+							board[loc.x + loc.y * width] = M_AISL;
 							break;
 						case B:
-							board[loc.x][loc.y] = M_BISL;
+							board[loc.x + loc.y * width] = M_BISL;
 							break;
 						default:
-							board[loc.x][loc.y] = M_NISL;
+							board[loc.x + loc.y * width] = M_NISL;
 					}
 				}
 			}
@@ -311,7 +308,7 @@ public strictfp class RobotPlayer {
 			MapLocation loc = rc.getLocation().add(dir);
 			if (!rc.onTheMap(loc))
 				return true;
-			int tile = board[loc.x][loc.y];
+			int tile = board[loc.x + loc.y * width];
 			if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
 				return true;
 			MapInfo tileInfo = rc.senseMapInfo(loc);
@@ -419,7 +416,7 @@ public strictfp class RobotPlayer {
 			} else {
 				if (!onObstacle) {
 					MapLocation pathTile = rc.getLocation().add(goalDir);
-					if (board[pathTile.x][pathTile.y] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
+					if (board[pathTile.x + pathTile.y * width] == M_STORM || rng.nextInt(3) == 1) { // indicates obstacle
 						onObstacle = true;
 						currentDirection = goalDir;
 						turnLeft();
@@ -570,7 +567,7 @@ public strictfp class RobotPlayer {
 		}
 
 		static boolean onMLine(MapLocation loc) {
-			float epsilon = 2.5f;
+			float epsilon = 3f;
 			return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
 		}
 

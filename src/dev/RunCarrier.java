@@ -111,7 +111,7 @@ public strictfp class RunCarrier {
         	    exploreBFS(rc);
             else {
                 short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
-                if (board[me.x][me.y] == islandNum) {
+                if (board[me.x + me.y * width] == islandNum) {
                     return;
                 }    
                 // Move randomly
@@ -251,7 +251,7 @@ public strictfp class RunCarrier {
             MapLocation miningLoc = wellLoc.add(directions[i]);
 			if (!rc.onTheMap(miningLoc))
 				continue;
-            if (!miningLoc.equals(me) && board[miningLoc.x][miningLoc.y] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER && rc.canMove(me.directionTo(miningLoc))) {
+            if (!miningLoc.equals(me) && board[miningLoc.x + miningLoc.y * width] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER && rc.canMove(me.directionTo(miningLoc))) {
                 rc.move(me.directionTo(miningLoc));
                 return;
             }
@@ -269,7 +269,7 @@ public strictfp class RunCarrier {
 			if (!rc.onTheMap(miningLoc))
 				continue;
             // good tile for mining
-            if (board[miningLoc.x][miningLoc.y] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER) {
+            if (board[miningLoc.x + miningLoc.y * width] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER) {
                 spots++;
             } else {
                 continue;
@@ -290,7 +290,7 @@ public strictfp class RunCarrier {
        		navigateTo(rc, exploreGoal);
         if (me.distanceSquaredTo(exploreGoal) <= 1) {
             getUnexploredTiles(rc);
-            while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x][exploreGoal.y] != 0)) {
+            while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x + exploreGoal.y * width] != 0)) {
                 exploreGoal = bfsQ.remove(0);
         	    rc.setIndicatorDot(exploreGoal, 255, 0, 0);
         	}
@@ -307,73 +307,73 @@ public strictfp class RunCarrier {
         switch (rng.nextInt(4)) {
             case 0:
                 try {
-                    if (board[coord[0]][coord[1]] == 0)
+                    if (board[coord[0] + coord[1] * width] == 0)
                         bfsQ.add(new MapLocation(coord[0], coord[1]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[4]][coord[5]] == 0)
+                    if (board[coord[4] + coord[5] * width] == 0)
                         bfsQ.add(new MapLocation(coord[4], coord[5]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[2]][coord[3]] == 0)
+                    if (board[coord[2] + coord[3] * width] == 0)
                         bfsQ.add(new MapLocation(coord[2], coord[3]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[6]][coord[7]] == 0)
+                    if (board[coord[6] + coord[7] * width] == 0)
                         bfsQ.add(new MapLocation(coord[6], coord[7]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 break;
             case 1:
                 try {
-                    if (board[coord[4]][coord[5]] == 0)
+                    if (board[coord[4] + coord[5] * width] == 0)
                         bfsQ.add(new MapLocation(coord[4], coord[5]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[2]][coord[3]] == 0)
+                    if (board[coord[2] + coord[3] * width] == 0)
                         bfsQ.add(new MapLocation(coord[2], coord[3]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[6]][coord[7]] == 0)
+                    if (board[coord[6] + coord[7] * width] == 0)
                         bfsQ.add(new MapLocation(coord[6], coord[7]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[0]][coord[1]] == 0)
+                    if (board[coord[0] + coord[1] * width] == 0)
                         bfsQ.add(new MapLocation(coord[0], coord[1]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 break;
             case 2:
                 try {
-                    if (board[coord[2]][coord[3]] == 0)
+                    if (board[coord[2] + coord[3] * width] == 0)
                         bfsQ.add(new MapLocation(coord[2], coord[3]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[6]][coord[7]] == 0)
+                    if (board[coord[6] + coord[7] * width] == 0)
                         bfsQ.add(new MapLocation(coord[6], coord[7]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[0]][coord[1]] == 0)
+                    if (board[coord[0] + coord[1] * width] == 0)
                         bfsQ.add(new MapLocation(coord[0], coord[1]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[4]][coord[5]] == 0)
+                    if (board[coord[4] + coord[5] * width] == 0)
                         bfsQ.add(new MapLocation(coord[4], coord[5]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 break;
             case 3:
                 try {
-                    if (board[coord[6]][coord[7]] == 0)
+                    if (board[coord[6] + coord[7] * width] == 0)
                         bfsQ.add(new MapLocation(coord[6], coord[7]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[0]][coord[1]] == 0)
+                    if (board[coord[0] + coord[1] * width] == 0)
                         bfsQ.add(new MapLocation(coord[0], coord[1]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[4]][coord[5]] == 0)
+                    if (board[coord[4] + coord[5] * width] == 0)
                         bfsQ.add(new MapLocation(coord[4], coord[5]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 try {
-                    if (board[coord[2]][coord[3]] == 0)
+                    if (board[coord[2] + coord[3] * width] == 0)
                         bfsQ.add(new MapLocation(coord[2], coord[3]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 break;

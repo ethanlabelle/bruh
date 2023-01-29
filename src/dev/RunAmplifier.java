@@ -114,7 +114,7 @@ public strictfp class RunAmplifier {
         if (enemyIsland != null) {
             me = rc.getLocation();
             short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
-            if (board[me.x][me.y] == islandNum || board[me.x][me.y] == M_NISL) {
+            if (board[me.x + me.y * width] == islandNum || board[me.x + me.y * width] == M_NISL) {
                 enemyIsland = null;
                 return;
             }
@@ -139,7 +139,7 @@ public strictfp class RunAmplifier {
                 rc.setIndicatorString("trying to heal!!");
                 me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
-                if (board[me.x][me.y] == islandNum) {
+                if (board[me.x + me.y * width] == islandNum) {
                     if (rc.canSenseLocation(healingIsland)) {
                         int islandId = rc.senseIsland(healingIsland);
                         MapLocation[] islandLocs = rc.senseNearbyIslandLocations(islandId);

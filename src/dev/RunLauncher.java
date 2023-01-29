@@ -33,7 +33,7 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
-        if (turnCount != 0)
+        if (turnCount != 1)
             updateMap(rc);
         else
             HQLOC = rc.getLocation();
@@ -242,7 +242,7 @@ public strictfp class RunLauncher {
         if (enemyIsland != null) {
             me = rc.getLocation();
             short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
-            if (board[me.x][me.y] == islandNum || board[me.x][me.y] == M_NISL) {
+            if (board[me.x + me.y * width] == islandNum || board[me.x + me.y * width] == M_NISL) {
                 enemyIsland = null;
                 return;
             }
@@ -332,7 +332,7 @@ public strictfp class RunLauncher {
                 rc.setIndicatorString("trying to heal!!");
                 me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
-                if (board[me.x][me.y] == islandNum) {
+                if (board[me.x + me.y * width] == islandNum) {
                     if (rc.canSenseLocation(healingIsland)) {
                         int islandId = rc.senseIsland(healingIsland);
                         MapLocation[] islandLocs = rc.senseNearbyIslandLocations(islandId);
