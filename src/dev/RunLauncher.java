@@ -24,7 +24,11 @@ public strictfp class RunLauncher {
     static MapLocation enemyIsland = null;
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
     static RobotInfo[] friends;
+    static RobotInfo[] enemies;
+    static MapLocation me;
+    static MapLocation defLoc;
     static boolean swarm = false;
+    
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
@@ -33,18 +37,7 @@ public strictfp class RunLauncher {
         else
             HQLOC = rc.getLocation();
         
-        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
-        MapLocation me = rc.getLocation();
-        if (enemies != null && enemies.length > 0) {
-            int i = enemies.length;
-            while (--i >= 0) {
-                RobotInfo robot = enemies[i];
-                if (robot.getType() == RobotType.HEADQUARTERS) {
-                    tryMove(rc, me.directionTo(robot.location).opposite());
-                    break;
-                }
-            }
-        }
+        avoidHQ(rc);
         
         if (getEnemies(rc).length > 0) {
             Communication.reportEnemy(rc, rc.getLocation());
@@ -62,7 +55,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-		MapLocation defLoc = Communication.getClosestEnemy(rc);
+		defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			navigateTo(rc, defLoc);
             Communication.clearObsoleteEnemies(rc);
@@ -89,18 +82,7 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
 
-        enemies = rc.senseNearbyRobots(-1, enemyTeam);
-        me = rc.getLocation();
-        if (enemies != null && enemies.length > 0) {
-            int i = enemies.length;
-            while (--i >= 0) {
-                RobotInfo robot = enemies[i];
-                if (robot.getType() == RobotType.HEADQUARTERS) {
-                    tryMove(rc, me.directionTo(robot.location).opposite());
-                    break;
-                }
-            }
-        }
+        avoidHQ(rc);
         cloudShot(rc);
     }
 
@@ -126,7 +108,7 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            MapLocation me = rc.getLocation();
+            me = rc.getLocation();
             // if (width*height < 1000 || rc.getID() % 2 == 0) {
             //     MapLocation curr_hq = HQLOC;
             //     closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
@@ -169,7 +151,7 @@ public strictfp class RunLauncher {
     // the new attackEnemies function uses less bytecode
     static void attackEnemies(RobotController rc) throws GameActionException {
         if (rc.isActionReady()) {
-            RobotInfo[] enemies = getEnemies(rc);
+            enemies = getEnemies(rc);
             // sort by descending health and put launcher types last in the array
             Arrays.sort(enemies, (robot1, robot2) -> {
                 if (robot1.type == RobotType.LAUNCHER && robot2.type != RobotType.LAUNCHER) {
@@ -212,7 +194,7 @@ public strictfp class RunLauncher {
                 n++;
             }
         }
-        RobotInfo[] enemies = new RobotInfo[n];
+        enemies = new RobotInfo[n];
         for (int i = enemyInfos.length; --i >= 0;) {
             if (enemyInfos[i].type != RobotType.HEADQUARTERS) {
                 enemies[--n] = enemyInfos[i];
@@ -227,7 +209,7 @@ public strictfp class RunLauncher {
             enemyIsland = getClosestEnemyIsland(rc);
         }
         if (enemyIsland != null) {
-            MapLocation me = rc.getLocation();
+            me = rc.getLocation();
             short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
             if (board[me.x][me.y] == islandNum || board[me.x][me.y] == M_NISL) {
                 enemyIsland = null;
@@ -238,7 +220,7 @@ public strictfp class RunLauncher {
     }
 
     static void protectWell(RobotController rc) throws GameActionException {
-        MapLocation me = rc.getLocation();
+        me = rc.getLocation();
 
         if (nearbyWells.length >= 1) {
             WellInfo closest_well = nearbyWells[0];
@@ -317,7 +299,7 @@ public strictfp class RunLauncher {
             }
             if (healingIsland != null) {
                 rc.setIndicatorString("trying to heal!!");
-                MapLocation me = rc.getLocation();
+                me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x][me.y] == islandNum) {
                     if (rc.canSenseLocation(healingIsland)) {
@@ -364,7 +346,7 @@ public strictfp class RunLauncher {
     
     static void cloudShot(RobotController rc) throws GameActionException {
         if (rc.isActionReady()) {
-            RobotInfo[] enemies = getEnemies(rc);
+            enemies = getEnemies(rc);
             if (enemies.length == 0) {
                 if (!rc.senseCloud(rc.getLocation())) {
                     // sense nearby clouds and attack a location in there
@@ -402,6 +384,21 @@ public strictfp class RunLauncher {
                     if (rc.canAttack(attackLoc)) {
                         rc.attack(attackLoc);
                     }
+                }
+            }
+        }
+    }
+
+    static void avoidHQ(RobotController rc) throws GameActionException {
+        enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        me = rc.getLocation();
+        if (enemies != null && enemies.length > 0) {
+            int i = enemies.length;
+            while (--i >= 0) {
+                RobotInfo robot = enemies[i];
+                if (robot.getType() == RobotType.HEADQUARTERS) {
+                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    break;
                 }
             }
         }
