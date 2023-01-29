@@ -136,17 +136,10 @@ public strictfp class RunLauncher {
         if(possibleEnemyLOC != null)
             navigateTo(rc, possibleEnemyLOC);
          */
-        // System.out.println(possibleEnemyLOC);
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            // me = rc.getLocation();
-            // if (width*height < 1000 || rc.getID() % 2 == 0) {
-            //     MapLocation curr_hq = HQLOC;
-            //     closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-            // } else {
-            // System.out.println(Communication.getClosestEnemy(rc));
 
             // generate list of possible hqs
             for(int i = Communication.headquarterLocs.length; --i >= 0;) {
@@ -156,9 +149,47 @@ public strictfp class RunLauncher {
                 MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
                 MapLocation verticalSym = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
                 MapLocation horizontalSym = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
-                possibleHQLocs[i] = rotationalSym;
-                possibleHQLocs[i+1] = verticalSym;
-                possibleHQLocs[i+2] = horizontalSym;
+                possibleHQLocs[i * 3] = rotationalSym;
+                possibleHQLocs[i * 3 + 1] = verticalSym;
+                possibleHQLocs[i * 3 + 2] = horizontalSym;
+            }
+            int count = 0;
+            for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+                if (Communication.headquarterLocs[i] != null) {
+                    count++;
+                }
+            }
+            if (count > 1) {
+                // check if horrizontal symmetry is possible with our headquarters
+                int mid = width / 2;
+                int leftOfMid = 0;
+                for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+                    if (Communication.headquarterLocs[i] != null) {
+                        if (Communication.headquarterLocs[i].x < mid)
+                            leftOfMid++;
+                    }
+                }
+                if (leftOfMid == count || leftOfMid == 0) {
+                    possibleHQLocs[0 * 3 + 2] = null;
+                    possibleHQLocs[1 * 3 + 2] = null;
+                    possibleHQLocs[2 * 3 + 2] = null;
+                    possibleHQLocs[3 * 3 + 2] = null;
+                }
+                // check if vertical symmetry is possible with our headquarters
+                mid = height / 2;
+                int belowMid = 0;
+                for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+                    if (Communication.headquarterLocs[i] != null) {
+                        if (Communication.headquarterLocs[i].y < mid)
+                            belowMid++;
+                    }
+                }
+                if (belowMid == count || belowMid == 0) {
+                    possibleHQLocs[0 * 3 + 1] = null;
+                    possibleHQLocs[1 * 3 + 1] = null;
+                    possibleHQLocs[2 * 3 + 1] = null;
+                    possibleHQLocs[3 * 3 + 1] = null;
+                }
             }
             // pick closest HQ that is outside of known HQs' action radius
             int ind = -1;
@@ -179,22 +210,6 @@ public strictfp class RunLauncher {
             }
             possibleEnemyLOC = closest_predicted;
             possibleHQLocs[ind] = null;
-            // if (rc.canSenseLocation(possibleEnemyLOC)) {
-            //     RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            //     RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
-            //     if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
-            //         EnemyHQLOC = possibleEnemyLOC;
-            //         return;
-            //     }
-            //     else{
-            //         possibleEnemyLOC = null;
-            //         EnemyHQLOC = undefined_loc;
-            //         fake_id += 1;
-            //         if(fake_id == 6){
-            //             move_randomly = true;
-            //         }
-            //     }
-            // }
         }
 
         if (possibleEnemyLOC != null) {
