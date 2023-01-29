@@ -137,7 +137,7 @@ public strictfp class RobotPlayer {
 			Communication.tryWriteMessages(rc);
 			HQLOC = rc.getLocation();
 			updateMap(rc);
-			setup(rc);
+			RunHeadquarters.setup(rc);
 			Communication.updateHeadquarterInfo(rc);
 		} else {
 			Communication.updateHeadquarterInfo(rc);
@@ -621,33 +621,6 @@ public strictfp class RobotPlayer {
 			}
 			return null;
 		}
-
-		static void setup(RobotController rc) throws GameActionException {
-			int i = 0;
-			while (i < 4) {
-                rc.setIndicatorString("Trying to build a launcher");
-			    MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-                if (loc != null) {
-                    rc.buildRobot(RobotType.LAUNCHER, loc);
-			    	i++;
-                } else {
-			    	Clock.yield();
-					turnCount++;
-			    }
-			}	
-			i = 0;
-			while (i < 4) {
-        	    rc.setIndicatorString("Trying to build a carrier");
-				MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
-        	    if (loc != null) {
-        	        rc.buildRobot(RobotType.CARRIER, loc);
-					i++;
-        	    } else {
-					Clock.yield();
-					turnCount++;
-				}
-			}
-	}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {
 		return rc.getResourceAmount(ResourceType.ADAMANTIUM) + rc.getResourceAmount(ResourceType.MANA) + rc.getResourceAmount(ResourceType.ELIXIR);

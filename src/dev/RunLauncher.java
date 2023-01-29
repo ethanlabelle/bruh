@@ -2,6 +2,7 @@ package dev;
 
 import battlecode.common.*;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import static dev.RobotPlayer.*;
 
@@ -28,7 +29,7 @@ public strictfp class RunLauncher {
     static MapLocation me;
     static MapLocation defLoc;
     static boolean swarm = false;
-    
+    static HashSet<MapLocation> possibleHQLocs = new HashSet<>();
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
@@ -109,23 +110,36 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            me = rc.getLocation();
+            // me = rc.getLocation();
             // if (width*height < 1000 || rc.getID() % 2 == 0) {
             //     MapLocation curr_hq = HQLOC;
             //     closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
             // } else {
+            // System.out.println(Communication.getClosestEnemy(rc));
             for(int i = Communication.headquarterLocs.length; --i >= 0;) {
                 MapLocation curr_hq = Communication.headquarterLocs[i];
                 if (curr_hq == null)
                     continue;
-                MapLocation guess_loc = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+                MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+                // MapLocation verticalSym = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
+                // MapLocation horizontalSym = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
+                // possibleHQLocs.add(rotationalSym);
+                // possibleHQLocs.add(verticalSym);
+                // possibleHQLocs.add(horizontalSym);
                 // guess on rotational symmetry
-                if (me.distanceSquaredTo(guess_loc) < min_dist && !Communication.headquarterLocsSet.contains(guess_loc)) {
-                    min_dist = me.distanceSquaredTo(guess_loc);
-                    closest_predicted = guess_loc;
+                if (HQLOC.distanceSquaredTo(rotationalSym) < min_dist && !Communication.headquarterLocsSet.contains(rotationalSym)) {
+                    min_dist = HQLOC.distanceSquaredTo(rotationalSym);
+                    closest_predicted = rotationalSym;
                 }
+                // if (HQLOC.distanceSquaredTo(verticalSym) < min_dist && !Communication.headquarterLocsSet.contains(verticalSym)) {
+                //     min_dist = HQLOC.distanceSquaredTo(verticalSym);
+                //     closest_predicted = verticalSym;
+                // }
+                // if (HQLOC.distanceSquaredTo(horizontalSym) < min_dist && !Communication.headquarterLocsSet.contains(horizontalSym)) {
+                //     min_dist = HQLOC.distanceSquaredTo(horizontalSym);
+                //     closest_predicted = horizontalSym;
+                // }
             }
-            // }
             possibleEnemyLOC = closest_predicted;
         }
 
