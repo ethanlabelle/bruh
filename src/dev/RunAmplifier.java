@@ -24,7 +24,7 @@ public strictfp class RunAmplifier {
 		if (enemyRobots.length > 0) {
             for (RobotInfo robot: enemyRobots) {
                 if (robot.type == RobotType.LAUNCHER) {
-			        Communication.reportEnemy(rc, rc.getLocation());
+			        Communication.reportEnemy(rc, robot.location);
                     runAway(rc);
                 }
             }
@@ -53,17 +53,17 @@ public strictfp class RunAmplifier {
             return;
 		}
 
-        // if (turnCount < 100) {
-        //     MapLocation neutralIslandLoc = null;
-        //     for (int i = 1; i <= GameConstants.MAX_NUMBER_ISLANDS; i++) {
-        //         if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
-        //             neutralIslandLoc = Communication.readIslandLocation(rc, i);
-        //             break;
-        //         }
-        //     }
-        //     if (neutralIslandLoc != null)
-        //         navigateTo(rc, neutralIslandLoc);
-        // }
+        if (defLoc == null) {
+            MapLocation neutralIslandLoc = null;
+            for (int i = 1; i <= GameConstants.MAX_NUMBER_ISLANDS; i++) {
+                if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
+                    neutralIslandLoc = Communication.readIslandLocation(rc, i);
+                    break;
+                }
+            }
+            if (neutralIslandLoc != null)
+                navigateTo(rc, neutralIslandLoc);
+        }
 
         // Move randomly
         Direction dir = currentDirection;

@@ -646,7 +646,7 @@ public strictfp class RobotPlayer {
 					Clock.yield();
 					turnCount++;
 				}
-			}	
+			}
 	}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {

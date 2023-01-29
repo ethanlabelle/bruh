@@ -32,20 +32,20 @@ public strictfp class RunLauncher {
             updateMap(rc);
         else
             HQLOC = rc.getLocation();
-        MapLocation leader_loc = getLeader(rc);
-
-        if ((leader_loc.equals(rc.getLocation()) && friends.length < 4) && friends.length > 0) {
-            tryMove(rc, rc.getLocation().directionTo(friends[0].location));
-        } 
-        // if this launcher is not a leader
-        if (!leader_loc.equals(rc.getLocation())) {
-            healingStrategy(rc);
-            Direction dir = rc.getLocation().directionTo(leader_loc);
-            if (rc.canMove(dir)) {
-                runFollower(rc, leader_loc);
+        
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        MapLocation me = rc.getLocation();
+        if (enemies != null && enemies.length > 0) {
+            int i = enemies.length;
+            while (--i >= 0) {
+                RobotInfo robot = enemies[i];
+                if (robot.getType() == RobotType.HEADQUARTERS) {
+                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    break;
+                }
             }
         }
-
+        
         if (getEnemies(rc).length > 0) {
             Communication.reportEnemy(rc, rc.getLocation());
         }
@@ -88,8 +88,8 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
-        MapLocation me = rc.getLocation();
+        enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        me = rc.getLocation();
         if (enemies != null && enemies.length > 0) {
             int i = enemies.length;
             while (--i >= 0) {

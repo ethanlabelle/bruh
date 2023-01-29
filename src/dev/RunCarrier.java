@@ -14,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 5;
+    static final int CARRIER_DIFF_MOD = 4;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -260,7 +260,7 @@ public strictfp class RunCarrier {
     }
 
     static boolean isWellFull(RobotController rc, MapLocation well) throws GameActionException {
-        int spots = 0;
+        int spots = 1;
         int taken = 0;
         for (int i = directions.length; --i >= 0;) {
             MapLocation miningLoc = wellLoc.add(directions[i]);
@@ -274,7 +274,10 @@ public strictfp class RunCarrier {
             }
             if (rc.canSenseRobotAtLocation(miningLoc) && rc.senseRobotAtLocation(miningLoc).team == myTeam)
                 taken++;
-        } 
+        }
+        if (rc.canSenseRobotAtLocation(wellLoc) && rc.senseRobotAtLocation(wellLoc).team == myTeam) {
+            taken++;
+        }
         return spots == taken; 
     }
 
