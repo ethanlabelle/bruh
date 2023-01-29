@@ -2,8 +2,6 @@ package dev;
 
 import battlecode.common.*;
 import java.util.Arrays;
-import java.util.HashSet;
-
 import static dev.RobotPlayer.*;
 
 public strictfp class RunLauncher {
@@ -161,33 +159,20 @@ public strictfp class RunLauncher {
                 possibleHQLocs[i] = rotationalSym;
                 possibleHQLocs[i+1] = verticalSym;
                 possibleHQLocs[i+2] = horizontalSym;
-                // // guess on rotational symmetry
-                // if (HQLOC.distanceSquaredTo(rotationalSym) < min_dist && !Communication.headquarterLocsSet.contains(rotationalSym)) {
-                //     min_dist = HQLOC.distanceSquaredTo(rotationalSym);
-                //     closest_predicted = rotationalSym;
-                // }
-                // // if (HQLOC.distanceSquaredTo(verticalSym) < min_dist && !Communication.headquarterLocsSet.contains(verticalSym)) {
-                // //     min_dist = HQLOC.distanceSquaredTo(verticalSym);
-                // //     closest_predicted = verticalSym;
-                // // }
-                // // if (HQLOC.distanceSquaredTo(horizontalSym) < min_dist && !Communication.headquarterLocsSet.contains(horizontalSym)) {
-                // //     min_dist = HQLOC.distanceSquaredTo(horizontalSym);
-                // //     closest_predicted = horizontalSym;
-                // // }
             }
             // pick closest HQ that is outside of known HQs' action radius
             int ind = -1;
             for (int i = possibleHQLocs.length; --i >= 0;) {
-                if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(HQLOC) < min_dist) {
+                if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
                     boolean inFriendlyHQVision = false;
                     for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-                        if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.actionRadiusSquared) {
+                        if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.visionRadiusSquared) {
                             inFriendlyHQVision = true;
                         }
                     }
                     if (!inFriendlyHQVision) {
                         closest_predicted = possibleHQLocs[i];
-                        min_dist = possibleHQLocs[i].distanceSquaredTo(HQLOC);
+                        min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
                         ind = i;
                     }
                 }
