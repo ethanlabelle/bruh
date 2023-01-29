@@ -107,29 +107,29 @@ public strictfp class RobotPlayer {
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		enemyTeam = myTeam.opponent();
-		if (rc.getType() != RobotType.LAUNCHER) {
+		// if (rc.getType() != RobotType.LAUNCHER) {
 			currentDirection = directions[rng.nextInt(directions.length)];
-		}
-		else {
-			// make launcher go the opposite direction of the quadrant they were spawned in
-			MapLocation loc = rc.getLocation();
-			int x = loc.x;
-			int y = loc.y;
-			int map_width = rc.getMapWidth();
-			int map_height = rc.getMapHeight();
-			if (x < map_width / 2 && y < map_height / 2) {
-				currentDirection = Direction.NORTHEAST;
-			}
-			else if (x < map_width / 2 && y >= map_height / 2) {
-				currentDirection = Direction.SOUTHEAST;
-			}
-			else if (x >= map_width / 2 && y < map_height / 2) {
-				currentDirection = Direction.NORTHWEST;
-			}
-			else {
-				currentDirection = Direction.SOUTHWEST;
-			}
-		}
+		// }
+		// else {
+		// 	// make launcher go the opposite direction of the quadrant they were spawned in
+		// 	MapLocation loc = rc.getLocation();
+		// 	int x = loc.x;
+		// 	int y = loc.y;
+		// 	int map_width = rc.getMapWidth();
+		// 	int map_height = rc.getMapHeight();
+		// 	if (x < map_width / 2 && y < map_height / 2) {
+		// 		currentDirection = Direction.NORTHEAST;
+		// 	}
+		// 	else if (x < map_width / 2 && y >= map_height / 2) {
+		// 		currentDirection = Direction.SOUTHEAST;
+		// 	}
+		// 	else if (x >= map_width / 2 && y < map_height / 2) {
+		// 		currentDirection = Direction.NORTHWEST;
+		// 	}
+		// 	else {
+		// 		currentDirection = Direction.SOUTHWEST;
+		// 	}
+		// }
 		onObstacle = false;
 		
 		if (rc.getType() == RobotType.HEADQUARTERS) {
@@ -152,7 +152,6 @@ public strictfp class RobotPlayer {
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
 			
             turnCount += 1;  // We have now been alive for one more turn!
-			
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
 				// The same run() function is called for every robot on your team, even if they are
@@ -184,6 +183,9 @@ public strictfp class RobotPlayer {
 				} finally {
 					// Signify we've done everything we want to do, thereby ending our turn.
 					// This will make our code wait until the next turn, and then perform this loop again.
+					if (Clock.getBytecodeNum() > 100 && Clock.getBytecodeNum() < 1000) {
+						System.out.println("hmmmmmmm");
+					}
 					Clock.yield();
 				}
 				// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
@@ -297,9 +299,11 @@ public strictfp class RobotPlayer {
 		
 		// Navigation
 		static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-			bug2(rc, loc);
-			if (rc.getType() == RobotType.CARRIER) {
+			if (rc.isMovementReady()) {
 				bug2(rc, loc);
+				if (rc.getType() == RobotType.CARRIER) {
+					bug2(rc, loc);
+				}
 			}
 		}
 

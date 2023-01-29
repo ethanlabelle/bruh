@@ -60,7 +60,6 @@ public strictfp class RunLauncher {
 		defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			navigateTo(rc, defLoc);
-            Communication.clearObsoleteEnemies(rc);
             attackEnemies(rc);
             cloudShot(rc);
             return;
@@ -86,6 +85,7 @@ public strictfp class RunLauncher {
 
         avoidHQ(rc);
         cloudShot(rc);
+        Communication.clearOld();
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
@@ -141,6 +141,22 @@ public strictfp class RunLauncher {
                 // }
             }
             possibleEnemyLOC = closest_predicted;
+            // if (rc.canSenseLocation(possibleEnemyLOC)) {
+            //     RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+            //     RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
+            //     if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
+            //         EnemyHQLOC = possibleEnemyLOC;
+            //         return;
+            //     }
+            //     else{
+            //         possibleEnemyLOC = null;
+            //         EnemyHQLOC = undefined_loc;
+            //         fake_id += 1;
+            //         if(fake_id == 6){
+            //             move_randomly = true;
+            //         }
+            //     }
+            // }
         }
 
         if (possibleEnemyLOC != null) {

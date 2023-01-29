@@ -61,10 +61,14 @@ public strictfp class RunAmplifier {
 
         if (defLoc == null) {
             MapLocation neutralIslandLoc = null;
-            for (int i = 1; i <= GameConstants.MAX_NUMBER_ISLANDS; i++) {
-                if (Communication.readTeamHoldingIsland(rc, i) == Team.NEUTRAL && Communication.readIslandLocation(rc, i) != null) {
-                    neutralIslandLoc = Communication.readIslandLocation(rc, i);
-                    break;
+            int minDist = 7200;
+            int id;
+            for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
+                Team team = Communication.readTeamHoldingIsland(rc, id);
+                MapLocation islLoc = Communication.readIslandLocation(rc, id);
+                if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
+                    neutralIslandLoc = Communication.readIslandLocation(rc, id);
+                    minDist = me.distanceSquaredTo(islLoc);
                 }
             }
             if (neutralIslandLoc != null)
@@ -90,8 +94,6 @@ public strictfp class RunAmplifier {
     }
 
     static void avoidHQ(RobotController rc) throws GameActionException {
-        enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
-        me = rc.getLocation();
         if (enemyRobots != null && enemyRobots.length > 0) {
             int i = enemyRobots.length;
             while (--i >= 0) {

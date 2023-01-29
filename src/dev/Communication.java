@@ -34,8 +34,10 @@ class Communication {
     private static final int TEAM_BITS = 4;
     private static final int TEAM_MASK = 0b1111;
 
-
+    private static final int HQ_FLAG = 1 << 12;
+    private static final int not_HQ_FLAG = ~HQ_FLAG;
 	private static final int MESSAGE_QUEUE_SIZE = 500;
+    private static final int MESSAGE_LIMIT = 20;
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	private static int head = 0;
 	private static int tail = 0;
@@ -115,10 +117,11 @@ class Communication {
     }
 
     static void tryWriteMessages(RobotController rc) throws GameActionException {
-		clearOld();
+        clearOld();
+        int counter = 0;
         // Can always write (0, 0), so just checks are we in range to write
         if (rc.canWriteSharedArray(0, 0)) {
-            while (queueSize() > 0 ) {
+            while (queueSize() > 0 && counter < MESSAGE_LIMIT) {
                 Message msg = pop();
                 if (msg.idx == EXTRA_MANA_IDX) {
                     // first check if this well is a duplicate 
@@ -147,6 +150,7 @@ class Communication {
                 } else if (rc.canWriteSharedArray(msg.idx, msg.value)) {
                     rc.writeSharedArray(msg.idx, msg.value);
                 }
+                counter++;
             }
         }
     }
@@ -341,6 +345,44 @@ class Communication {
         }
     }
 
+    static void reportEnemyHeadquarters(RobotController rc, MapLocation enemyHQ) throws GameActionException {
+        int slot = -1;
+        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+            try {
+                MapLocation prevEnemy = intToLocation(rc, rc.readSharedArray(i));
+                if (prevEnemy == null) {
+                    slot = i;
+                    break;
+                } else if (prevEnemy.distanceSquaredTo(enemyHQ) < AREA_RADIUS) {
+                    return;
+                }
+            } catch (GameActionException e) {
+                continue;
+            }
+        }
+        if (slot != -1) {
+            Message msg = new Message(slot, locationToInt(rc, enemyHQ, true), RobotPlayer.turnCount);
+            add(msg);
+        }
+    }
+
+    static MapLocation[] getEnemyHeadquarters(RobotController rc) throws GameActionException {
+        MapLocation[] hqs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
+        int hqCounter = 0;
+        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+            int value = rc.readSharedArray(i);
+            if ((value & HQ_FLAG) == HQ_FLAG) {
+                hqs[hqCounter] = intToLocation(rc, value);
+                hqCounter++;
+            }
+        }
+        MapLocation[] toRet = new MapLocation[hqCounter];
+        for (int i = 0; i < hqCounter; i++) {
+            toRet[i] = hqs[i];
+        }
+        return toRet;
+    }
+
     static MapLocation getClosestEnemy(RobotController rc) throws GameActionException {
         MapLocation answer = null;
         for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
@@ -365,7 +407,21 @@ class Communication {
         return 1 + m.x + m.y * rc.getMapWidth();
     }
 
+    private static int locationToInt(RobotController rc, MapLocation m, boolean hq) {
+        if (m == null) {
+            return 0;
+        }
+        int out = 1 + m.x + m.y * rc.getMapWidth();
+        if (hq)
+            return out | HQ_FLAG;
+        else
+            return out;
+    }
+
     private static MapLocation intToLocation(RobotController rc, int m) {
+        if ((m & HQ_FLAG) == HQ_FLAG) {
+            m &= not_HQ_FLAG;
+        }
         if (m == 0) {
             return null;
         }
