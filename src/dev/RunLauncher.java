@@ -28,23 +28,26 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
+        
+        moveOutsideHQ(rc);
+
         if (turnCount != 0)
             updateMap(rc);
         else
             HQLOC = rc.getLocation();
-        MapLocation leader_loc = getLeader(rc);
-
-        if ((leader_loc.equals(rc.getLocation()) && friends.length < 4) && friends.length > 0) {
-            tryMove(rc, rc.getLocation().directionTo(friends[0].location));
-        } 
+        // MapLocation leader_loc = getLeader(rc);
+        
+        // if (!leader_loc.equals(rc.getLocation())) {
+        //     healingStrategy(rc);
+        //     Direction dir = rc.getLocation().directionTo(leader_loc);
+        //     if (rc.canMove(dir)) {
+        //         rc.move(dir);
+        //     }
+        // }
+        // else if ((leader_loc.equals(rc.getLocation()) && friends.length < 3) && friends.length > 0) {
+        //     tryMove(rc, rc.getLocation().directionTo(friends[0].location));
+        // } 
         // if this launcher is not a leader
-        if (!leader_loc.equals(rc.getLocation())) {
-            healingStrategy(rc);
-            Direction dir = rc.getLocation().directionTo(leader_loc);
-            if (rc.canMove(dir)) {
-                runFollower(rc, leader_loc);
-            }
-        }
 
         if (getEnemies(rc).length > 0) {
             Communication.reportEnemy(rc, rc.getLocation());
@@ -85,26 +88,14 @@ public strictfp class RunLauncher {
         } else {
             travelToPossibleHQ(rc);
         }
-
         attackEnemies(rc);
-
-        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
-        MapLocation me = rc.getLocation();
-        if (enemies != null && enemies.length > 0) {
-            int i = enemies.length;
-            while (--i >= 0) {
-                RobotInfo robot = enemies[i];
-                if (robot.getType() == RobotType.HEADQUARTERS) {
-                    tryMove(rc, me.directionTo(robot.location).opposite());
-                    break;
-                }
-            }
-        }
         cloudShot(rc);
+        moveOutsideHQ(rc);
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
-        navigateTo(rc, leader_loc);
+        attackEnemies(rc);
+        cloudShot(rc);
     }
 
     static MapLocation getLeader(RobotController rc) throws GameActionException {
@@ -112,7 +103,7 @@ public strictfp class RunLauncher {
         int smallest_id = rc.getID();
         MapLocation leader_loc = rc.getLocation();
         for (int i = friends.length; --i >= 0;) {
-            if (friends[i].ID < smallest_id) {
+            if (friends[i].ID < smallest_id && friends[i].health > minimum_health) {
                 smallest_id = friends[i].ID;
                 leader_loc = friends[i].location;
             }
@@ -395,6 +386,24 @@ public strictfp class RunLauncher {
                     if (rc.canAttack(attackLoc)) {
                         rc.attack(attackLoc);
                     }
+                }
+            }
+            else{
+                attackEnemies(rc);
+            }
+        }
+    }
+
+    static void moveOutsideHQ(RobotController rc) throws GameActionException {
+        RobotInfo[] enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        MapLocation me = rc.getLocation();
+        if (enemies != null && enemies.length > 0) {
+            int i = enemies.length;
+            while (--i >= 0) {
+                RobotInfo robot = enemies[i];
+                if (robot.getType() == RobotType.HEADQUARTERS) {
+                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    break;
                 }
             }
         }

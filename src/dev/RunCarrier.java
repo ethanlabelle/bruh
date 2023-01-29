@@ -42,6 +42,7 @@ public strictfp class RunCarrier {
         }
 
         if (enemyRobots.length > 0 && getTotalResources(rc) < 5) {
+            banWellLoc(rc);
             runAway(rc);
         }
 
@@ -72,9 +73,7 @@ public strictfp class RunCarrier {
             mine(rc);
 		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
             if (isWellFull(rc, wellLoc)) {
-                bannedWells[banCounter] = wellLoc;
-                wellLoc = null;
-                banCounter = ++banCounter % BAN_LIST_SIZE;
+                banWellLoc(rc);
             }
         }
 
@@ -142,7 +141,13 @@ public strictfp class RunCarrier {
 			}
 		}
     }
-    
+
+    static void banWellLoc(RobotController rc) throws GameActionException {
+        bannedWells[banCounter] = wellLoc;
+        banCounter = ++banCounter % BAN_LIST_SIZE;
+        wellLoc = null;
+    }
+
     static void carryAnchor(RobotController rc) throws GameActionException {
         // If I have an anchor singularly focus on getting it to the first island I see
         int[] islands = rc.senseNearbyIslands();
