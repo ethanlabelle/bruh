@@ -57,6 +57,7 @@ public strictfp class RunLauncher {
 
         if (isHealing && healingIsland != null) {
             attackEnemies(rc);
+            cloudShot(rc);
             return;
         }
         
@@ -377,7 +378,13 @@ public strictfp class RunLauncher {
                         }
                         if (!(rc.getLocation().distanceSquaredTo(clouds[j]) <= 4) && rc.canAttack(clouds[j])) {
                             rc.attack(clouds[j]);
-                            break;
+                            return;
+                        }
+                    }
+                    for (int i = clouds.length; --i >= 0;) {
+                        if (!(rc.getLocation().distanceSquaredTo(clouds[i]) <= 4) && rc.canAttack(clouds[i])) {
+                            rc.attack(clouds[i]);
+                            return;
                         }
                     }
                 } else {
