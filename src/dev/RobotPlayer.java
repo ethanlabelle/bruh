@@ -561,7 +561,7 @@ public strictfp class RobotPlayer {
 				}
 			}
 			rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
-			if (!touchingObstacle(rc) || navCount > 50)
+			if (!touchingObstacle(rc) || navCount > 200)
 				goalLoc = null;
 		}
 

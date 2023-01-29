@@ -8,7 +8,10 @@ public strictfp class RunAmplifier {
     static MapLocation me;
     static RobotInfo[] enemyRobots;
     static RobotInfo[] friendlyRobots;
-
+    static boolean isHealing = false;
+    static int maximum_health = RobotType.AMPLIFIER.health;
+    static int minimum_health = RobotType.AMPLIFIER.health/4;
+    static MapLocation healingIsland;
     /**
      * Run a single turn for a Amplifier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -19,7 +22,8 @@ public strictfp class RunAmplifier {
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
         friendlyRobots = rc.senseNearbyRobots(-1, myTeam);
-
+        
+        avoidHQ(rc);
         // run away from enemy launchers
 		if (enemyRobots.length > 0) {
             for (RobotInfo robot: enemyRobots) {
@@ -44,6 +48,8 @@ public strictfp class RunAmplifier {
                 tryMove(rc, me.directionTo(dest));
             }
         }
+
+        attackEnemyIsland(rc);
 
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
@@ -81,5 +87,72 @@ public strictfp class RunAmplifier {
 				break;
 			}
 		}
+    }
+
+    static void avoidHQ(RobotController rc) throws GameActionException {
+        enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
+        me = rc.getLocation();
+        if (enemyRobots != null && enemyRobots.length > 0) {
+            int i = enemyRobots.length;
+            while (--i >= 0) {
+                RobotInfo robot = enemyRobots[i];
+                if (robot.getType() == RobotType.HEADQUARTERS) {
+                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    break;
+                }
+            }
+        }
+    }
+
+    static void attackEnemyIsland(RobotController rc) throws GameActionException {
+        MapLocation enemyIsland = null;
+        if (enemyIsland == null) {
+            enemyIsland = getClosestEnemyIsland(rc);
+        }
+        if (enemyIsland != null) {
+            me = rc.getLocation();
+            short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
+            if (board[me.x][me.y] == islandNum || board[me.x][me.y] == M_NISL) {
+                enemyIsland = null;
+                return;
+            }
+            navigateTo(rc, enemyIsland);
+        }
+    }
+
+    static void healingStrategy(RobotController rc) throws GameActionException {
+        // leave if healed
+        if (isHealing && rc.getHealth() >= maximum_health) {
+            isHealing = false;
+            healingIsland = null;
+        }
+
+        // check if need to go to island
+        if (isHealing || rc.getHealth() < minimum_health) {
+            isHealing = true;
+            if (healingIsland == null) {
+                healingIsland = getClosestControlledIsland(rc);
+            }
+            if (healingIsland != null) {
+                rc.setIndicatorString("trying to heal!!");
+                me = rc.getLocation();
+                short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
+                if (board[me.x][me.y] == islandNum) {
+                    if (rc.canSenseLocation(healingIsland)) {
+                        int islandId = rc.senseIsland(healingIsland);
+                        MapLocation[] islandLocs = rc.senseNearbyIslandLocations(islandId);
+                        for (MapLocation islandLoc : islandLocs) {
+                            if (rc.canMove(me.directionTo(islandLoc))) {
+                                rc.move(me.directionTo(islandLoc));
+                                return;
+                            }
+                        }
+                        return;
+                    }
+                }
+                navigateTo(rc, healingIsland);
+                return;
+            }
+        }
     }
 }

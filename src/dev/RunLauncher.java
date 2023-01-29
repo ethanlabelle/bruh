@@ -55,6 +55,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
+        
 		defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			navigateTo(rc, defLoc);

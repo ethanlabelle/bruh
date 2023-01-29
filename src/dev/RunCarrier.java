@@ -144,7 +144,8 @@ public strictfp class RunCarrier {
     }
     
     static void carryAnchor(RobotController rc) throws GameActionException {
-        // If I have an anchor singularly focus on getting it to the first island I see
+        // go to closest island!
+        me = rc.getLocation();
         int[] islands = rc.senseNearbyIslands();
         for (int id : islands) {
             MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
@@ -184,13 +185,14 @@ public strictfp class RunCarrier {
         }
 
         MapLocation neutralIslandLoc = null;
+        int minDist = 7200;
         int id;
         for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
 			Team team = Communication.readTeamHoldingIsland(rc, id);
 			MapLocation islLoc = Communication.readIslandLocation(rc, id);
-			if (team.equals(Team.NEUTRAL) && islLoc != null) {
+			if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
                 neutralIslandLoc = Communication.readIslandLocation(rc, id);
-               	break;
+                minDist = me.distanceSquaredTo(islLoc);
             }
         }
         if (neutralIslandLoc != null) {
