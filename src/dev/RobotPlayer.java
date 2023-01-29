@@ -612,13 +612,15 @@ public strictfp class RobotPlayer {
 					return spawnLoc;
 				}
 			}
-			
-			// Pick a direction to build in.
-			for (Direction checkDir : directions) {
-				MapLocation newLoc = rc.getLocation().add(checkDir);
-				if (rc.canBuildRobot(unit, newLoc))
-					return newLoc;
+
+			// pick a random location within the action radius
+			MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+			for (int index = possBuild.length; --index > 0;) {
+				if (rc.canBuildRobot(unit, possBuild[index])) {
+					return possBuild[index];
+				}
 			}
+			
 			return null;
 		}
 
