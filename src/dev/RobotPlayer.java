@@ -19,7 +19,7 @@ public strictfp class RobotPlayer {
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
-    static final Random rng = new Random(6147);
+    static Random rng = null;
     //static final Random rng = new Random();
 
     /** Array containing all the possible movement directions. */
@@ -101,6 +101,7 @@ public strictfp class RobotPlayer {
 		// TODO: clean up initialization
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
+		rng = new Random(rc.getID());
 		board = new byte[width][height];
 
         rc.setIndicatorString("Hello world!");
@@ -310,9 +311,8 @@ public strictfp class RobotPlayer {
 			if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
 				return true;
 			MapInfo tileInfo = rc.senseMapInfo(loc);
-			if (tileInfo.getCurrentDirection() == dir.opposite())
-				return true;
-			return false;
+			Direction d = tileInfo.getCurrentDirection();
+			return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
 		}    
 		
 		static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
