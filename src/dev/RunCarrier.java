@@ -71,7 +71,6 @@ public strictfp class RunCarrier {
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
 		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
-            rc.setIndicatorString(wellLoc + " is full? " + isWellFull(rc, wellLoc) + " " + banCounter);
             if (isWellFull(rc, wellLoc)) {
                 bannedWells[banCounter] = wellLoc;
                 wellLoc = null;
@@ -90,14 +89,20 @@ public strictfp class RunCarrier {
             HQLOC = Communication.getClosestHeadquarters(rc);
             navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
-            if (rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM))) {
-                rc.transferResource(HQLOC, ResourceType.ADAMANTIUM, rc.getResourceAmount(ResourceType.ADAMANTIUM));
+            int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
+            int mana = rc.getResourceAmount(ResourceType.MANA);
+
+            if (ada > 0 && rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, ada)) {
+                rc.transferResource(HQLOC, ResourceType.ADAMANTIUM, ada);
+                Clock.yield();
+                turnCount++;
             }
             // try to transfer MANA
-            if (rc.canTransferResource(HQLOC, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA))) {
-                rc.transferResource(HQLOC, ResourceType.MANA, rc.getResourceAmount(ResourceType.MANA));
+            if (mana > 0 && rc.canTransferResource(HQLOC, ResourceType.MANA, mana)) {
+                rc.transferResource(HQLOC, ResourceType.MANA, mana);
+                Clock.yield();
+                turnCount++;
             }
-            Clock.yield();
             if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD)) {
                 rc.takeAnchor(HQLOC, Anchor.STANDARD);
             }
@@ -156,7 +161,8 @@ public strictfp class RunCarrier {
 					if (onIsland && rc.canPlaceAnchor()) {
             	       	rc.setIndicatorString("Huzzah, placed anchor!");
             	       	rc.placeAnchor();
-            	       	Clock.yield();
+            	       	// Clock.yield();
+                        // turnCount++;
             	       	Communication.updateIslandInfo(rc, id);
             	       	return;
 					
@@ -199,7 +205,7 @@ public strictfp class RunCarrier {
                     	        if (me.equals(loc) && rc.canPlaceAnchor()) {
                     	            rc.setIndicatorString("Huzzah, placed anchor!");
                     	            rc.placeAnchor();
-                    	            Clock.yield();
+                    	            // Clock.yield();
                     	            Communication.updateIslandInfo(rc, id);
                     	            return;
                     	        }
@@ -239,7 +245,7 @@ public strictfp class RunCarrier {
         if (getTotalResources(rc) == 40) {
             return;
         }
-        for (int i = 0; i < directions.length; i++) {
+        for (int i = directions.length; --i >= 0;) {
             MapLocation miningLoc = wellLoc.add(directions[i]);
 			if (!rc.onTheMap(miningLoc))
 				continue;
@@ -256,7 +262,7 @@ public strictfp class RunCarrier {
     static boolean isWellFull(RobotController rc, MapLocation well) throws GameActionException {
         int spots = 0;
         int taken = 0;
-        for (int i = 0; i < directions.length; i++) {
+        for (int i = directions.length; --i >= 0;) {
             MapLocation miningLoc = wellLoc.add(directions[i]);
 			if (!rc.onTheMap(miningLoc))
 				continue;

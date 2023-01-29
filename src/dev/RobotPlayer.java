@@ -632,6 +632,7 @@ public strictfp class RobotPlayer {
 			    	i++;
                 } else {
 			    	Clock.yield();
+					turnCount++;
 			    }
 			}	
 			i = 0;
@@ -643,6 +644,7 @@ public strictfp class RobotPlayer {
 					i++;
         	    } else {
 					Clock.yield();
+					turnCount++;
 				}
 			}	
 	}
