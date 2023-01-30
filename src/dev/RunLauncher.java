@@ -147,8 +147,8 @@ public strictfp class RunLauncher {
                 if (curr_hq == null)
                     continue;
                 MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-                MapLocation verticalSym = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
-                MapLocation horizontalSym = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
+                MapLocation verticalSym = new MapLocation(abs(curr_hq.x + 1 - width), curr_hq.y);
+                MapLocation horizontalSym = new MapLocation(curr_hq.x, abs(curr_hq.y + 1 - height));
                 possibleHQLocs[i * 3] = rotationalSym;
                 possibleHQLocs[i * 3 + 1] = verticalSym;
                 possibleHQLocs[i * 3 + 2] = horizontalSym;
