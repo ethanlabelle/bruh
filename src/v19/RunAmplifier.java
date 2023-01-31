@@ -1,8 +1,8 @@
-package dev;
+package v19;
 
 import battlecode.common.*;
 
-import static dev.RobotPlayer.*;
+import static v19.RobotPlayer.*;
 
 public strictfp class RunAmplifier {
     static MapLocation me;
@@ -45,7 +45,7 @@ public strictfp class RunAmplifier {
                 }
             }
             if (!dest.equals(me)) {
-                Pathing.tryMove(rc, me.directionTo(dest));
+                tryMove(rc, me.directionTo(dest));
             }
         }
 
@@ -54,7 +54,7 @@ public strictfp class RunAmplifier {
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
-			Pathing.navigateTo(rc, defLoc);
+			navigateTo(rc, defLoc);
             Communication.clearObsoleteEnemies(rc);
             return;
 		}
@@ -72,22 +72,22 @@ public strictfp class RunAmplifier {
                 }
             }
             if (neutralIslandLoc != null)
-                Pathing.navigateTo(rc, neutralIslandLoc);
+                navigateTo(rc, neutralIslandLoc);
         }
 
         // Move randomly
-        Direction dir = Pathing.currentDirection;
+        Direction dir = currentDirection;
         if (rc.canMove(dir)) {
             rc.move(dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
-            Pathing.currentDirection = directions[rng.nextInt(directions.length)];
+            currentDirection = directions[rng.nextInt(directions.length)];
         }
     }
 
     static void runAway(RobotController rc) throws GameActionException {
 		for (RobotInfo r : enemyRobots) {
 			if (r.type == RobotType.LAUNCHER) {
-				Pathing.tryMove(rc, Pathing.oppositeDirection(me.directionTo(r.location)));
+				tryMove(rc, oppositeDirection(me.directionTo(r.location)));
 				break;
 			}
 		}
@@ -99,7 +99,7 @@ public strictfp class RunAmplifier {
             while (--i >= 0) {
                 RobotInfo robot = enemyRobots[i];
                 if (robot.getType() == RobotType.HEADQUARTERS) {
-                    Pathing.tryMove(rc, me.directionTo(robot.location).opposite());
+                    tryMove(rc, me.directionTo(robot.location).opposite());
                     break;
                 }
             }
@@ -118,7 +118,7 @@ public strictfp class RunAmplifier {
                 enemyIsland = null;
                 return;
             }
-            Pathing.navigateTo(rc, enemyIsland);
+            navigateTo(rc, enemyIsland);
         }
     }
 
@@ -152,7 +152,7 @@ public strictfp class RunAmplifier {
                         return;
                     }
                 }
-                Pathing.navigateTo(rc, healingIsland);
+                navigateTo(rc, healingIsland);
                 return;
             }
         }

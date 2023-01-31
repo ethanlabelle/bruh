@@ -1,8 +1,10 @@
-package dev;
+package v19;
 
 import battlecode.common.*;
 import java.util.Arrays;
-import static dev.RobotPlayer.*;
+import java.util.HashSet;
+
+import static v19.RobotPlayer.*;
 
 public strictfp class RunLauncher {
     /**
@@ -27,7 +29,7 @@ public strictfp class RunLauncher {
     static MapLocation me;
     static MapLocation defLoc;
     static boolean swarm = false;
-    static MapLocation[] possibleHQLocs = new MapLocation[3 * GameConstants.MAX_STARTING_HEADQUARTERS];
+    static HashSet<MapLocation> possibleHQLocs = new HashSet<>();
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
@@ -38,9 +40,8 @@ public strictfp class RunLauncher {
         
         avoidHQ(rc);
         
-        enemies = getEnemies(rc);
-        if (enemies.length > 0) {
-            Communication.reportEnemy(rc, enemies[0].location);
+        if (getEnemies(rc).length > 0) {
+            Communication.reportEnemy(rc, rc.getLocation());
         }
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -58,7 +59,7 @@ public strictfp class RunLauncher {
         
 		defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
-			Pathing.navigateTo(rc, defLoc);
+			navigateTo(rc, defLoc);
             attackEnemies(rc);
             cloudShot(rc);
             return;
@@ -66,15 +67,14 @@ public strictfp class RunLauncher {
 
         if (move_randomly) {
             moveLastResort(rc);
-            attackEnemies(rc);
             cloudShot(rc);
             return;
         }
-
+        
         // want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
             if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-                Pathing.navigateTo(rc, EnemyHQLOC);
+                navigateTo(rc, EnemyHQLOC);
                 checkForFriends(rc, EnemyHQLOC);
             }
         } else {
@@ -82,13 +82,14 @@ public strictfp class RunLauncher {
         }
 
         attackEnemies(rc);
+
         avoidHQ(rc);
         cloudShot(rc);
         Communication.clearOld();
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
-        Pathing.navigateTo(rc, leader_loc);
+        navigateTo(rc, leader_loc);
     }
 
     static MapLocation getLeader(RobotController rc) throws GameActionException {
@@ -105,119 +106,61 @@ public strictfp class RunLauncher {
     }
 
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
-        /*
-         * INSPO
-         * 
-         if(possibleEnemyLOC == null){
-            // set possible enemy loc based on symmetry of our HQ
-            int id = fake_id;
-            if(id % 3 == 0)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
-            else if(id % 3 == 1)
-                possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
-            else
-                possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
-        }
-        if (rc.canSenseLocation(possibleEnemyLOC)) {
-            RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-            RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
-            if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
-                EnemyHQLOC = possibleEnemyLOC;
-                return;
-            }
-            else{
-                possibleEnemyLOC = null;
-                EnemyHQLOC = undefined_loc;
-                fake_id += 1;
-                if(fake_id == 6){
-                    move_randomly = true;
-                }
-            }
-        }
-        if(possibleEnemyLOC != null)
-            navigateTo(rc, possibleEnemyLOC);
-         */
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-
-            // generate list of possible hqs
+            // me = rc.getLocation();
+            // if (width*height < 1000 || rc.getID() % 2 == 0) {
+            //     MapLocation curr_hq = HQLOC;
+            //     closest_predicted = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+            // } else {
+            // System.out.println(Communication.getClosestEnemy(rc));
             for(int i = Communication.headquarterLocs.length; --i >= 0;) {
                 MapLocation curr_hq = Communication.headquarterLocs[i];
                 if (curr_hq == null)
                     continue;
                 MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-                MapLocation verticalSym = new MapLocation(abs(curr_hq.x + 1 - width), curr_hq.y);
-                MapLocation horizontalSym = new MapLocation(curr_hq.x, abs(curr_hq.y + 1 - height));
-                possibleHQLocs[i * 3] = rotationalSym;
-                possibleHQLocs[i * 3 + 1] = verticalSym;
-                possibleHQLocs[i * 3 + 2] = horizontalSym;
+                // MapLocation verticalSym = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
+                // MapLocation horizontalSym = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
+                // possibleHQLocs.add(rotationalSym);
+                // possibleHQLocs.add(verticalSym);
+                // possibleHQLocs.add(horizontalSym);
+                // guess on rotational symmetry
+                if (HQLOC.distanceSquaredTo(rotationalSym) < min_dist && !Communication.headquarterLocsSet.contains(rotationalSym)) {
+                    min_dist = HQLOC.distanceSquaredTo(rotationalSym);
+                    closest_predicted = rotationalSym;
+                }
+                // if (HQLOC.distanceSquaredTo(verticalSym) < min_dist && !Communication.headquarterLocsSet.contains(verticalSym)) {
+                //     min_dist = HQLOC.distanceSquaredTo(verticalSym);
+                //     closest_predicted = verticalSym;
+                // }
+                // if (HQLOC.distanceSquaredTo(horizontalSym) < min_dist && !Communication.headquarterLocsSet.contains(horizontalSym)) {
+                //     min_dist = HQLOC.distanceSquaredTo(horizontalSym);
+                //     closest_predicted = horizontalSym;
+                // }
             }
-            int count = 0;
-            for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-                if (Communication.headquarterLocs[i] != null) {
-                    count++;
-                }
-            }
-            if (count > 1) {
-                // check if horrizontal symmetry is possible with our headquarters
-                int mid = width / 2;
-                int leftOfMid = 0;
-                for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-                    if (Communication.headquarterLocs[i] != null) {
-                        if (Communication.headquarterLocs[i].x < mid)
-                            leftOfMid++;
-                    }
-                }
-                if (leftOfMid == count || leftOfMid == 0) {
-                    possibleHQLocs[0 * 3 + 2] = null;
-                    possibleHQLocs[1 * 3 + 2] = null;
-                    possibleHQLocs[2 * 3 + 2] = null;
-                    possibleHQLocs[3 * 3 + 2] = null;
-                }
-                // check if vertical symmetry is possible with our headquarters
-                mid = height / 2;
-                int belowMid = 0;
-                for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-                    if (Communication.headquarterLocs[i] != null) {
-                        if (Communication.headquarterLocs[i].y < mid)
-                            belowMid++;
-                    }
-                }
-                if (belowMid == count || belowMid == 0) {
-                    possibleHQLocs[0 * 3 + 1] = null;
-                    possibleHQLocs[1 * 3 + 1] = null;
-                    possibleHQLocs[2 * 3 + 1] = null;
-                    possibleHQLocs[3 * 3 + 1] = null;
-                }
-                // pick closest HQ that is outside of known HQs' action radius
-                int ind = -1;
-                for (int i = possibleHQLocs.length; --i >= 0;) {
-                    if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-                        boolean inFriendlyHQVision = false;
-                        for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-                            if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.visionRadiusSquared) {
-                                inFriendlyHQVision = true;
-                            }
-                        }
-                        if (!inFriendlyHQVision) {
-                            closest_predicted = possibleHQLocs[i];
-                            min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-                            ind = i;
-                        }
-                    }
-                }
-                possibleEnemyLOC = closest_predicted;
-                possibleHQLocs[ind] = null;
-            } else {
-                possibleEnemyLOC = possibleHQLocs[0];
-                possibleHQLocs[0] = null;
-            }
+            possibleEnemyLOC = closest_predicted;
+            // if (rc.canSenseLocation(possibleEnemyLOC)) {
+            //     RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+            //     RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
+            //     if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
+            //         EnemyHQLOC = possibleEnemyLOC;
+            //         return;
+            //     }
+            //     else{
+            //         possibleEnemyLOC = null;
+            //         EnemyHQLOC = undefined_loc;
+            //         fake_id += 1;
+            //         if(fake_id == 6){
+            //             move_randomly = true;
+            //         }
+            //     }
+            // }
         }
 
         if (possibleEnemyLOC != null) {
-            Pathing.navigateTo(rc, possibleEnemyLOC);
+            navigateTo(rc, possibleEnemyLOC);
             if (rc.canSenseLocation(possibleEnemyLOC)) {
                 RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
                 if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
@@ -225,31 +168,7 @@ public strictfp class RunLauncher {
                     possibleEnemyLOC = null;
                     return;
                 } else {
-                    MapLocation closest_predicted = null;
-                    int min_dist = 7200;
-                    // pick closest HQ that is outside of known HQs' action radius
-                    int ind = -1;
-                    for (int i = possibleHQLocs.length; --i >= 0;) {
-                        if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-                            boolean inFriendlyHQVision = false;
-                            for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-                                if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.actionRadiusSquared) {
-                                    inFriendlyHQVision = true;
-                                }
-                            }
-                            if (!inFriendlyHQVision) {
-                                closest_predicted = possibleHQLocs[i];
-                                min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-                                ind = i;
-                            }
-                        }
-                    }
-                    if (ind == -1) {
-                        move_randomly = true;
-                    } else {
-                        possibleEnemyLOC = closest_predicted;
-                        possibleHQLocs[ind] = null;
-                    }
+                    move_randomly = true;
                 }
             }
         }
@@ -261,7 +180,6 @@ public strictfp class RunLauncher {
     }
 
     // the new attackEnemies function uses less bytecode
-    // IMPORTANT: make sure enemies list is current before call
     static void attackEnemies(RobotController rc) throws GameActionException {
         if (rc.isActionReady()) {
             enemies = getEnemies(rc);
@@ -286,13 +204,13 @@ public strictfp class RunLauncher {
                 }
             }
             if (shot) {
-                Pathing.tryMove(rc, Pathing.oppositeDirection(rc.getLocation().directionTo(toAttack)));
+                tryMove(rc, oppositeDirection(rc.getLocation().directionTo(toAttack)));
             }
             // if we didn't shoot, move towards the enemy of lowest health and attack it
             else if (!shot && enemies.length > 0 && rc.getActionCooldownTurns() == 0) {
                 toAttack = enemies[enemies.length - 1].location;
-                Pathing.tryMove(rc, rc.getLocation().directionTo(toAttack));
-                if (rc.canAttack(toAttack)) {
+                tryMove(rc, rc.getLocation().directionTo(toAttack));
+                if (rc.canAttack(toAttack)){
                     rc.attack(toAttack);
                 }
             }
@@ -328,7 +246,7 @@ public strictfp class RunLauncher {
                 enemyIsland = null;
                 return;
             }
-            Pathing.navigateTo(rc, enemyIsland);
+            navigateTo(rc, enemyIsland);
         }
     }
 
@@ -369,13 +287,13 @@ public strictfp class RunLauncher {
     }
 
     static void moveLastResort(RobotController rc) throws GameActionException {
-        Direction last_dir = Pathing.currentDirection;
+        Direction last_dir = currentDirection;
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                Pathing.currentDirection = Pathing.currentDirection.rotateRight().rotateRight().rotateRight();
-                last_dir = Pathing.currentDirection;
+                currentDirection = currentDirection.rotateRight().rotateRight().rotateRight();
+                last_dir = currentDirection;
                 if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;
@@ -427,7 +345,7 @@ public strictfp class RunLauncher {
                         return;
                     }
                 }
-                Pathing.navigateTo(rc, healingIsland);
+                navigateTo(rc, healingIsland);
                 return;
             }
         }
@@ -484,15 +402,15 @@ public strictfp class RunLauncher {
                     }
                 } else {
                     MapLocation attackLoc;
-                    switch(Pathing.currentDirection) {
+                    switch(currentDirection) {
                         case NORTHWEST:
                         case SOUTHWEST:
                         case NORTHEAST:
                         case SOUTHEAST:
-                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
+                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection);
                             break;
                         default:
-                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
+                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection).add(currentDirection);
                     }
                     if (rc.canAttack(attackLoc)) {
                         rc.attack(attackLoc);
@@ -503,17 +421,15 @@ public strictfp class RunLauncher {
     }
 
     static void avoidHQ(RobotController rc) throws GameActionException {
-        if (rc.isMovementReady()) {
-            enemies = rc.senseNearbyRobots(-1, enemyTeam);
-            me = rc.getLocation();
-            if (enemies != null && enemies.length > 0) {
-                int i = enemies.length;
-                while (--i >= 0) {
-                    RobotInfo robot = enemies[i];
-                    if (robot.getType() == RobotType.HEADQUARTERS) {
-                        Pathing.tryMove(rc, me.directionTo(robot.location).opposite());
-                        break;
-                    }
+        enemies = rc.senseNearbyRobots(-1, enemyTeam);
+        me = rc.getLocation();
+        if (enemies != null && enemies.length > 0) {
+            int i = enemies.length;
+            while (--i >= 0) {
+                RobotInfo robot = enemies[i];
+                if (robot.getType() == RobotType.HEADQUARTERS) {
+                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    break;
                 }
             }
         }
