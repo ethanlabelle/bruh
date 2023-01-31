@@ -129,7 +129,7 @@ public strictfp class RobotPlayer {
 			Communication.addHeadquarter(rc);
 			Communication.tryWriteMessages(rc);
 			HQLOC = rc.getLocation();
-			updateMap(rc);
+			// updateMap(rc);
 			RunHeadquarters.setup(rc);
 			Communication.updateHeadquarterInfo(rc);
 		} else {

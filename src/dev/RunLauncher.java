@@ -16,7 +16,7 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = RobotType.LAUNCHER.health/2;
+    static final int minimum_health = RobotType.LAUNCHER.health - 1;
     static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;

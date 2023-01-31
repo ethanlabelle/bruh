@@ -16,12 +16,25 @@ public class Pathing {
     static float slope;
     static float yIntercept;
     static boolean wallMode = false;
+    static MapLocation lastLoc = null;
+    static int stuckCounter = 0;
 
+    static boolean atWellLoc(RobotController rc, MapLocation wellLoc) {
+        if (wellLoc == null) return false;
+        MapLocation me = rc.getLocation();
+        for (int i = directions.length; --i >= 0;) {
+            if (me.add(directions[i]).equals(wellLoc))
+                return true;
+        }
+        if (me.equals(wellLoc))
+            return true;
+        return false;
+    }
     // Navigation
     static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
         if (rc.isMovementReady()) {
             bug2(rc, loc);
-            if (rc.getType() == RobotType.CARRIER) {
+            if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
                 bug2(rc, loc);
             }
         }
@@ -34,6 +47,8 @@ public class Pathing {
         int tile = RobotPlayer.board[loc.x + loc.y * width];
         if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
             return true;
+        if (rc.getType() == RobotType.CARRIER && rc.getWeight() == 0)
+            return false;
         MapInfo tileInfo = rc.senseMapInfo(loc);
         Direction d = tileInfo.getCurrentDirection();
         return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
@@ -280,6 +295,27 @@ public class Pathing {
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
         if (!touchingObstacle(rc) || navCount > 200)
             goalLoc = null;
+        
+        
+        if (stuckCounter > 5) {
+            if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
+                RunCarrier.banWellLoc();
+            }
+            for (int i = directions.length; --i >= 0;)
+                if (rc.canMove(directions[i])) {
+                    rc.move(directions[i]);
+                    currentDirection = directions[i];
+                }
+        }
+        if (lastLoc == null)
+            lastLoc = rc.getLocation();
+        
+        if (!rc.getLocation().equals(lastLoc)) {
+            lastLoc = null;
+            stuckCounter = 0;
+        } else {
+            stuckCounter++;
+        }
     }
 
     static boolean onMLine(MapLocation loc) {
