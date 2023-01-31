@@ -14,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 8;
+    static final int CARRIER_DIFF_MOD = 3;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -109,9 +109,9 @@ public strictfp class RunCarrier {
                 }
             }
         } else if (wellLoc == null) {
-            // if (rc.getRoundNum() < 100)
-        	//     exploreBFS(rc);
-            // else {
+            if (rc.getRoundNum() < 100)
+        	    exploreBFS(rc);
+            else {
                 short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
                 if (board[me.x + me.y * width] == islandNum) {
                     return;
@@ -123,7 +123,7 @@ public strictfp class RunCarrier {
                 } else if (rc.getMovementCooldownTurns() == 0) {
                     Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
-            // }
+            }
         }
     }
 
@@ -164,9 +164,8 @@ public strictfp class RunCarrier {
 					if (onIsland && rc.canPlaceAnchor()) {
             	       	rc.setIndicatorString("Huzzah, placed anchor!");
             	       	rc.placeAnchor();
-            	       	// Clock.yield();
-                        // turnCount++;
             	       	Communication.updateIslandInfo(rc, id);
+                        Communication.tryWriteMessages(rc);
             	       	return;
 					
 					} else {
@@ -209,8 +208,8 @@ public strictfp class RunCarrier {
                     	        if (me.equals(loc) && rc.canPlaceAnchor()) {
                     	            rc.setIndicatorString("Huzzah, placed anchor!");
                     	            rc.placeAnchor();
-                    	            // Clock.yield();
                     	            Communication.updateIslandInfo(rc, id);
+                                    Communication.tryWriteMessages(rc);
                     	            return;
                     	        }
                     	    }

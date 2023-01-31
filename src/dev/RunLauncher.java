@@ -16,7 +16,7 @@ public strictfp class RunLauncher {
     static int fake_id = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = RobotType.LAUNCHER.health - 1;
+    static final int minimum_health = RobotType.LAUNCHER.health/2;
     static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;
@@ -38,10 +38,6 @@ public strictfp class RunLauncher {
         
         avoidHQ(rc);
         
-        enemies = getEnemies(rc);
-        if (enemies.length > 0) {
-            Communication.reportEnemy(rc, enemies[0].location);
-        }
         // attack enemy islands
         attackEnemyIsland(rc);
 
@@ -55,14 +51,15 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        
-		defLoc = Communication.getClosestEnemy(rc);
-		if (defLoc != null) {
-			Pathing.navigateTo(rc, defLoc);
-            attackEnemies(rc);
-            cloudShot(rc);
-            return;
-		}
+        if (rc.getRoundNum() > 50) {
+            defLoc = Communication.getClosestEnemy(rc);
+            if (defLoc != null) {
+                Pathing.navigateTo(rc, defLoc);
+                attackEnemies(rc);
+                cloudShot(rc);
+                return;
+            }
+        }
 
         if (move_randomly) {
             moveLastResort(rc);

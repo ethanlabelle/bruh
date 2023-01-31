@@ -297,9 +297,10 @@ public class Pathing {
             goalLoc = null;
         
         
-        if (stuckCounter > 5) {
+        if (stuckCounter > 50) {
             if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
                 RunCarrier.banWellLoc();
+                stuckCounter = 0;
             }
             for (int i = directions.length; --i >= 0;)
                 if (rc.canMove(directions[i])) {
