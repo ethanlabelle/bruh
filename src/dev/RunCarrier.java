@@ -64,7 +64,7 @@ public strictfp class RunCarrier {
         foundWell = false;
 		// find resources
         if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
-            navigateTo(rc, wellLoc);
+            Pathing.navigateTo(rc, wellLoc);
         }
 
         // Try to gather from assigned well.
@@ -87,7 +87,7 @@ public strictfp class RunCarrier {
 		// try to deposite resources
         if (getTotalResources(rc) == 40) {
             HQLOC = Communication.getClosestHeadquarters(rc);
-            navigateTo(rc, HQLOC);
+            Pathing.navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
             int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
             int mana = rc.getResourceAmount(ResourceType.MANA);
@@ -115,11 +115,11 @@ public strictfp class RunCarrier {
                     return;
                 }    
                 // Move randomly
-                Direction dir = currentDirection;
+                Direction dir = Pathing.currentDirection;
                 if (rc.canMove(dir)) {
                     rc.move(dir);
                 } else if (rc.getMovementCooldownTurns() == 0) {
-                    currentDirection = directions[rng.nextInt(directions.length)];
+                    Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
             }
         }
@@ -136,8 +136,8 @@ public strictfp class RunCarrier {
     static void runAway(RobotController rc) throws GameActionException {
 		for (RobotInfo r : enemyRobots) {
 			if (r.type == RobotType.LAUNCHER) {
-				tryMove(rc, oppositeDirection(me.directionTo(r.location)));
-				tryMove(rc, oppositeDirection(me.directionTo(r.location)));
+				Pathing.tryMove(rc, Pathing.oppositeDirection(me.directionTo(r.location)));
+				Pathing.tryMove(rc, Pathing.oppositeDirection(me.directionTo(r.location)));
 				break;
 			}
 		}
@@ -168,7 +168,7 @@ public strictfp class RunCarrier {
             	       	return;
 					
 					} else {
-						navigateTo(rc, islLoc);
+						Pathing.navigateTo(rc, islLoc);
 					}
             	}
             	else if (team == enemyTeam) {
@@ -196,7 +196,7 @@ public strictfp class RunCarrier {
             }
         }
         if (neutralIslandLoc != null) {
-            navigateTo(rc, neutralIslandLoc);
+            Pathing.navigateTo(rc, neutralIslandLoc);
             for (int i: islands) {
                 if (i == id) {
                     MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
@@ -219,11 +219,11 @@ public strictfp class RunCarrier {
         }
         else {
 	        // try to move *randomly*.
-	        Direction dir = currentDirection;
+	        Direction dir = Pathing.currentDirection;
 	        if (rc.canMove(dir)) {
 	            rc.move(dir);
 	        } else if (rc.getMovementCooldownTurns() == 0) {
-	            currentDirection = directions[rng.nextInt(directions.length)];
+	            Pathing.currentDirection = directions[rng.nextInt(directions.length)];
 	        }
         }
     }
@@ -287,7 +287,7 @@ public strictfp class RunCarrier {
         if (exploreGoal == null)
             exploreGoal = me;
 		else
-       		navigateTo(rc, exploreGoal);
+       		Pathing.navigateTo(rc, exploreGoal);
         if (me.distanceSquaredTo(exploreGoal) <= 1) {
             getUnexploredTiles(rc);
             while (bfsQ.size() > 0 && (exploreGoal == null || board[exploreGoal.x + exploreGoal.y * width] != 0)) {
@@ -297,7 +297,7 @@ public strictfp class RunCarrier {
             if (bfsQ.size() == 0) {
                 rad++;
             }
-       		navigateTo(rc, exploreGoal);
+       		Pathing.navigateTo(rc, exploreGoal);
 		}
     }
 

@@ -38,8 +38,9 @@ public strictfp class RunLauncher {
         
         avoidHQ(rc);
         
-        if (getEnemies(rc).length > 0) {
-            Communication.reportEnemy(rc, rc.getLocation());
+        enemies = getEnemies(rc);
+        if (enemies.length > 0) {
+            Communication.reportEnemy(rc, enemies[0].location);
         }
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -57,7 +58,7 @@ public strictfp class RunLauncher {
         
 		defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
-			navigateTo(rc, defLoc);
+			Pathing.navigateTo(rc, defLoc);
             attackEnemies(rc);
             cloudShot(rc);
             return;
@@ -65,14 +66,15 @@ public strictfp class RunLauncher {
 
         if (move_randomly) {
             moveLastResort(rc);
+            attackEnemies(rc);
             cloudShot(rc);
             return;
         }
-        
+
         // want to stop 'outside' HQ action radius
         if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
             if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-                navigateTo(rc, EnemyHQLOC);
+                Pathing.navigateTo(rc, EnemyHQLOC);
                 checkForFriends(rc, EnemyHQLOC);
             }
         } else {
@@ -80,14 +82,13 @@ public strictfp class RunLauncher {
         }
 
         attackEnemies(rc);
-
         avoidHQ(rc);
         cloudShot(rc);
         Communication.clearOld();
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
-        navigateTo(rc, leader_loc);
+        Pathing.navigateTo(rc, leader_loc);
     }
 
     static MapLocation getLeader(RobotController rc) throws GameActionException {
@@ -216,7 +217,7 @@ public strictfp class RunLauncher {
         }
 
         if (possibleEnemyLOC != null) {
-            navigateTo(rc, possibleEnemyLOC);
+            Pathing.navigateTo(rc, possibleEnemyLOC);
             if (rc.canSenseLocation(possibleEnemyLOC)) {
                 RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
                 if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
@@ -260,6 +261,7 @@ public strictfp class RunLauncher {
     }
 
     // the new attackEnemies function uses less bytecode
+    // IMPORTANT: make sure enemies list is current before call
     static void attackEnemies(RobotController rc) throws GameActionException {
         if (rc.isActionReady()) {
             enemies = getEnemies(rc);
@@ -284,13 +286,13 @@ public strictfp class RunLauncher {
                 }
             }
             if (shot) {
-                tryMove(rc, oppositeDirection(rc.getLocation().directionTo(toAttack)));
+                Pathing.tryMove(rc, Pathing.oppositeDirection(rc.getLocation().directionTo(toAttack)));
             }
             // if we didn't shoot, move towards the enemy of lowest health and attack it
             else if (!shot && enemies.length > 0 && rc.getActionCooldownTurns() == 0) {
                 toAttack = enemies[enemies.length - 1].location;
-                tryMove(rc, rc.getLocation().directionTo(toAttack));
-                if (rc.canAttack(toAttack)){
+                Pathing.tryMove(rc, rc.getLocation().directionTo(toAttack));
+                if (rc.canAttack(toAttack)) {
                     rc.attack(toAttack);
                 }
             }
@@ -326,7 +328,7 @@ public strictfp class RunLauncher {
                 enemyIsland = null;
                 return;
             }
-            navigateTo(rc, enemyIsland);
+            Pathing.navigateTo(rc, enemyIsland);
         }
     }
 
@@ -367,13 +369,13 @@ public strictfp class RunLauncher {
     }
 
     static void moveLastResort(RobotController rc) throws GameActionException {
-        Direction last_dir = currentDirection;
+        Direction last_dir = Pathing.currentDirection;
         if (rc.canMove(last_dir)) {
             rc.move(last_dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
             for (int i = 0; i < 3; i++) {
-                currentDirection = currentDirection.rotateRight().rotateRight().rotateRight();
-                last_dir = currentDirection;
+                Pathing.currentDirection = Pathing.currentDirection.rotateRight().rotateRight().rotateRight();
+                last_dir = Pathing.currentDirection;
                 if (rc.canMove(last_dir)) {
                     rc.move(last_dir);
                     break;
@@ -425,7 +427,7 @@ public strictfp class RunLauncher {
                         return;
                     }
                 }
-                navigateTo(rc, healingIsland);
+                Pathing.navigateTo(rc, healingIsland);
                 return;
             }
         }
@@ -482,15 +484,15 @@ public strictfp class RunLauncher {
                     }
                 } else {
                     MapLocation attackLoc;
-                    switch(currentDirection) {
+                    switch(Pathing.currentDirection) {
                         case NORTHWEST:
                         case SOUTHWEST:
                         case NORTHEAST:
                         case SOUTHEAST:
-                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection);
+                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
                             break;
                         default:
-                            attackLoc = rc.getLocation().add(currentDirection).add(currentDirection).add(currentDirection);
+                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
                     }
                     if (rc.canAttack(attackLoc)) {
                         rc.attack(attackLoc);
@@ -501,15 +503,17 @@ public strictfp class RunLauncher {
     }
 
     static void avoidHQ(RobotController rc) throws GameActionException {
-        enemies = rc.senseNearbyRobots(-1, enemyTeam);
-        me = rc.getLocation();
-        if (enemies != null && enemies.length > 0) {
-            int i = enemies.length;
-            while (--i >= 0) {
-                RobotInfo robot = enemies[i];
-                if (robot.getType() == RobotType.HEADQUARTERS) {
-                    tryMove(rc, me.directionTo(robot.location).opposite());
-                    break;
+        if (rc.isMovementReady()) {
+            enemies = rc.senseNearbyRobots(-1, enemyTeam);
+            me = rc.getLocation();
+            if (enemies != null && enemies.length > 0) {
+                int i = enemies.length;
+                while (--i >= 0) {
+                    RobotInfo robot = enemies[i];
+                    if (robot.getType() == RobotType.HEADQUARTERS) {
+                        Pathing.tryMove(rc, me.directionTo(robot.location).opposite());
+                        break;
+                    }
                 }
             }
         }

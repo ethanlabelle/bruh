@@ -45,7 +45,7 @@ public strictfp class RunAmplifier {
                 }
             }
             if (!dest.equals(me)) {
-                tryMove(rc, me.directionTo(dest));
+                Pathing.tryMove(rc, me.directionTo(dest));
             }
         }
 
@@ -54,7 +54,7 @@ public strictfp class RunAmplifier {
 		// look for targets to defend
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
-			navigateTo(rc, defLoc);
+			Pathing.navigateTo(rc, defLoc);
             Communication.clearObsoleteEnemies(rc);
             return;
 		}
@@ -72,22 +72,22 @@ public strictfp class RunAmplifier {
                 }
             }
             if (neutralIslandLoc != null)
-                navigateTo(rc, neutralIslandLoc);
+                Pathing.navigateTo(rc, neutralIslandLoc);
         }
 
         // Move randomly
-        Direction dir = currentDirection;
+        Direction dir = Pathing.currentDirection;
         if (rc.canMove(dir)) {
             rc.move(dir);
         } else if (rc.getMovementCooldownTurns() == 0) {
-            currentDirection = directions[rng.nextInt(directions.length)];
+            Pathing.currentDirection = directions[rng.nextInt(directions.length)];
         }
     }
 
     static void runAway(RobotController rc) throws GameActionException {
 		for (RobotInfo r : enemyRobots) {
 			if (r.type == RobotType.LAUNCHER) {
-				tryMove(rc, oppositeDirection(me.directionTo(r.location)));
+				Pathing.tryMove(rc, Pathing.oppositeDirection(me.directionTo(r.location)));
 				break;
 			}
 		}
@@ -99,7 +99,7 @@ public strictfp class RunAmplifier {
             while (--i >= 0) {
                 RobotInfo robot = enemyRobots[i];
                 if (robot.getType() == RobotType.HEADQUARTERS) {
-                    tryMove(rc, me.directionTo(robot.location).opposite());
+                    Pathing.tryMove(rc, me.directionTo(robot.location).opposite());
                     break;
                 }
             }
@@ -118,7 +118,7 @@ public strictfp class RunAmplifier {
                 enemyIsland = null;
                 return;
             }
-            navigateTo(rc, enemyIsland);
+            Pathing.navigateTo(rc, enemyIsland);
         }
     }
 
@@ -152,7 +152,7 @@ public strictfp class RunAmplifier {
                         return;
                     }
                 }
-                navigateTo(rc, healingIsland);
+                Pathing.navigateTo(rc, healingIsland);
                 return;
             }
         }
