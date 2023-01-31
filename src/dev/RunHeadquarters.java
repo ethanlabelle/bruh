@@ -10,8 +10,8 @@ public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 10;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 10;
-	static final int MAX_CARRIERS = 20;
+	static final int CARRIER_MOD = 15;
+	static final int MAX_CARRIERS = 15;
 	static final int EXCESS = 160;
 	static int launcherCount = 0;
 	static int carrierCount = 0;
@@ -35,7 +35,7 @@ public strictfp class RunHeadquarters {
 
 		if (enemies.length > 0) {
             for (RobotInfo robot: enemies) {
-                if (robot.type == RobotType.LAUNCHER || robot.type == RobotType.HEADQUARTERS) {
+                if (robot.type == RobotType.LAUNCHER) {
 			        Communication.reportEnemy(rc, robot.location);
                 }
             }
@@ -46,12 +46,21 @@ public strictfp class RunHeadquarters {
 		Communication.clearObsoleteEnemies(rc);
 
 		// if max enemies are reached wait to build robots
-		if (enemies.length > MAX_ENEMIES) {
-			RobotType [] robotBuild = getBuild (rc);
-			if (robotBuild != null) {
-				for (int index = 0; index < SPAWN_AMOUNT; index ++) {
-					rc.buildRobot(robotBuild[index], getSpawnLocation(rc, robotBuild[index]));
+		if (enemies.length > 0 && rc.getResourceAmount(ResourceType.MANA) > enemies.length * RobotType.LAUNCHER.buildCostMana * 2) {
+			MapLocation loc = null;
+			while (rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
+				while (rc.isActionReady()) {
+					rc.setIndicatorString("Trying to build launchers");
+					loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+					if (loc != null) {
+						rc.buildRobot(RobotType.LAUNCHER, loc);
+						launcherCount++;
+					} else {
+						break;
+					}
 				}
+				Clock.yield();
+				turnCount++;
 			}
 			return;
 		}

@@ -128,9 +128,9 @@ public strictfp class RobotPlayer {
 		
 		if (rc.getType() == RobotType.HEADQUARTERS) {
 			Communication.addHeadquarter(rc);
-			Communication.tryWriteMessages(rc);
 			HQLOC = rc.getLocation();
 			updateMap(rc);
+			Communication.tryWriteMessages(rc);
 			RunHeadquarters.setup(rc);
 			Communication.updateHeadquarterInfo(rc);
 		} else {
@@ -261,6 +261,7 @@ public strictfp class RobotPlayer {
 					default:
 						break;
 				}
+				Communication.tryWriteMessages(rc);
 			}
 
 			length = islands.length;
@@ -284,7 +285,6 @@ public strictfp class RobotPlayer {
 					}
 				}
 			}
-			Communication.tryWriteMessages(rc);
 		}
 
 		static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
@@ -309,14 +309,21 @@ public strictfp class RobotPlayer {
 			WellInfo [] wells = rc.senseNearbyWells();
 			if (unit == RobotType.CARRIER) {
 				if (wells.length > 0) {
-					for (WellInfo well : wells) {
-						if (well.getResourceType() == ResourceType.MANA) {
-							MapLocation closeWell = getClosestLocation(rc, well.getMapLocation(), unit);
-							if (closeWell != null) {
-								return closeWell;
-							}
+					MapLocation manaWell = getClosestWell(rc, ResourceType.MANA);
+					if (manaWell != null) {
+						MapLocation closeTile = getClosestLocation(rc, manaWell, unit);
+						if (closeTile != null) {
+							return closeTile;
 						}
 					}
+					// for (WellInfo well : wells) {
+					// 	if (well.getResourceType() == ResourceType.MANA) {
+					// 		MapLocation closeWell = getClosestLocation(rc, well.getMapLocation(), unit);
+					// 		if (closeWell != null) {
+					// 			return closeWell;
+					// 		}
+					// 	}
+					// }
 					MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation(), unit);
 					if (closeWell != null) {
 						return closeWell;
@@ -375,16 +382,34 @@ public strictfp class RobotPlayer {
 		// this will find the closest loc
 		int bestDist = Pathing.maxDistSquared;
 		MapLocation bestLoc = null;
+		MapLocation myLoc = rc.getLocation();
 		for (int index = GameConstants.MAX_NUMBER_ISLANDS; --index >= 0;) {
 			int id = index + 1;
 			if (readTeamHoldingIsland(rc, id).equals(enemyTeam)) {
 				MapLocation currLoc = readIslandLocation(rc, id);
 				if (currLoc == null)
 					continue;
-				int currDist = currLoc.distanceSquaredTo(rc.getLocation());
+				int currDist = currLoc.distanceSquaredTo(myLoc);
 				if (currDist < bestDist) {
 					bestDist = currDist;
 					bestLoc = currLoc;
+				}
+			}
+		}
+		if (bestLoc == null) {
+			int[] islands = rc.senseNearbyIslands();
+			for (int i = islands.length; --i >= 0;) {
+				if (rc.senseTeamOccupyingIsland(islands[i]) == enemyTeam) {
+					MapLocation[] tiles = rc.senseNearbyIslandLocations(islands[i]);
+					if (tiles.length > 0) {
+						for (int j = tiles.length; --j >= 0;) {
+							int currDist = tiles[j].distanceSquaredTo(myLoc);
+							if (currDist < bestDist) {
+								bestDist = currDist;
+								bestLoc = tiles[j];
+							}
+						} 
+					}
 				}
 			}
 		}

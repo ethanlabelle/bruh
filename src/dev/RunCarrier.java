@@ -14,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 5;
+    static final int CARRIER_DIFF_MOD = 3;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -63,14 +63,14 @@ public strictfp class RunCarrier {
 
         foundWell = false;
 		// find resources
-        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
+        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 39) {
             Pathing.navigateTo(rc, wellLoc);
         }
 
         // Try to gather from assigned well.
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
             mine(rc);
-		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
+		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 39) {
             if (isWellFull(rc, wellLoc)) {
                 bannedWells[banCounter] = wellLoc;
                 wellLoc = null;
@@ -79,13 +79,13 @@ public strictfp class RunCarrier {
         }
 
         // If at a well, keep collecting until full.
-        if (foundWell && getTotalResources(rc) < 40) {
+        if (foundWell && getTotalResources(rc) < 39) {
             return;
         }
 
 
 		// try to deposite resources
-        if (getTotalResources(rc) == 40) {
+        if (getTotalResources(rc) >= 39) {
             HQLOC = Communication.getClosestHeadquarters(rc);
             Pathing.navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
@@ -94,17 +94,19 @@ public strictfp class RunCarrier {
 
             if (ada > 0 && rc.canTransferResource(HQLOC, ResourceType.ADAMANTIUM, ada)) {
                 rc.transferResource(HQLOC, ResourceType.ADAMANTIUM, ada);
-                Clock.yield();
-                turnCount++;
             }
             // try to transfer MANA
             if (mana > 0 && rc.canTransferResource(HQLOC, ResourceType.MANA, mana)) {
                 rc.transferResource(HQLOC, ResourceType.MANA, mana);
-                Clock.yield();
-                turnCount++;
             }
-            if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD)) {
-                rc.takeAnchor(HQLOC, Anchor.STANDARD);
+            if (rc.canSenseRobotAtLocation(HQLOC)) {
+                RobotInfo hqInfo = rc.senseRobotAtLocation(HQLOC);
+                if (hqInfo.getNumAnchors(Anchor.STANDARD) > 0) {
+                    Clock.yield();
+                    turnCount++;
+                    if (rc.canTakeAnchor(HQLOC, Anchor.STANDARD))
+                        rc.takeAnchor(HQLOC, Anchor.STANDARD);
+                }
             }
         } else if (wellLoc == null) {
             if (rc.getRoundNum() < 100)
@@ -162,9 +164,8 @@ public strictfp class RunCarrier {
 					if (onIsland && rc.canPlaceAnchor()) {
             	       	rc.setIndicatorString("Huzzah, placed anchor!");
             	       	rc.placeAnchor();
-            	       	// Clock.yield();
-                        // turnCount++;
             	       	Communication.updateIslandInfo(rc, id);
+                        Communication.tryWriteMessages(rc);
             	       	return;
 					
 					} else {
@@ -207,8 +208,8 @@ public strictfp class RunCarrier {
                     	        if (me.equals(loc) && rc.canPlaceAnchor()) {
                     	            rc.setIndicatorString("Huzzah, placed anchor!");
                     	            rc.placeAnchor();
-                    	            // Clock.yield();
                     	            Communication.updateIslandInfo(rc, id);
+                                    Communication.tryWriteMessages(rc);
                     	            return;
                     	        }
                     	    }
@@ -244,7 +245,7 @@ public strictfp class RunCarrier {
                 " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
         foundWell = true;
         // if there are too many carriers about this well, forget and ban well
-        if (getTotalResources(rc) == 40) {
+        if (getTotalResources(rc) >= 39) {
             return;
         }
         for (int i = directions.length; --i >= 0;) {
@@ -274,13 +275,24 @@ public strictfp class RunCarrier {
             } else {
                 continue;
             }
-            if (rc.canSenseRobotAtLocation(miningLoc) && rc.senseRobotAtLocation(miningLoc).team == myTeam)
+            if (rc.canSenseRobotAtLocation(miningLoc)) {
+                RobotInfo r = rc.senseRobotAtLocation(miningLoc);
+                if (r.team == myTeam)
+                    taken++;
+            }
+        }
+        if (rc.canSenseRobotAtLocation(wellLoc)) {
+            RobotInfo r = rc.senseRobotAtLocation(wellLoc);
+            if (r.team == myTeam)
                 taken++;
         }
-        if (rc.canSenseRobotAtLocation(wellLoc) && rc.senseRobotAtLocation(wellLoc).team == myTeam) {
-            taken++;
-        }
         return spots == taken; 
+    }
+    
+    static void banWellLoc() {
+        bannedWells[banCounter] = wellLoc;
+        wellLoc = null;
+        banCounter = ++banCounter % BAN_LIST_SIZE;
     }
 
     static void exploreBFS(RobotController rc) throws GameActionException {

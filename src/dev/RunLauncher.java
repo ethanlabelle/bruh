@@ -38,10 +38,6 @@ public strictfp class RunLauncher {
         
         avoidHQ(rc);
         
-        enemies = getEnemies(rc);
-        if (enemies.length > 0) {
-            Communication.reportEnemy(rc, enemies[0].location);
-        }
         // attack enemy islands
         attackEnemyIsland(rc);
 
@@ -55,14 +51,15 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        
-		defLoc = Communication.getClosestEnemy(rc);
-		if (defLoc != null) {
-			Pathing.navigateTo(rc, defLoc);
-            attackEnemies(rc);
-            cloudShot(rc);
-            return;
-		}
+        if (rc.getRoundNum() > 50) {
+            defLoc = Communication.getClosestEnemy(rc);
+            if (defLoc != null) {
+                Pathing.navigateTo(rc, defLoc);
+                attackEnemies(rc);
+                cloudShot(rc);
+                return;
+            }
+        }
 
         if (move_randomly) {
             moveLastResort(rc);
