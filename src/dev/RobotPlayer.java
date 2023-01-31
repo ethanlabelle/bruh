@@ -5,6 +5,7 @@ import battlecode.common.*;
 import static dev.Communication.*;
 
 import java.util.Random;
+import java.util.Arrays;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -328,13 +329,16 @@ public strictfp class RobotPlayer {
 					return spawnLoc;
 				}
 			}
-			
-			// Pick a direction to build in.
-			for (Direction checkDir : directions) {
-				MapLocation newLoc = rc.getLocation().add(checkDir);
-				if (rc.canBuildRobot(unit, newLoc))
-					return newLoc;
+
+			// pick a random location within the action radius
+			MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+			Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
+			for (int index = possBuild.length; --index > 0;) {
+				if (rc.canBuildRobot(unit, possBuild[index])) {
+					return possBuild[index];
+				}
 			}
+			
 			return null;
 		}
 	
