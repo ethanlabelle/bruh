@@ -578,7 +578,7 @@ public strictfp class RobotPlayer {
 			MapLocation bestLoc = null;
 			for (MapLocation checkLoc : possLoc) {
 				// rc.canSenseRobotAtLocation(MapLocation loc) always returned false, spawned robot on top of robot and deleted headquarters
-				if (rc.canBuildRobot(unit, checkLoc)) {
+				if (!checkLoc.equals(rc.getLocation()) && rc.canBuildRobot(unit, checkLoc)) {
 					int checkDist = checkLoc.distanceSquaredTo(loc);
 					if (checkDist < minDist) {
 						bestLoc = checkLoc;
