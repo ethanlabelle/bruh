@@ -53,28 +53,39 @@ public class Pathing {
     static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
         if (path.size() > 0) {
             if (toHQ) {
+                System.out.println(currentPathIdx);
                 if (currentPathIdx == -1) {
                     currentPathIdx = path.size() - 1;
                 }
                 MapLocation nextTile = path.get(currentPathIdx);
-                if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-                    rc.move(rc.getLocation().directionTo(nextTile));
+                // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+                //     rc.move(rc.getLocation().directionTo(nextTile));
+                //     currentPathIdx--;
+                // }
+                if (tryMove(rc, rc.getLocation().directionTo(nextTile))) {
                     currentPathIdx--;
                 }
             }
             else {
-                if (currentPathIdx == -1) {
-                    currentPathIdx = 0;
+                System.out.println(currentPathIdx);
+                if (currentPathIdx == 0) {
+                    currentPathIdx = 1;
                 }
                 MapLocation nextTile = path.get(currentPathIdx);
-                if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-                    rc.move(rc.getLocation().directionTo(nextTile));
-                    if (currentPathIdx < path.size() - 1)
-                        currentPathIdx++;
-                }
+                // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+                //     rc.move(rc.getLocation().directionTo(nextTile));
+                //     if (currentPathIdx < path.size() - 1)
+                //         currentPathIdx++;
+                // }
+                navigateTo(rc, nextTile);
+                if (rc.getLocation().equals(nextTile))
+                    currentPathIdx++;
+                // if (tryMove(rc, rc.getLocation().directionTo(nextTile))) {
+                //     if (currentPathIdx < path.size() - 1)
+                //         currentPathIdx++;
+                // }
             }
-        }
-        if (rc.isMovementReady()) {
+        } else if (rc.isMovementReady()) {
             bug2(rc, loc);
             if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
                 bug2(rc, loc);
