@@ -39,7 +39,7 @@ class Communication {
     private static final int HQ_FLAG = 1 << 12;
     private static final int not_HQ_FLAG = ~HQ_FLAG;
 	// private static final int MESSAGE_QUEUE_SIZE = 500;
-    private static final int MESSAGE_LIMIT = 20;
+    private static final int MESSAGE_LIMIT = 10;
     private static Queue<Message> messagesQueue =  new LinkedList<Message>();
     // private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	// private static int head = 0;
@@ -120,11 +120,10 @@ class Communication {
 		int minDist = 7200;
 		MapLocation closestHQ = null;
         for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
-            MapLocation loc = intToLocation(rc, rc.readSharedArray(i));
-            if (loc == null) break;
-			if (headquarterLocs[i].distanceSquaredTo(rc.getLocation()) < minDist) {
-				minDist = headquarterLocs[i].distanceSquaredTo(rc.getLocation());
-				closestHQ = headquarterLocs[i];
+            MapLocation loc = headquarterLocs[i];
+			if (loc.distanceSquaredTo(rc.getLocation()) < minDist) {
+				minDist = loc.distanceSquaredTo(rc.getLocation());
+				closestHQ = loc;
 			}
         }
         return closestHQ;
