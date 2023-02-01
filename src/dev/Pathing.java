@@ -235,14 +235,14 @@ public class Pathing {
                 hitPoint = rc.getLocation();
             } else {
                 //bugRandom(rc, goalLoc);
-                Direction a = currentDirection.rotateLeft().rotateLeft();
-                if (rc.canMove(a))
-                    rc.move(a);
-                else {
-                    a = currentDirection.rotateRight().rotateRight();
-                    if (rc.canMove(a))
-                        rc.move(a);
-                }
+                int i = directions.length;
+				while (--i >= 0) {
+                	currentDirection = currentDirection.rotateLeft();
+					if (tryMove(rc, currentDirection)) {
+						break;
+					}
+				}
+				rc.setIndicatorString("crowd mode");
             }
         }
         
@@ -298,10 +298,10 @@ public class Pathing {
         
         
         if (stuckCounter > 50) {
-            if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
-                RunCarrier.banWellLoc();
-                stuckCounter = 0;
-            }
+            // if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
+            //     RunCarrier.banWellLoc();
+            //     stuckCounter = 0;
+            // }
             for (int i = directions.length; --i >= 0;)
                 if (rc.canMove(directions[i])) {
                     rc.move(directions[i]);

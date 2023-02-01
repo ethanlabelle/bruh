@@ -29,7 +29,7 @@ public strictfp class RunAmplifier {
             for (RobotInfo robot: enemyRobots) {
                 if (robot.type == RobotType.LAUNCHER) {
 			        Communication.reportEnemy(rc, robot.location);
-                    runAway(rc);
+                    // runAway(rc);
                 }
             }
 		}

@@ -109,13 +109,14 @@ public strictfp class RunCarrier {
                 }
             }
         } else if (wellLoc == null) {
-            if (rc.getRoundNum() < 100)
-        	    exploreBFS(rc);
-            else {
+            // if (rc.getRoundNum() < 100)
+        	//     exploreBFS(rc);
+            // else {
                 short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
                 if (board[me.x + me.y * width] == islandNum) {
                     return;
                 }    
+                attackEnemyIsland(rc);
                 // Move randomly
                 Direction dir = Pathing.currentDirection;
                 if (rc.canMove(dir)) {
@@ -123,7 +124,7 @@ public strictfp class RunCarrier {
                 } else if (rc.getMovementCooldownTurns() == 0) {
                     Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
-            }
+            // }
         }
     }
 
@@ -389,6 +390,21 @@ public strictfp class RunCarrier {
                         bfsQ.add(new MapLocation(coord[2], coord[3]));
                 } catch (ArrayIndexOutOfBoundsException e) {}
                 break;
+        }
+    }
+    static void attackEnemyIsland(RobotController rc) throws GameActionException {
+        MapLocation enemyIsland = null;
+        if (enemyIsland == null) {
+            enemyIsland = getClosestEnemyIsland(rc);
+        }
+        if (enemyIsland != null) {
+            me = rc.getLocation();
+            short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
+            if (board[me.x + me.y * width] == islandNum || board[me.x + me.y * width] == M_NISL) {
+                enemyIsland = null;
+                return;
+            }
+            Pathing.navigateTo(rc, enemyIsland);
         }
     }
 }
