@@ -53,7 +53,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        if (turnCount > 400) {
+        // if (turnCount > 100) {
             defLoc = Communication.getClosestEnemy(rc);
             if (defLoc != null) {
                 Pathing.navigateTo(rc, defLoc);
@@ -63,7 +63,7 @@ public strictfp class RunLauncher {
                 Communication.clearOld();
                 return;
             }
-        }
+        // }
 
         if (move_randomly) {
             moveLastResort(rc);
@@ -108,6 +108,207 @@ public strictfp class RunLauncher {
         return leader_loc;
     }
 
+    // static void travelToPossibleHQ(RobotController rc) throws GameActionException {
+    //     /*
+    //      * INSPO
+    //      * 
+    //      if(possibleEnemyLOC == null){
+    //         // set possible enemy loc based on symmetry of our HQ
+    //         int id = fake_id;
+    //         if(id % 3 == 0)
+    //             possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
+    //         else if(id % 3 == 1)
+    //             possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
+    //         else
+    //             possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
+    //     }
+    //     if (rc.canSenseLocation(possibleEnemyLOC)) {
+    //         RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+    //         RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
+    //         if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
+    //             EnemyHQLOC = possibleEnemyLOC;
+    //             return;
+    //         }
+    //         else{
+    //             possibleEnemyLOC = null;
+    //             EnemyHQLOC = undefined_loc;
+    //             fake_id += 1;
+    //             if(fake_id == 6){
+    //                 move_randomly = true;
+    //             }
+    //         }
+    //     }
+    //     if(possibleEnemyLOC != null)
+    //         navigateTo(rc, possibleEnemyLOC);
+    //      */
+    //     if(possibleEnemyLOC == null){
+    //         // set possible enemy loc based on symmetry of our HQ
+    //         MapLocation closest_predicted = null;
+    //         int min_dist = 7200;
+    //         boolean horizontalSymmetry = true;
+    //         boolean verticalSymmetry = true;
+    //         boolean rotationalSymmetry = true;
+
+    //         // generate list of possible hqs
+    //         int count = 0;
+    //         for(int i = Communication.headquarterLocs.length; --i >= 0;) {
+    //             MapLocation curr_hq = Communication.headquarterLocs[i];
+    //             if (curr_hq == null)
+    //                 continue;
+    //             count++;
+    //             MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
+    //             if (Communication.headquarterLocsSet.contains(rotationalSym))
+    //                 rotationalSymmetry = false;
+    //             MapLocation verticalSym = new MapLocation(abs(curr_hq.x + 1 - width), curr_hq.y);
+    //             if (Communication.headquarterLocsSet.contains(verticalSym))
+    //                 verticalSymmetry = false;
+    //             MapLocation horizontalSym = new MapLocation(curr_hq.x, abs(curr_hq.y + 1 - height));
+    //             if (Communication.headquarterLocsSet.contains(horizontalSym))
+    //                 horizontalSymmetry = false;
+    //             possibleHQLocs[i * 3] = rotationalSym;
+    //             possibleHQLocs[i * 3 + 1] = verticalSym;
+    //             possibleHQLocs[i * 3 + 2] = horizontalSym;
+    //         }
+
+    //         if (count > 1) {
+    //             int verticalLine = width / 2;
+    //             int horizontalLine = height / 2;
+    //             int leftOfVerticalLine = 0;
+    //             int belowHorizontalLine = 0;
+    //             boolean top = false;
+    //             boolean bottom = false;
+    //             boolean left = false;
+    //             boolean right = false;
+    //             for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+    //                 if (Communication.headquarterLocs[i] != null) {
+    //                     int x = Communication.headquarterLocs[i].x;
+    //                     int y = Communication.headquarterLocs[i].y;
+    //                     switch (width % 2) {
+    //                         case 0:
+    //                             if (x < verticalLine) {
+    //                                 leftOfVerticalLine++;
+    //                                 left = true;
+    //                             }
+    //                             else 
+    //                                 right = true;
+
+    //                         case 1:
+    //                             if (x < verticalLine) {
+    //                                 leftOfVerticalLine++;
+    //                                 left = true;
+    //                             }
+    //                             else if (x > verticalLine)
+    //                                 right = true;
+    //                             else
+    //                                 verticalSymmetry = false;
+    //                     }
+
+    //                     switch (height % 2) {
+    //                         case 0:
+    //                             if (y < horizontalLine) {
+    //                                 belowHorizontalLine++;
+    //                                 bottom = true;
+    //                             }
+    //                             else
+    //                                 top = true;
+
+    //                         case 1:
+    //                             if (y < horizontalLine) {
+    //                                 belowHorizontalLine++;
+    //                                 bottom = true;
+    //                             }
+    //                             else if (y > horizontalLine)
+    //                                 top = true;
+    //                             else
+    //                                 horizontalSymmetry = false;
+    //                     }
+    //                 }
+    //             }
+    //             // check if horrizontal symmetry is possible with our headquarters
+    //             if (((leftOfVerticalLine == count || leftOfVerticalLine == 0) && top && bottom) || !horizontalSymmetry) {
+    //                 possibleHQLocs[0 * 3 + 2] = null;
+    //                 possibleHQLocs[1 * 3 + 2] = null;
+    //                 possibleHQLocs[2 * 3 + 2] = null;
+    //                 possibleHQLocs[3 * 3 + 2] = null;
+    //             }
+    //             // check if vertical symmetry is possible with our headquarters
+    //             if (((belowHorizontalLine == count || belowHorizontalLine == 0) && left && right) || !verticalSymmetry) {
+    //                 possibleHQLocs[0 * 3 + 1] = null;
+    //                 possibleHQLocs[1 * 3 + 1] = null;
+    //                 possibleHQLocs[2 * 3 + 1] = null;
+    //                 possibleHQLocs[3 * 3 + 1] = null;
+    //             }
+
+    //             // check if rotational symmetry is possible with our headquarters
+    //             if (!rotationalSymmetry) {
+    //                 possibleHQLocs[0 * 3] = null;
+    //                 possibleHQLocs[1 * 3] = null;
+    //                 possibleHQLocs[2 * 3] = null;
+    //                 possibleHQLocs[3 * 3] = null;
+    //             }
+    //             // pick closest HQ that is outside of known HQs' action radius
+    //             int ind = -1;
+    //             for (int i = possibleHQLocs.length; --i >= 0;) {
+    //                 if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
+    //                     boolean inFriendlyHQVision = false;
+    //                     for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
+    //                         if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.visionRadiusSquared) {
+    //                             inFriendlyHQVision = true;
+    //                         }
+    //                     }
+    //                     if (!inFriendlyHQVision) {
+    //                         closest_predicted = possibleHQLocs[i];
+    //                         min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
+    //                         ind = i;
+    //                     }
+    //                 }
+    //             }
+    //             possibleEnemyLOC = closest_predicted;
+    //             possibleHQLocs[ind] = null;
+    //         } else {
+    //             possibleEnemyLOC = possibleHQLocs[0];
+    //             possibleHQLocs[0] = null;
+    //         }
+    //     }
+
+    //     if (possibleEnemyLOC != null) {
+    //         Pathing.navigateTo(rc, possibleEnemyLOC);
+    //         if (rc.canSenseLocation(possibleEnemyLOC)) {
+    //             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
+    //             if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
+    //                 EnemyHQLOC = possibleEnemyLOC;
+    //                 possibleEnemyLOC = null;
+    //                 return;
+    //             } else {
+    //                 MapLocation closest_predicted = null;
+    //                 int min_dist = 7200;
+    //                 // pick closest HQ that is outside of known HQs' action radius
+    //                 int ind = -1;
+    //                 for (int i = possibleHQLocs.length; --i >= 0;) {
+    //                     if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
+    //                         boolean inFriendlyHQVision = false;
+    //                         for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
+    //                             if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.actionRadiusSquared) {
+    //                                 inFriendlyHQVision = true;
+    //                             }
+    //                         }
+    //                         if (!inFriendlyHQVision) {
+    //                             closest_predicted = possibleHQLocs[i];
+    //                             min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
+    //                             ind = i;
+    //                         }
+    //                     }
+    //                 }
+    //                 if (ind == -1) {
+    //                     move_randomly = true;
+    //                 } else {
+    //                     possibleEnemyLOC = closest_predicted;
+    //                     possibleHQLocs[ind] = null;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     static void travelToPossibleHQ(RobotController rc) throws GameActionException {
         /*
          * INSPO
@@ -145,106 +346,55 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            boolean horizontalSymmetry = true;
-            boolean verticalSymmetry = true;
-            boolean rotationalSymmetry = true;
 
             // generate list of possible hqs
-            int count = 0;
             for(int i = Communication.headquarterLocs.length; --i >= 0;) {
                 MapLocation curr_hq = Communication.headquarterLocs[i];
                 if (curr_hq == null)
                     continue;
-                count++;
                 MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-                if (Communication.headquarterLocsSet.contains(rotationalSym))
-                    rotationalSymmetry = false;
                 MapLocation verticalSym = new MapLocation(abs(curr_hq.x + 1 - width), curr_hq.y);
-                if (Communication.headquarterLocsSet.contains(verticalSym))
-                    verticalSymmetry = false;
                 MapLocation horizontalSym = new MapLocation(curr_hq.x, abs(curr_hq.y + 1 - height));
-                if (Communication.headquarterLocsSet.contains(horizontalSym))
-                    horizontalSymmetry = false;
                 possibleHQLocs[i * 3] = rotationalSym;
                 possibleHQLocs[i * 3 + 1] = verticalSym;
                 possibleHQLocs[i * 3 + 2] = horizontalSym;
             }
-
+            int count = 0;
+            for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+                if (Communication.headquarterLocs[i] != null) {
+                    count++;
+                }
+            }
             if (count > 1) {
-                int verticalLine = width / 2;
-                int horizontalLine = height / 2;
-                int leftOfVerticalLine = 0;
-                int belowHorizontalLine = 0;
-                boolean top = false;
-                boolean bottom = false;
-                boolean left = false;
-                boolean right = false;
+                // check if horrizontal symmetry is possible with our headquarters
+                int mid = width / 2;
+                int leftOfMid = 0;
                 for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
                     if (Communication.headquarterLocs[i] != null) {
-                        int x = Communication.headquarterLocs[i].x;
-                        int y = Communication.headquarterLocs[i].y;
-                        switch (width % 2) {
-                            case 0:
-                                if (x < verticalLine) {
-                                    leftOfVerticalLine++;
-                                    left = true;
-                                }
-                                else 
-                                    right = true;
-
-                            case 1:
-                                if (x < verticalLine) {
-                                    leftOfVerticalLine++;
-                                    left = true;
-                                }
-                                else if (x > verticalLine)
-                                    right = true;
-                                else
-                                    verticalSymmetry = false;
-                        }
-
-                        switch (height % 2) {
-                            case 0:
-                                if (y < horizontalLine) {
-                                    belowHorizontalLine++;
-                                    bottom = true;
-                                }
-                                else
-                                    top = true;
-
-                            case 1:
-                                if (y < horizontalLine) {
-                                    belowHorizontalLine++;
-                                    bottom = true;
-                                }
-                                else if (y > horizontalLine)
-                                    top = true;
-                                else
-                                    horizontalSymmetry = false;
-                        }
+                        if (Communication.headquarterLocs[i].x < mid)
+                            leftOfMid++;
                     }
                 }
-                // check if horrizontal symmetry is possible with our headquarters
-                if (((leftOfVerticalLine == count || leftOfVerticalLine == 0) && top && bottom) || !horizontalSymmetry) {
+                if (leftOfMid == count || leftOfMid == 0) {
                     possibleHQLocs[0 * 3 + 2] = null;
                     possibleHQLocs[1 * 3 + 2] = null;
                     possibleHQLocs[2 * 3 + 2] = null;
                     possibleHQLocs[3 * 3 + 2] = null;
                 }
                 // check if vertical symmetry is possible with our headquarters
-                if (((belowHorizontalLine == count || belowHorizontalLine == 0) && left && right) || !verticalSymmetry) {
+                mid = height / 2;
+                int belowMid = 0;
+                for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
+                    if (Communication.headquarterLocs[i] != null) {
+                        if (Communication.headquarterLocs[i].y < mid)
+                            belowMid++;
+                    }
+                }
+                if (belowMid == count || belowMid == 0) {
                     possibleHQLocs[0 * 3 + 1] = null;
                     possibleHQLocs[1 * 3 + 1] = null;
                     possibleHQLocs[2 * 3 + 1] = null;
                     possibleHQLocs[3 * 3 + 1] = null;
-                }
-
-                // check if rotational symmetry is possible with our headquarters
-                if (!rotationalSymmetry) {
-                    possibleHQLocs[0 * 3] = null;
-                    possibleHQLocs[1 * 3] = null;
-                    possibleHQLocs[2 * 3] = null;
-                    possibleHQLocs[3 * 3] = null;
                 }
                 // pick closest HQ that is outside of known HQs' action radius
                 int ind = -1;

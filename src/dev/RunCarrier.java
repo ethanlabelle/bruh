@@ -44,11 +44,20 @@ public strictfp class RunCarrier {
             carrierAttack(rc);
         }
 
-        if (enemyRobots.length > 0 && getTotalResources(rc) < 5) {
-            // Communication.reportEnemy(rc, rc.getLocation());
-            runAway(rc);
-        }
-
+        // if (enemyRobots.length > 0 && getTotalResources(rc) < 5) {
+            
+        //     runAway(rc);
+        // }
+        if (enemyRobots.length > 0) {
+            for (RobotInfo robot: enemyRobots) {
+                if (robot.type == RobotType.LAUNCHER) {
+			        Communication.reportEnemy(rc, robot.location);
+                    if (getTotalResources(rc) < 5)
+                        runAway(rc);
+                    break;
+                }
+            }
+		}
         if (rc.getAnchor() != null) {
             carryAnchor(rc);
             return;
@@ -70,8 +79,8 @@ public strictfp class RunCarrier {
 		// find resources
         if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 39) {
             if (Pathing.hasPath) {
-                Pathing.navigateToWithPath(rc, wellLoc, false);
-                Pathing.navigateToWithPath(rc, wellLoc, false);
+                Pathing.navigateToWithPath(rc, wellLoc, true);
+                Pathing.navigateToWithPath(rc, wellLoc, true);
             }
             else Pathing.navigateTo(rc, wellLoc);
         }
@@ -94,8 +103,8 @@ public strictfp class RunCarrier {
         if (getTotalResources(rc) >= 39) {
             HQLOC = Communication.getClosestHeadquarters(rc);
             if (Pathing.hasPath) {
-                Pathing.navigateToWithPath(rc, HQLOC, true);
-                Pathing.navigateToWithPath(rc, HQLOC, true);
+                Pathing.navigateToWithPath(rc, HQLOC, false);
+                Pathing.navigateToWithPath(rc, HQLOC, false);
             }
             else Pathing.navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
@@ -123,9 +132,9 @@ public strictfp class RunCarrier {
             if (board[me.x + me.y * width] == islandNum) {
                 return;
             }  
-            if (rc.getRoundNum() < 300)
-                exploreBFS(rc);
-            else {
+            // if (rc.getRoundNum() < 300)
+            //     exploreBFS(rc);
+            // else {
                 // attackEnemyIsland(rc);
                 // Move randomly
                 Direction dir = Pathing.currentDirection;
@@ -134,11 +143,11 @@ public strictfp class RunCarrier {
                 } else if (rc.getMovementCooldownTurns() == 0) {
                     Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
-            }
+            // }
         }
         Communication.tryWriteMessages(rc);
         while (wellLoc != null && Clock.getBytecodeNum() < 10000 && !Pathing.hasPath) {
-            Pathing.bfs(rc, wellLoc, HQLOC);
+            Pathing.bfs(rc, HQLOC, wellLoc);
         }
     }
 

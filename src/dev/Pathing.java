@@ -366,7 +366,7 @@ public class Pathing {
         if (path.size() > 0) {
             if (toHQ) {
                 if (currentPathIdx == -1) {
-                    currentPathIdx = path.size() - 1;
+                    currentPathIdx = path.size() - 2;
                 }
                 MapLocation nextTile = path.get(currentPathIdx);
                 rc.setIndicatorString("toHQ moving to " + nextTile);
@@ -375,7 +375,7 @@ public class Pathing {
                 //     currentPathIdx--;
                 // }
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 1)
+                if (rc.getLocation().distanceSquaredTo(nextTile) < 1)
                     currentPathIdx--;
             }
             else {
@@ -389,7 +389,7 @@ public class Pathing {
                 rc.setIndicatorString("to well moving to " + nextTile);
                 rc.setIndicatorDot(nextTile, 255, 0, 0);
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 1) {
+                if (rc.getLocation().distanceSquaredTo(nextTile) < 1) {
                     if (currentPathIdx < path.size() - 1)
                         currentPathIdx++;
                 }

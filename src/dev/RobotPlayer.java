@@ -345,17 +345,17 @@ public strictfp class RobotPlayer {
 			// 	}
 			// }
 
-			// MapLocation center = new MapLocation(width/2, height/2);
-			// MapLocation spawnLoc = getClosestLocation(rc, center, unit);
+			MapLocation center = new MapLocation(width/2, height/2);
+			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
 			// pick a random location within the action radius
-			MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
-			Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
-			for (int index = possBuild.length; --index > 0;) {
-				if (rc.canBuildRobot(unit, possBuild[index])) {
-					return possBuild[index];
-				}
-			}
-			return null;
+			// MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+			// Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
+			// for (int index = possBuild.length; --index > 0;) {
+			// 	if (rc.canBuildRobot(unit, possBuild[index])) {
+			// 		return possBuild[index];
+			// 	}
+			// }
+			return spawnLoc;
 		}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {
