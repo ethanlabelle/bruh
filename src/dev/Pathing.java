@@ -27,6 +27,7 @@ public class Pathing {
     static HashSet<MapLocation> visited = new HashSet<>();
     static LinkedList<MapLocation> path = new LinkedList<>();
     static HashMap<MapLocation, MapLocation> parents = new HashMap<>();
+    static int currentPathIdx = -1;
 
     static boolean atWellLoc(RobotController rc, MapLocation wellLoc) {
         if (wellLoc == null) return false;
@@ -41,11 +42,35 @@ public class Pathing {
     }
     // Navigation
     static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
+        if (rc.isMovementReady()) {
+            bug2(rc, loc);
+            if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
+                bug2(rc, loc);
+            }
+        }
+    }
+
+    static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
         if (path.size() > 0) {
-            MapLocation nextTile = path.getLast();
-            if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-                rc.move(rc.getLocation().directionTo(nextTile));
-                path.removeLast();
+            if (toHQ) {
+                if (currentPathIdx == -1) {
+                    currentPathIdx = path.size() - 1;
+                }
+                MapLocation nextTile = path.get(currentPathIdx);
+                if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+                    rc.move(rc.getLocation().directionTo(nextTile));
+                    currentPathIdx--;
+                }
+            }
+            else {
+                if (currentPathIdx == -1) {
+                    currentPathIdx = 2;
+                }
+                MapLocation nextTile = path.get(currentPathIdx);
+                if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+                    rc.move(rc.getLocation().directionTo(nextTile));
+                    currentPathIdx++;
+                }
             }
         }
         if (rc.isMovementReady()) {
@@ -54,7 +79,6 @@ public class Pathing {
                 bug2(rc, loc);
             }
         }
-
     }
 
     static boolean hasObstacle(RobotController rc, Direction dir) throws GameActionException {
@@ -344,21 +368,19 @@ public class Pathing {
     
     static boolean bfs(RobotController rc, MapLocation src, MapLocation dst) throws GameActionException {
         System.out.println(src + " " + dst);
-        if (visited.contains(dst)) {
+        if (visited.contains(dst) && path.isEmpty()) {
             MapLocation current = dst;
-            while (!current.equals(src)) {
+            while (current != null) {
                 path.add(current);
                 rc.setIndicatorDot(current, 255, 0, 0);
                 current = parents.get(current);
             }
             return true;
         }
-        if (visited.size() == 0) {
-            visited.add(src);
+        if (bfsQ.size() == 0) {
             rc.setIndicatorDot(src, 255, 0, 0);
-            for (int i = directions.length; --i >= 0; ) {
-                bfsQ.add(src.add(directions[i]));
-            }
+            bfsQ.add(src);
+            parents.put(src, null);
         }
         if (bfsQ.size() > 0){
             MapLocation next = bfsQ.remove();
@@ -372,7 +394,7 @@ public class Pathing {
                     continue;
                 byte tile = board[adj.x + adj.y * width];
                 rc.setIndicatorDot(adj, 0, 0, 255);
-                if (tile == M_STORM || tile == M_HIDDEN) {
+                if (tile == M_STORM || tile == M_HIDDEN || tile == M_CURE || tile == M_CURN || tile == M_CURS || tile == M_CURW) {
                     visited.add(adj);
                     continue;
                 }

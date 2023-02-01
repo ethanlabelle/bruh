@@ -64,7 +64,7 @@ public strictfp class RunCarrier {
         foundWell = false;
 		// find resources
         if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 39) {
-            Pathing.navigateTo(rc, wellLoc);
+            Pathing.navigateToWithPath(rc, wellLoc, false);
         }
 
         // Try to gather from assigned well.
@@ -87,7 +87,7 @@ public strictfp class RunCarrier {
 		// try to deposite resources
         if (getTotalResources(rc) >= 39) {
             HQLOC = Communication.getClosestHeadquarters(rc);
-            Pathing.navigateTo(rc, HQLOC);
+            Pathing.navigateToWithPath(rc, HQLOC, true);
             // try to transfer ADAMANTIUM
             int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
             int mana = rc.getResourceAmount(ResourceType.MANA);
