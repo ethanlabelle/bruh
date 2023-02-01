@@ -229,7 +229,6 @@ public strictfp class RunLauncher {
                         }
                     }
                 }
-                System.out.println("num below: " + belowHorizontalLine + " left " + left + " right " + right + " top " + top + " bottom " + bottom);
                 // check if horrizontal symmetry is possible with our headquarters
                 if (((leftOfVerticalLine == count || leftOfVerticalLine == 0) && top && bottom) || !horizontalSymmetry) {
                     possibleHQLocs[0 * 3 + 2] = null;
