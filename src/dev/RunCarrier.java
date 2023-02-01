@@ -14,23 +14,26 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 3;
+    static final int CARRIER_DIFF_MOD = 5;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
     static boolean earlyMana = false;
     static int rad = 4;
+    static MapLocation enemyIsland;
     /**
      * Run a single turn for a Carrier.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
-        if (rc.getRoundNum() == 2) {
-            earlyAda = true;
-        } else if (rc.getRoundNum() == 3 && !earlyAda) {
+        // if (rc.getRoundNum() == 2) {
+        //     earlyAda = true;
+        // } else if (rc.getRoundNum() == 3 && !earlyAda) {
+        //     earlyMana = true;
+        // }
+        if (rc.getRoundNum() < 50) {
             earlyMana = true;
         }
-
         updateMap(rc);
         Communication.clearObsoleteEnemies(rc);
 
@@ -50,25 +53,33 @@ public strictfp class RunCarrier {
             return;
         }
 		
-        MapLocation pWellLoc;
-		if (!earlyMana && (rc.getID() % CARRIER_DIFF_MOD == 0 || earlyAda)) {
-		    pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
-		} 
-		else {
-			pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
-		}
-        if (wellLoc == null && pWellLoc != null) {
-            wellLoc = pWellLoc;
+        if (wellLoc == null) {
+            MapLocation pWellLoc;
+            if (!earlyMana && (rc.getID() % CARRIER_DIFF_MOD == 0 || earlyAda)) {
+                pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
+            } 
+            else {
+                pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
+                if (pWellLoc == null && !earlyMana)
+                    pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
+            }
+            if (pWellLoc != null)
+                wellLoc = pWellLoc;
         }
 
         foundWell = false;
 		// find resources
         if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 39) {
-            Pathing.navigateToWithPath(rc, wellLoc, false);
+            if (Pathing.hasPath)
+                Pathing.navigateToWithPath(rc, wellLoc, false);
+            else Pathing.navigateTo(rc, wellLoc);
         }
 
         // Try to gather from assigned well.
+        if (wellLoc != null)
+            rc.setIndicatorString("wellLoc " + wellLoc + " " + rc.canCollectResource(wellLoc, -1) + " "  + rc.getLocation());
 		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
+            rc.setIndicatorString("trying to mine");
             mine(rc);
 		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 39) {
             if (isWellFull(rc, wellLoc)) {
@@ -78,16 +89,12 @@ public strictfp class RunCarrier {
             }
         }
 
-        // If at a well, keep collecting until full.
-        if (foundWell && getTotalResources(rc) < 39) {
-            return;
-        }
-
-
 		// try to deposite resources
         if (getTotalResources(rc) >= 39) {
             HQLOC = Communication.getClosestHeadquarters(rc);
-            Pathing.navigateToWithPath(rc, HQLOC, true);
+            if (Pathing.hasPath)
+                Pathing.navigateToWithPath(rc, HQLOC, true);
+            else Pathing.navigateTo(rc, HQLOC);
             // try to transfer ADAMANTIUM
             int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
             int mana = rc.getResourceAmount(ResourceType.MANA);
@@ -109,13 +116,14 @@ public strictfp class RunCarrier {
                 }
             }
         } else if (wellLoc == null) {
-            if (rc.getRoundNum() < 100)
-        	    exploreBFS(rc);
+            short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
+            if (board[me.x + me.y * width] == islandNum) {
+                return;
+            }  
+            if (rc.getRoundNum() < 300)
+                exploreBFS(rc);
             else {
-                short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
-                if (board[me.x + me.y * width] == islandNum) {
-                    return;
-                }    
+                attackEnemyIsland(rc);
                 // Move randomly
                 Direction dir = Pathing.currentDirection;
                 if (rc.canMove(dir)) {
@@ -124,6 +132,24 @@ public strictfp class RunCarrier {
                     Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
             }
+        }
+        while (wellLoc != null && Clock.getBytecodeNum() < 10000 && !Pathing.hasPath) {
+            Pathing.bfs(rc, wellLoc, HQLOC);
+        }
+    }
+
+    static void attackEnemyIsland(RobotController rc) throws GameActionException {
+        if (enemyIsland == null) {
+            enemyIsland = getClosestEnemyIsland(rc);
+        }
+        if (enemyIsland != null) {
+            me = rc.getLocation();
+            short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
+            if (board[me.x + me.y * width] == islandNum || board[me.x + me.y * width] == M_NISL) {
+                enemyIsland = null;
+                return;
+            }
+            Pathing.navigateTo(rc, enemyIsland);
         }
     }
 
@@ -259,9 +285,6 @@ public strictfp class RunCarrier {
         } 
         if (rc.canMove(me.directionTo(wellLoc))) {
             rc.move(me.directionTo(wellLoc));
-        }
-        while (Clock.getBytecodeNum() < 10000) {
-            Pathing.bfs(rc, wellLoc, HQLOC);
         }
     }
 

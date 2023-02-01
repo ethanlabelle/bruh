@@ -5,7 +5,6 @@ import battlecode.common.*;
 import static dev.Communication.*;
 
 import java.util.Random;
-import java.util.Arrays;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -36,23 +35,26 @@ public strictfp class RobotPlayer {
     };
 
 	// constants for local map
-	// we have 64 * 16 bits = 2^6 * 2^4 = 2^10 bits = 1024 bits
-	static final short M_HIDDEN = 0b0000;
-	static final short M_CLOUD = 0b0001;
-	static final short M_STORM = 0b0010;
-	static final short M_CURW = 0b0011;
-	static final short M_CURN = 0b0100;
-	static final short M_CURS = 0b0101;
-	static final short M_CURE = 0b0110;
-	static final short M_AISL = 0b0111;
-	static final short M_BISL = 0b1000;
-	static final short M_NISL = 0b1001;
-	static final short M_MANA = 0b1010;
-	static final short M_ADA = 0b1011;
-	static final short M_ELIX = 0b1100;
-	static final short M_AHQ = 0b1101;
-	static final short M_BHQ = 0b1110;
-	static final short M_EMPTY = 0b1111;
+	static final byte M_HIDDEN = 0b0000;
+	static final byte M_CLOUD = 0b0001;
+	static final byte M_STORM = 0b0010;
+	static final byte M_CURW = 0b0011;
+	static final byte M_CURN = 0b0100;
+	static final byte M_CURS = 0b0101;
+	static final byte M_CURE = 0b0110;
+	static final byte M_AISL = 0b0111;
+	static final byte M_BISL = 0b1000;
+	static final byte M_NISL = 0b1001;
+	static final byte M_MANA = 0b1010;
+	static final byte M_ADA = 0b1011;
+	static final byte M_ELIX = 0b1100;
+	static final byte M_AHQ = 0b1101;
+	static final byte M_BHQ = 0b1110;
+	static final byte M_EMPTY = 0b1111;
+	static final byte M_CURNW = 0b10000;
+	static final byte M_CURSW = 0b10001;
+	static final byte M_CURNE = 0b10010;
+	static final byte M_CURSE = 0b10011;
 	static byte[] board;
 	static int width;
 	static int height;
@@ -102,29 +104,6 @@ public strictfp class RobotPlayer {
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		enemyTeam = myTeam.opponent();
-		// if (rc.getType() != RobotType.LAUNCHER) {
-			// currentDirection = directions[rng.nextInt(directions.length)];
-		// }
-		// else {
-		// 	// make launcher go the opposite direction of the quadrant they were spawned in
-		// 	MapLocation loc = rc.getLocation();
-		// 	int x = loc.x;
-		// 	int y = loc.y;
-		// 	int map_width = rc.getMapWidth();
-		// 	int map_height = rc.getMapHeight();
-		// 	if (x < map_width / 2 && y < map_height / 2) {
-		// 		currentDirection = Direction.NORTHEAST;
-		// 	}
-		// 	else if (x < map_width / 2 && y >= map_height / 2) {
-		// 		currentDirection = Direction.SOUTHEAST;
-		// 	}
-		// 	else if (x >= map_width / 2 && y < map_height / 2) {
-		// 		currentDirection = Direction.NORTHWEST;
-		// 	}
-		// 	else {
-		// 		currentDirection = Direction.SOUTHWEST;
-		// 	}
-		// }
 		
 		if (rc.getType() == RobotType.HEADQUARTERS) {
 			Communication.addHeadquarter(rc);
@@ -203,6 +182,33 @@ public strictfp class RobotPlayer {
 						board[loc.x + loc.y * width] = M_STORM;
 					else
 						board[loc.x + loc.y * width] = M_EMPTY;
+					switch (mapInf.getCurrentDirection()) {
+						case NORTH:
+							board[loc.x + loc.y * width] = M_CURN;
+							break;
+						case SOUTH:
+							board[loc.x + loc.y * width] = M_CURS;
+							break;
+						case EAST:
+							board[loc.x + loc.y * width] = M_CURE;
+							break;
+						case WEST:
+							board[loc.x + loc.y * width] = M_CURW;
+							break;
+						case SOUTHWEST:
+							board[loc.x + loc.y * width] = M_CURSW;
+							break;
+						case SOUTHEAST:
+							board[loc.x + loc.y * width] = M_CURSE;
+							break;
+						case NORTHWEST:
+							board[loc.x + loc.y * width] = M_CURNW;
+							break;
+						case NORTHEAST:
+							board[loc.x + loc.y * width] = M_CURNE;
+							break;
+						default:
+					}
 				}
 			}
 
@@ -337,16 +343,9 @@ public strictfp class RobotPlayer {
 				}
 			}
 
-			// pick a random location within the action radius
-			MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
-			Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
-			for (int index = possBuild.length; --index > 0;) {
-				if (rc.canBuildRobot(unit, possBuild[index])) {
-					return possBuild[index];
-				}
-			}
-			
-			return null;
+			MapLocation center = new MapLocation(width/2, height/2);
+			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
+			return spawnLoc;
 		}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {

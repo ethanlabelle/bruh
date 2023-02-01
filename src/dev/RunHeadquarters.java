@@ -172,8 +172,8 @@ public strictfp class RunHeadquarters {
 		// 		turnCount++;
 		// 	}
 		// }	
-		i = 0;
-		while (i < 4) {
+		// i = 0;
+		while (i < 20) {
 			rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
 			if (loc != null) {
