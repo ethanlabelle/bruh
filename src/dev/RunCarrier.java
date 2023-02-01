@@ -134,9 +134,9 @@ public strictfp class RunCarrier {
             if (board[me.x + me.y * width] == islandNum) {
                 return;
             }  
-            // if (rc.getRoundNum() < 300)
-            //     exploreBFS(rc);
-            // else {
+            if (rc.getRoundNum() < 300)
+                exploreBFS(rc);
+            else {
                 // attackEnemyIsland(rc);
                 // Move randomly
                 Direction dir = Pathing.currentDirection;
@@ -145,7 +145,7 @@ public strictfp class RunCarrier {
                 } else if (rc.getMovementCooldownTurns() == 0) {
                     Pathing.currentDirection = directions[rng.nextInt(directions.length)];
                 }
-            // }
+            }
         }
         Communication.tryWriteMessages(rc);
         while (wellLoc != null && Clock.getBytecodeNum() < 10000 && !Pathing.hasPath) {
