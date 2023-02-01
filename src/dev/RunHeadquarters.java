@@ -161,17 +161,17 @@ public strictfp class RunHeadquarters {
 			}
 		}
 		int i = 0;
-		while (i < 4) {
-			rc.setIndicatorString("Trying to build a launcher");
-			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-			if (loc != null) {
-				rc.buildRobot(RobotType.LAUNCHER, loc);
-				i++;
-			} else {
-				Clock.yield();
-				turnCount++;
-			}
-		}	
+		// while (i < 4) {
+		// 	rc.setIndicatorString("Trying to build a launcher");
+		// 	MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+		// 	if (loc != null) {
+		// 		rc.buildRobot(RobotType.LAUNCHER, loc);
+		// 		i++;
+		// 	} else {
+		// 		Clock.yield();
+		// 		turnCount++;
+		// 	}
+		// }	
 		i = 0;
 		while (i < 4) {
 			rc.setIndicatorString("Trying to build a carrier");

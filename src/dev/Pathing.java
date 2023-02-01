@@ -2,6 +2,11 @@ package dev;
 
 import battlecode.common.*;
 import static dev.RobotPlayer.*;
+import java.util.Queue;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+
 public class Pathing {
 
     	// pathfinding state
@@ -18,6 +23,10 @@ public class Pathing {
     static boolean wallMode = false;
     static MapLocation lastLoc = null;
     static int stuckCounter = 0;
+    static Queue<MapLocation> bfsQ =  new LinkedList<MapLocation>();
+    static HashSet<MapLocation> visited = new HashSet<>();
+    static LinkedList<MapLocation> path = new LinkedList<>();
+    static HashMap<MapLocation, MapLocation> parents = new HashMap<>();
 
     static boolean atWellLoc(RobotController rc, MapLocation wellLoc) {
         if (wellLoc == null) return false;
@@ -32,12 +41,20 @@ public class Pathing {
     }
     // Navigation
     static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
+        if (path.size() > 0) {
+            MapLocation nextTile = path.getLast();
+            if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+                rc.move(rc.getLocation().directionTo(nextTile));
+                path.removeLast();
+            }
+        }
         if (rc.isMovementReady()) {
             bug2(rc, loc);
             if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
                 bug2(rc, loc);
             }
         }
+
     }
 
     static boolean hasObstacle(RobotController rc, Direction dir) throws GameActionException {
@@ -322,5 +339,50 @@ public class Pathing {
     static boolean onMLine(MapLocation loc) {
         float epsilon = 3f;
         return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
+    }
+
+    
+    static boolean bfs(RobotController rc, MapLocation src, MapLocation dst) throws GameActionException {
+        System.out.println(src + " " + dst);
+        if (visited.contains(dst)) {
+            MapLocation current = dst;
+            while (!current.equals(src)) {
+                path.add(current);
+                rc.setIndicatorDot(current, 255, 0, 0);
+                current = parents.get(current);
+            }
+            return true;
+        }
+        if (visited.size() == 0) {
+            visited.add(src);
+            rc.setIndicatorDot(src, 255, 0, 0);
+            for (int i = directions.length; --i >= 0; ) {
+                bfsQ.add(src.add(directions[i]));
+            }
+        }
+        if (bfsQ.size() > 0){
+            MapLocation next = bfsQ.remove();
+            if (visited.contains(next)) {
+                return false;
+            }
+            rc.setIndicatorDot(next, 0, 255, 0);
+            for (int i = directions.length; --i >= 0;) {
+                MapLocation adj = next.add(directions[i]);
+                if (!rc.onTheMap(adj))
+                    continue;
+                byte tile = board[adj.x + adj.y * width];
+                rc.setIndicatorDot(adj, 0, 0, 255);
+                if (tile == M_STORM || tile == M_HIDDEN) {
+                    visited.add(adj);
+                    continue;
+                }
+                if (!visited.contains(adj) && !parents.containsKey(adj)) {
+                    bfsQ.add(adj);
+                    parents.put(adj, next);
+                }
+            }
+            visited.add(next);
+        }
+        return false;
     }
 }

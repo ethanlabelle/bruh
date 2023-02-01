@@ -254,11 +254,14 @@ public strictfp class RunCarrier {
 				continue;
             if (!miningLoc.equals(me) && board[miningLoc.x + miningLoc.y * width] != M_STORM && rc.canSenseLocation(miningLoc) && rc.senseMapInfo(miningLoc).getCurrentDirection() == Direction.CENTER && rc.canMove(me.directionTo(miningLoc))) {
                 rc.move(me.directionTo(miningLoc));
-                return;
+                break;
             }
         } 
         if (rc.canMove(me.directionTo(wellLoc))) {
             rc.move(me.directionTo(wellLoc));
+        }
+        while (Clock.getBytecodeNum() < 10000) {
+            Pathing.bfs(rc, wellLoc, HQLOC);
         }
     }
 

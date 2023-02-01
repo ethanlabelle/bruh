@@ -414,7 +414,7 @@ class Communication {
         return answer;
     }
 
-    private static int locationToInt(RobotController rc, MapLocation m) {
+    static int locationToInt(RobotController rc, MapLocation m) {
         if (m == null) {
             return 0;
         }
@@ -432,7 +432,7 @@ class Communication {
             return out;
     }
 
-    private static MapLocation intToLocation(RobotController rc, int m) {
+    static MapLocation intToLocation(RobotController rc, int m) {
         if ((m & HQ_FLAG) == HQ_FLAG) {
             m &= not_HQ_FLAG;
         }
