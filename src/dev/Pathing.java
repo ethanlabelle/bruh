@@ -60,12 +60,17 @@ public class Pathing {
         int tile = RobotPlayer.board[loc.x + loc.y * width];
         if (tile == M_AHQ || tile == M_BHQ || tile == M_STORM)
             return true;
-        if (rc.getType() == RobotType.CARRIER && rc.getWeight() == 0)
-            return false;
         MapInfo tileInfo = rc.senseMapInfo(loc);
         Direction d = tileInfo.getCurrentDirection();
-        // return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
-        return d != Direction.CENTER && d != currentDirection;
+        if (rc.getType() == RobotType.CARRIER) {
+            if (rc.getWeight() < 10)
+                return false;
+            else return d != Direction.CENTER && d != currentDirection;
+        }
+        
+        // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
+        return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
+        // return d != Direction.CENTER && d != currentDirection;
     }    
     
     static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
@@ -346,7 +351,7 @@ public class Pathing {
     }
 
     static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
-        if (!(loc.equals(path.getLast()) || loc.equals(path.getFirst()))) {
+        if (path.size() == 0 || !(loc.equals(path.getLast()) || loc.equals(path.getFirst()))) {
             // reset path state
             pSrc = null;
             pDst = null;
@@ -429,8 +434,10 @@ public class Pathing {
             // System.out.println("starting bfs " + src + " " + dst);
             // System.out.println(visited.size());
             rc.setIndicatorDot(src, 255, 0, 0);
-            bfsQ.add(src);
-            parents.put(src, null);
+            if (board[src.x + src.y * width] != M_HIDDEN) {
+                bfsQ.add(src);
+                parents.put(src, null);
+            }
         }
         if (bfsQ.size() > 0){
             MapLocation next = bfsQ.remove();

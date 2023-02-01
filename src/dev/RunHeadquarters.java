@@ -11,8 +11,8 @@ public strictfp class RunHeadquarters {
 	static final int LAUNCHER_MOD = 10;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
 	static final int CARRIER_MOD = 15;
-	static final int MAX_CARRIERS = 15;
-	static final int EXCESS = 160;
+	static final int MAX_CARRIERS = 10;
+	static final int EXCESS = 100;
 	static int launcherCount = 0;
 	static int carrierCount = 0;
 
@@ -76,7 +76,7 @@ public strictfp class RunHeadquarters {
 
 		MapLocation loc;
         //if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
-        if (turnCount % 100 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
+        if (turnCount % 100 == 0) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);
@@ -161,19 +161,19 @@ public strictfp class RunHeadquarters {
 			}
 		}
 		int i = 0;
-		// while (i < 4) {
-		// 	rc.setIndicatorString("Trying to build a launcher");
-		// 	MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-		// 	if (loc != null) {
-		// 		rc.buildRobot(RobotType.LAUNCHER, loc);
-		// 		i++;
-		// 	} else {
-		// 		Clock.yield();
-		// 		turnCount++;
-		// 	}
-		// }	
-		// i = 0;
-		while (i < 20) {
+		while (i < 4) {
+			rc.setIndicatorString("Trying to build a launcher");
+			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+			if (loc != null) {
+				rc.buildRobot(RobotType.LAUNCHER, loc);
+				i++;
+			} else {
+				Clock.yield();
+				turnCount++;
+			}
+		}	
+		i = 0;
+		while (i < 4) {
 			rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
 			if (loc != null) {

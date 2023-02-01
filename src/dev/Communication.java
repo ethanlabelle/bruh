@@ -20,7 +20,7 @@ class Message {
 
 class Communication {
 
-    private static final int OUTDATED_TURNS_AMOUNT = 10;
+    private static final int OUTDATED_TURNS_AMOUNT = 30;
     private static final int AREA_RADIUS = RobotType.CARRIER.visionRadiusSquared;
 	private static final int N_SAVED_WELLS = GameConstants.MAX_STARTING_HEADQUARTERS;
 
@@ -30,7 +30,7 @@ class Communication {
     private static final int ADA_WELL_IDX = MANA_WELL_IDX + N_SAVED_WELLS; 
     private static final int EXTRA_MANA_IDX = ADA_WELL_IDX + N_SAVED_WELLS;
     private static final int STARTING_ENEMY_IDX = EXTRA_MANA_IDX + N_SAVED_WELLS;
-
+    private static final int N_SAVED_ENEMIES = 64-STARTING_ENEMY_IDX;
     private static final int TOTAL_BITS = 16;
     private static final int MAPLOC_BITS = 12;
     private static final int TEAM_BITS = 4;
@@ -321,7 +321,7 @@ class Communication {
     }
 
     static void clearObsoleteEnemies(RobotController rc) {
-        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+        for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
                 MapLocation mapLoc = intToLocation(rc, rc.readSharedArray(i));
                 if (mapLoc == null) {
@@ -340,7 +340,7 @@ class Communication {
 
     static void reportEnemy(RobotController rc, MapLocation enemy) throws GameActionException {
         int slot = -1;
-        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+        for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
                 MapLocation prevEnemy = intToLocation(rc, rc.readSharedArray(i));
                 if (prevEnemy == null) {
@@ -361,7 +361,7 @@ class Communication {
 
     static void reportEnemyHeadquarters(RobotController rc, MapLocation enemyHQ) throws GameActionException {
         int slot = -1;
-        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+        for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
                 MapLocation prevEnemy = intToLocation(rc, rc.readSharedArray(i));
                 if (prevEnemy == null) {
@@ -383,7 +383,7 @@ class Communication {
     static MapLocation[] getEnemyHeadquarters(RobotController rc) throws GameActionException {
         MapLocation[] hqs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
         int hqCounter = 0;
-        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+        for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             int value = rc.readSharedArray(i);
             if ((value & HQ_FLAG) == HQ_FLAG) {
                 hqs[hqCounter] = intToLocation(rc, value);
@@ -399,7 +399,7 @@ class Communication {
 
     static MapLocation getClosestEnemy(RobotController rc) throws GameActionException {
         MapLocation answer = null;
-        for (int i = STARTING_ENEMY_IDX; i < GameConstants.SHARED_ARRAY_LENGTH; i++) {
+        for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             final int value;
             try {
                 value = rc.readSharedArray(i);

@@ -21,7 +21,7 @@ public strictfp class RunAmplifier {
 
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);
-        friendlyRobots = rc.senseNearbyRobots(-1, myTeam);
+        friendlyRobots = rc.senseNearbyRobots(RobotType.AMPLIFIER.visionRadiusSquared/2, myTeam);
         
         avoidHQ(rc);
         // run away from enemy launchers
@@ -55,25 +55,25 @@ public strictfp class RunAmplifier {
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			Pathing.navigateTo(rc, defLoc);
-            Communication.clearObsoleteEnemies(rc);
             return;
 		}
+        Communication.clearObsoleteEnemies(rc);
 
-        if (defLoc == null) {
-            MapLocation neutralIslandLoc = null;
-            int minDist = 7200;
-            int id;
-            for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
-                Team team = Communication.readTeamHoldingIsland(rc, id);
-                MapLocation islLoc = Communication.readIslandLocation(rc, id);
-                if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
-                    neutralIslandLoc = Communication.readIslandLocation(rc, id);
-                    minDist = me.distanceSquaredTo(islLoc);
-                }
-            }
-            if (neutralIslandLoc != null)
-                Pathing.navigateTo(rc, neutralIslandLoc);
-        }
+        // if (defLoc == null) {
+        //     MapLocation neutralIslandLoc = null;
+        //     int minDist = 7200;
+        //     int id;
+        //     for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
+        //         Team team = Communication.readTeamHoldingIsland(rc, id);
+        //         MapLocation islLoc = Communication.readIslandLocation(rc, id);
+        //         if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
+        //             neutralIslandLoc = Communication.readIslandLocation(rc, id);
+        //             minDist = me.distanceSquaredTo(islLoc);
+        //         }
+        //     }
+        //     if (neutralIslandLoc != null)
+        //         Pathing.navigateTo(rc, neutralIslandLoc);
+        // }
 
         // Move randomly
         Direction dir = Pathing.currentDirection;

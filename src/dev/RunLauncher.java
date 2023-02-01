@@ -47,16 +47,20 @@ public strictfp class RunLauncher {
         if (isHealing && healingIsland != null) {
             attackEnemies(rc);
             cloudShot(rc);
+            Communication.clearObsoleteEnemies(rc);
+            Communication.clearOld();
             return;
         }
         
 		// look for targets to defend
-        if (rc.getRoundNum() > 50) {
+        if (turnCount > 400) {
             defLoc = Communication.getClosestEnemy(rc);
             if (defLoc != null) {
                 Pathing.navigateTo(rc, defLoc);
                 attackEnemies(rc);
                 cloudShot(rc);
+                Communication.clearObsoleteEnemies(rc);
+                Communication.clearOld();
                 return;
             }
         }
@@ -65,6 +69,8 @@ public strictfp class RunLauncher {
             moveLastResort(rc);
             attackEnemies(rc);
             cloudShot(rc);
+            Communication.clearObsoleteEnemies(rc);
+            Communication.clearOld();
             return;
         }
 
@@ -81,6 +87,7 @@ public strictfp class RunLauncher {
         attackEnemies(rc);
         avoidHQ(rc);
         cloudShot(rc);
+        Communication.clearObsoleteEnemies(rc);
         Communication.clearOld();
     }
 

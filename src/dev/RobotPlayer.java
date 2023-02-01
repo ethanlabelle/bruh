@@ -5,6 +5,7 @@ import battlecode.common.*;
 import static dev.Communication.*;
 
 import java.util.Random;
+import java.util.Arrays;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -132,7 +133,7 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
                 switch (rc.getType()) {
-						case HEADQUARTERS:     break;//RunHeadquarters.runHeadquarters(rc);  break;
+						case HEADQUARTERS:     RunHeadquarters.runHeadquarters(rc);  break;
 						case CARRIER:      RunCarrier.runCarrier(rc);   break;
 						case LAUNCHER: RunLauncher.runLauncher(rc); break;
 						case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
@@ -335,17 +336,26 @@ public strictfp class RobotPlayer {
 						return closeWell;
 					}
 				}
-			} else if (unit == RobotType.LAUNCHER) {
-				MapLocation center = new MapLocation(width/2, height/2);
-				MapLocation spawnLoc = getClosestLocation(rc, center, unit);
-				if (spawnLoc != null) {
-					return spawnLoc;
+			} 
+			// else if (unit == RobotType.LAUNCHER) {
+			// 	MapLocation center = new MapLocation(width/2, height/2);
+			// 	MapLocation spawnLoc = getClosestLocation(rc, center, unit);
+			// 	if (spawnLoc != null) {
+			// 		return spawnLoc;
+			// 	}
+			// }
+
+			// MapLocation center = new MapLocation(width/2, height/2);
+			// MapLocation spawnLoc = getClosestLocation(rc, center, unit);
+			// pick a random location within the action radius
+			MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+			Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
+			for (int index = possBuild.length; --index > 0;) {
+				if (rc.canBuildRobot(unit, possBuild[index])) {
+					return possBuild[index];
 				}
 			}
-
-			MapLocation center = new MapLocation(width/2, height/2);
-			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
-			return spawnLoc;
+			return null;
 		}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {
