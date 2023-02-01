@@ -263,9 +263,18 @@ public class Pathing {
                 //         rc.move(a);
                 // }
 				if (hasObstacle(rc, goalDir)) {
-					currentDirection = currentDirection.rotateLeft().rotateLeft();
-                    if (rc.canMove(currentDirection))
-                        rc.move(currentDirection);
+					Direction left = currentDirection.rotateLeft();
+                    if (rc.canMove(left)) {
+                        rc.move(left);
+                        currentDirection = left;
+                    }
+                    else {
+                        Direction right = currentDirection.rotateRight();
+                        if (rc.canMove(right)) {
+                            rc.move(right);
+                            currentDirection = right;
+                        }
+                    }
 				} else {
 					bugRandom(rc, goalLoc);
 				}
@@ -363,7 +372,7 @@ public class Pathing {
             currentPathIdx = -1;
             // System.out.println("clearing bfs state");
         }
-        if (path.size() > 0) {
+        if (path.size() > 2) {
             if (toHQ) {
                 if (currentPathIdx == -1) {
                     currentPathIdx = path.size() - 2;
@@ -375,11 +384,11 @@ public class Pathing {
                 //     currentPathIdx--;
                 // }
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) < 1)
+                if (rc.getLocation().distanceSquaredTo(nextTile) <= 3)
                     currentPathIdx--;
             }
             else {
-                if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 1) {
+                if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 3) {
                     return;
                 }
                 if (currentPathIdx == -1 || currentPathIdx == 0) {
@@ -389,8 +398,8 @@ public class Pathing {
                 rc.setIndicatorString("to well moving to " + nextTile);
                 rc.setIndicatorDot(nextTile, 255, 0, 0);
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) < 1) {
-                    if (currentPathIdx < path.size() - 1)
+                if (rc.getLocation().distanceSquaredTo(nextTile) <= 3) {
+                    if (currentPathIdx < path.size() - 2)
                         currentPathIdx++;
                 }
                 // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {

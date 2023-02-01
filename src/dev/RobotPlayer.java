@@ -60,6 +60,11 @@ public strictfp class RobotPlayer {
 	static int width;
 	static int height;
 
+	// symmetry
+	static boolean canHorizontal = true;
+    static boolean canVertical = true;
+    static boolean canRotational = true;
+
 
 	// map state
 	static MapLocation HQLOC;
@@ -423,5 +428,56 @@ public strictfp class RobotPlayer {
 			}
 		}
 		return bestLoc;
+	}
+	public static void updateVertical (RobotController rc) throws GameActionException {
+        if (!canVertical) {
+            return;
+        }
+        // TODO: currents can cause problems because of rotation
+        MapLocation me = rc.getLocation();
+		MapLocation[] sensable = rc.getAllLocationsWithinRadiusSquared(me,rc.getType().visionRadiusSquared);
+		for (int index = sensable.length; --index > 0;) {
+			int x = abs(me.x + 1 - width);
+			int y = me.y;
+			if (isDiff(board[me.x + me.y * width], board[x + y * width])) {
+				canVertical = false;
+				return;
+			}
+		}
+    }
+    public static void updateHorizontal (RobotController rc) throws GameActionException {
+        if (!canHorizontal) {
+            return;
+        }
+        // TODO: currents can cause problems because of rotation
+        MapLocation me = rc.getLocation();
+		MapLocation[] sensable = rc.getAllLocationsWithinRadiusSquared(me,rc.getType().visionRadiusSquared);
+		for (int index = sensable.length; --index > 0;) {
+			int x = me.x;
+			int y = abs(me.y + 1 - height);
+			if (isDiff(board[me.x + me.y * width], board[x + y * width])) {
+				canHorizontal = false;
+				return;
+			}
+		}
+    }
+    public static void updateRotational (RobotController rc) throws GameActionException {
+        if (!canRotational) {
+            return;
+        }
+        MapLocation me = rc.getLocation();
+		MapLocation[] sensable = rc.getAllLocationsWithinRadiusSquared(me,rc.getType().visionRadiusSquared);
+		for (int index = sensable.length; --index > 0;) {
+			int x = abs(me.x + 1 - width);
+			int y = abs(me.y + 1 - height);
+			if (isDiff(board[me.x + me.y * width], board[x + y * width])) {
+				canRotational = false;
+				return;
+			}
+		}
+    }
+	static boolean isDiff (short myBoard, short otherBoard) {
+		// TODO: this doesnt consider currents or things that can change like islands and wells
+		return myBoard != M_HIDDEN && otherBoard != M_HIDDEN && (myBoard == M_STORM || myBoard == M_CLOUD || myBoard == M_EMPTY) && myBoard != otherBoard;
 	}
 }

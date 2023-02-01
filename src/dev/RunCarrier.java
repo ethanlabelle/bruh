@@ -14,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 4;
+    static final int CARRIER_DIFF_MOD = 6;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -71,8 +71,10 @@ public strictfp class RunCarrier {
         else {
             pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
         }
-        if (wellLoc == null && pWellLoc != null)
-            wellLoc = pWellLoc;
+        if (pWellLoc != null) {
+            if (wellLoc == null || pWellLoc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))
+                wellLoc = pWellLoc;
+        }
         // }
 
         foundWell = false;
