@@ -168,6 +168,9 @@ public strictfp class RunLauncher {
                 possibleHQLocs[i * 3] = rotationalSym;
                 possibleHQLocs[i * 3 + 1] = verticalSym;
                 possibleHQLocs[i * 3 + 2] = horizontalSym;
+                rc.setIndicatorDot(verticalSym, 255, 0, 0);
+                rc.setIndicatorDot(horizontalSym, 255, 0, 0);
+                rc.setIndicatorDot(rotationalSym, 255, 0, 0);
             }
 
             if (count > 1) {
@@ -191,7 +194,7 @@ public strictfp class RunLauncher {
                                 }
                                 else 
                                     right = true;
-
+                                break;
                             case 1:
                                 if (x < verticalLine) {
                                     leftOfVerticalLine++;
@@ -201,6 +204,7 @@ public strictfp class RunLauncher {
                                     right = true;
                                 else
                                     verticalSymmetry = false;
+                                break;
                         }
 
                         switch (height % 2) {
@@ -211,7 +215,7 @@ public strictfp class RunLauncher {
                                 }
                                 else
                                     top = true;
-
+                                break;
                             case 1:
                                 if (y < horizontalLine) {
                                     belowHorizontalLine++;
@@ -221,9 +225,11 @@ public strictfp class RunLauncher {
                                     top = true;
                                 else
                                     horizontalSymmetry = false;
+                                break;
                         }
                     }
                 }
+                System.out.println("num below: " + belowHorizontalLine + " left " + left + " right " + right + " top " + top + " bottom " + bottom);
                 // check if horrizontal symmetry is possible with our headquarters
                 if (((leftOfVerticalLine == count || leftOfVerticalLine == 0) && top && bottom) || !horizontalSymmetry) {
                     possibleHQLocs[0 * 3 + 2] = null;
