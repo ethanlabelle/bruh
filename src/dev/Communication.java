@@ -119,10 +119,11 @@ class Communication {
     static MapLocation getClosestHeadquarters(RobotController rc) throws GameActionException {
 		int minDist = 7200;
 		MapLocation closestHQ = null;
-        for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
+        MapLocation me = rc.getLocation();
+        for (int i = GameConstants.MAX_STARTING_HEADQUARTERS; --i >= 0;) {
             MapLocation loc = headquarterLocs[i];
-			if (loc.distanceSquaredTo(rc.getLocation()) < minDist) {
-				minDist = loc.distanceSquaredTo(rc.getLocation());
+			if (loc != null && loc.distanceSquaredTo(me) < minDist) {
+				minDist = loc.distanceSquaredTo(me);
 				closestHQ = loc;
 			}
         }
