@@ -64,12 +64,13 @@ public class Pathing {
             }
             else {
                 if (currentPathIdx == -1) {
-                    currentPathIdx = 2;
+                    currentPathIdx = 0;
                 }
                 MapLocation nextTile = path.get(currentPathIdx);
                 if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
                     rc.move(rc.getLocation().directionTo(nextTile));
-                    currentPathIdx++;
+                    if (currentPathIdx < path.size() - 1)
+                        currentPathIdx++;
                 }
             }
         }
