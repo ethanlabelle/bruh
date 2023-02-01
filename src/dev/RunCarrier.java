@@ -26,12 +26,11 @@ public strictfp class RunCarrier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
 	static void runCarrier(RobotController rc) throws GameActionException {
-        // if (rc.getRoundNum() == 2) {
-        //     earlyAda = true;
-        // } else if (rc.getRoundNum() == 3 && !earlyAda) {
-        //     earlyMana = true;
-        // }
-        if (rc.getRoundNum() < 50) {
+        if (rc.getRoundNum() == 2) {
+            earlyAda = true;
+        } else if (rc.getRoundNum() == 3 && !earlyAda) {
+            earlyMana = true;
+        } else if (rc.getRoundNum() < 200) {
             earlyMana = true;
         }
         updateMap(rc);
