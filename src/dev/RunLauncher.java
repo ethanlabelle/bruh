@@ -48,7 +48,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        // if (turnCount > 100) {
+        if (turnCount > 100) {
             defLoc = Communication.getClosestEnemy(rc);
             if (defLoc != null) {
                 Pathing.navigateTo(rc, defLoc);
@@ -58,7 +58,7 @@ public strictfp class RunLauncher {
                 Communication.clearOld();
                 return;
             }
-        // }
+        }
 
         if (move_randomly) {
             moveLastResort(rc);
@@ -664,47 +664,50 @@ public strictfp class RunLauncher {
     }
     
     static void cloudShot(RobotController rc) throws GameActionException {
+        rc.setIndicatorString("cloud shot");
         if (rc.isActionReady()) {
-            enemies = getEnemies(rc);
-            if (enemies.length == 0) {
-                if (!rc.senseCloud(rc.getLocation())) {
-                    // sense nearby clouds and attack a location in there
-                    MapLocation[] clouds = rc.senseNearbyCloudLocations();
-                    for (int i = clouds.length; --i >= 0;) {
-                        int j;
-                        if (i == 0) {
-                            j = i;
-                        } else {
-                            j = rng.nextInt(i);
-                        }
-                        if (!(rc.getLocation().distanceSquaredTo(clouds[j]) <= 4) && rc.canAttack(clouds[j])) {
-                            rc.attack(clouds[j]);
-                            return;
-                        }
+            rc.setIndicatorString("head empty");
+            if (!rc.senseCloud(rc.getLocation())) {
+                // sense nearby clouds and attack a location in there
+                MapLocation[] clouds = rc.senseNearbyCloudLocations();
+                for (int i = clouds.length; --i >= 0;) {
+                    int j;
+                    if (i == 0) {
+                        j = i;
+                    } else {
+                        j = rng.nextInt(i);
                     }
-                    for (int i = clouds.length; --i >= 0;) {
-                        if (!(rc.getLocation().distanceSquaredTo(clouds[i]) <= 4) && rc.canAttack(clouds[i])) {
-                            rc.attack(clouds[i]);
-                            return;
-                        }
-                    }
-                } else {
-                    MapLocation attackLoc;
-                    switch(Pathing.currentDirection) {
-                        case NORTHWEST:
-                        case SOUTHWEST:
-                        case NORTHEAST:
-                        case SOUTHEAST:
-                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
-                            break;
-                        default:
-                            attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
-                    }
-                    if (rc.canAttack(attackLoc)) {
-                        rc.attack(attackLoc);
+                    if (!(rc.getLocation().distanceSquaredTo(clouds[j]) <= 4) && rc.canAttack(clouds[j])) {
+                        rc.attack(clouds[j]);
+                        return;
                     }
                 }
-            }
+                for (int i = clouds.length; --i >= 0;) {
+                    if (rc.canAttack(clouds[i])) {
+                        rc.attack(clouds[i]);
+                        return;
+                    }
+                }
+            } 
+            
+            // else {
+            //     MapLocation attackLoc;
+            //     switch(Pathing.currentDirection) {
+            //         case NORTHWEST:
+            //         case SOUTHWEST:
+            //         case NORTHEAST:
+            //         case SOUTHEAST:
+            //             attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
+            //             break;
+            //         default:
+            //             attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
+            //     }
+            //     if (rc.canAttack(attackLoc)) {
+            //         rc.attack(attackLoc);
+            //     }
+            // }
+        } else {
+            rc.setIndicatorString("not action ready");
         }
     }
 

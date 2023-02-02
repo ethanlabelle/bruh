@@ -10,7 +10,7 @@ public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 30;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 15;
+	static final int CARRIER_MOD = 20;
 	static final int MAX_CARRIERS = 10;
 	static final int EXCESS = 100;
 	static int launcherCount = 0;
@@ -66,7 +66,7 @@ public strictfp class RunHeadquarters {
 		}
 
         // Pick a direction to build in.
-        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0) {
+        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0 && turnCount % 100 == 0) {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
             rc.setIndicatorString("Building anchor!");

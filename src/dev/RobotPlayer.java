@@ -213,6 +213,9 @@ public strictfp class RobotPlayer {
 						default:
 					}
 				}
+				if (rc.senseCloud(loc)) {
+					board[loc.x + loc.y * width] = M_CLOUD;
+				}
 			}
 
 			length = robotInfos.length;

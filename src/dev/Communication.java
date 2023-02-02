@@ -37,7 +37,7 @@ class Communication {
     private static final int ENEMY_LOCATION_MASK = 0b111111111111;
     private static final int HQ_FLAG = 1 << 12;
 	private static final int MESSAGE_QUEUE_SIZE = 500;
-    private static final int MESSAGE_LIMIT = 5;
+    private static final int MESSAGE_LIMIT = 20;
     // private static Queue<Message> messagesQueue =  new LinkedList<Message>();
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
 	private static int head = 0;

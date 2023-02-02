@@ -30,7 +30,8 @@ public strictfp class RunCarrier {
             earlyAda = true;
         } else if (rc.getRoundNum() == 3 && !earlyAda) {
             earlyMana = true;
-        } else if (rc.getRoundNum() < 50) {
+        } 
+        else if (rc.getRoundNum() < 200) {
             earlyMana = true;
         }
         updateMap(rc);
@@ -69,6 +70,7 @@ public strictfp class RunCarrier {
         } 
         else {
             pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
+            rc.setIndicatorString(pWellLoc + "");
             if (pWellLoc == null && !earlyMana) {
                 pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
             }
@@ -104,6 +106,7 @@ public strictfp class RunCarrier {
             mine(rc);
 		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
             if (isWellFull(rc, wellLoc)) {
+                rc.setIndicatorString("banning " + wellLoc);
                 bannedWells[banCounter] = wellLoc;
                 wellLoc = null;
                 banCounter = ++banCounter % BAN_LIST_SIZE;

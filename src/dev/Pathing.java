@@ -69,13 +69,49 @@ public class Pathing {
                 return false;
             // else return d != Direction.CENTER && d != currentDirection;
         }
-        
+        // if (rc.getType() == RobotType.LAUNCHER) {
+        //     if (board[loc.x + loc.y * width] == M_CLOUD) {
+        //         return true;
+        //     }
+        // }
         // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
         return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
         // return d != Direction.CENTER && d != currentDirection;
     }    
     
     static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
+        MapLocation me = rc.getLocation();
+        if (rc.getType() == RobotType.LAUNCHER) {
+            MapLocation tile = me.add(dir);
+            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, dir) && rc.canMove(dir)) {
+                rc.move(dir);
+                return true;
+            }
+            Direction right = dir.rotateRight();
+            tile = me.add(right);
+            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, right) && rc.canMove(right)) {
+                rc.move(right);
+                return true;
+            }
+            Direction left = dir.rotateLeft();
+            tile = me.add(left);
+            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, left) && rc.canMove(left)) {
+                rc.move(left);
+                return true;
+            }
+            Direction rightRight = dir.rotateRight().rotateRight();
+            tile = me.add(rightRight);
+            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, rightRight) && rc.canMove(rightRight)) {
+                rc.move(rightRight);
+                return true;
+            }
+            Direction leftLeft = dir.rotateLeft().rotateLeft();
+            tile = me.add(leftLeft);
+            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, leftLeft) && rc.canMove(leftLeft)) {
+                rc.move(leftLeft);
+                return true;
+            }
+        }
         if (!hasObstacle(rc, dir) && rc.canMove(dir)) {
             rc.move(dir);
             return true;
@@ -256,30 +292,32 @@ public class Pathing {
                 hitPoint = rc.getLocation();
             } else {
                 //bugRandom(rc, goalLoc);
-                // Direction a = currentDirection.rotateLeft().rotateLeft();
-                // if (rc.canMove(a))
-                //     rc.move(a);
-                // else {
-                //     a = currentDirection.rotateRight().rotateRight();
-                //     if (rc.canMove(a))
-                //         rc.move(a);
-                // }
-				if (hasObstacle(rc, goalDir)) {
-					Direction left = currentDirection.rotateLeft();
-                    if (rc.canMove(left)) {
-                        rc.move(left);
-                        currentDirection = left;
-                    }
-                    else {
-                        Direction right = currentDirection.rotateRight();
-                        if (rc.canMove(right)) {
-                            rc.move(right);
-                            currentDirection = right;
-                        }
-                    }
-				} else {
-					bugRandom(rc, goalLoc);
-				}
+                Direction a = currentDirection.rotateLeft().rotateLeft();
+                if (rc.canMove(a))
+                    rc.move(a);
+                else {
+                    a = currentDirection.rotateRight().rotateRight();
+                    if (rc.canMove(a))
+                        rc.move(a);
+                    else 
+                        bugRandom(rc, goalLoc);
+                }
+				// if (hasObstacle(rc, goalDir)) {
+				// 	Direction left = currentDirection.rotateLeft();
+                //     if (rc.canMove(left)) {
+                //         rc.move(left);
+                //         currentDirection = left;
+                //     }
+                //     else {
+                //         Direction right = currentDirection.rotateRight();
+                //         if (rc.canMove(right)) {
+                //             rc.move(right);
+                //             currentDirection = right;
+                //         }
+                //     }
+				// // } else {
+				// 	bugRandom(rc, goalLoc);
+				// }
             }
         }
         
@@ -289,13 +327,13 @@ public class Pathing {
 
             // check if we are on the line
 
-            if (onMLine(rc.getLocation())) {
-                rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
-            }
+            // if (onMLine(rc.getLocation())) {
+            //     rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
+            // }
             if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) < hitPoint.distanceSquaredTo(goalLoc)) {
                 // if we are on the line, we are done wall following
                 wallMode = false;
-                rc.setIndicatorString("left wall");
+                // rc.setIndicatorString("left wall");
                 return;
             }
 
@@ -307,26 +345,26 @@ public class Pathing {
                 Direction moveDirection = currentDirection.rotateRight().rotateRight();
                 if (tryMove(rc, moveDirection)) {
                     currentDirection = moveDirection;
-                    rc.setIndicatorString("turning right " + currentDirection);
+                    // rc.setIndicatorString("turning right " + currentDirection);
                 } else if (rc.getMovementCooldownTurns() == 0) {
-                    rc.setIndicatorString("could not turn right " + moveDirection);
+                    // rc.setIndicatorString("could not turn right " + moveDirection);
                     bugRandom(rc, goalLoc);
                 }
             } else if (!frontRight) {
                 Direction moveDirection = currentDirection.rotateRight();
                 if (tryMove(rc, moveDirection)) {
                     currentDirection = moveDirection;
-                    rc.setIndicatorString("turning front right " + currentDirection);
+                    // rc.setIndicatorString("turning front right " + currentDirection);
                 } else if (rc.getMovementCooldownTurns() == 0){
-                    rc.setIndicatorString("could not turn front right " + moveDirection);
+                    // rc.setIndicatorString("could not turn front right " + moveDirection);
                     bugRandom(rc, goalLoc);
                 }
             } else if (!front) {
-                if (tryMove(rc, currentDirection))
-                    rc.setIndicatorString("moving forward " + currentDirection);
+                tryMove(rc, currentDirection);
+                    // rc.setIndicatorString("moving forward " + currentDirection);
             } else {
                 turnLeft();
-                rc.setIndicatorString("turning left " + currentDirection);
+                // rc.setIndicatorString("turning left " + currentDirection);
             }
         }
         rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
@@ -412,6 +450,7 @@ public class Pathing {
             return;
         }
         if (rc.isMovementReady()) {
+            rc.setIndicatorString("here");
             bug2(rc, loc);
             if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
                 bug2(rc, loc);
