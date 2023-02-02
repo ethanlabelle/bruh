@@ -23,8 +23,10 @@ public class Pathing {
     static boolean wallMode = false;
     static MapLocation lastLoc = null;
     static int stuckCounter = 0;
-    static Queue<MapLocation> bfsQ =  new LinkedList<MapLocation>();
-    static HashSet<MapLocation> visited = new HashSet<>();
+    static MapLocation undefined_loc = new MapLocation(-1, -1);
+    static Queue<MapLocation> bfsQ =  new LinkedList<>();
+    // static HashSet<MapLocation> visited = new HashSet<>();
+    static HashSet<MapLocation> hidden = new HashSet<>();
     static LinkedList<MapLocation> path = new LinkedList<>();
     static HashMap<MapLocation, MapLocation> parents = new HashMap<>();
     static int currentPathIdx = -1;
@@ -65,7 +67,7 @@ public class Pathing {
         if (rc.getType() == RobotType.CARRIER) {
             if (rc.getWeight() < 10)
                 return false;
-            else return d != Direction.CENTER && d != currentDirection;
+            // else return d != Direction.CENTER && d != currentDirection;
         }
         
         // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
@@ -364,10 +366,10 @@ public class Pathing {
             // reset path state
             pSrc = null;
             pDst = null;
-            visited.clear();
+            // visited.clear();
             path.clear();
-            bfsQ.clear();
-            parents.clear();
+            // bfsQ.clear();
+            // parents.clear();
             hasPath = false;
             currentPathIdx = -1;
             // System.out.println("clearing bfs state");
@@ -384,11 +386,11 @@ public class Pathing {
                 //     currentPathIdx--;
                 // }
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 3)
+                if (rc.getLocation().distanceSquaredTo(nextTile) <= 2)
                     currentPathIdx--;
             }
             else {
-                if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 3) {
+                if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 2) {
                     return;
                 }
                 if (currentPathIdx == -1 || currentPathIdx == 0) {
@@ -398,7 +400,7 @@ public class Pathing {
                 rc.setIndicatorString("to well moving to " + nextTile);
                 rc.setIndicatorDot(nextTile, 255, 0, 0);
                 bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 3) {
+                if (rc.getLocation().distanceSquaredTo(nextTile) <= 2) {
                     if (currentPathIdx < path.size() - 2)
                         currentPathIdx++;
                 }
@@ -418,20 +420,34 @@ public class Pathing {
     }
 
     static boolean bfs(RobotController rc, MapLocation src, MapLocation dst) throws GameActionException {
-        if (pDst == null || pSrc == null || !src.equals(pSrc) || !dst.equals(pDst)) {
+        
+        // clear old path/init pathing src/dst
+        if (pSrc == null || !src.equals(pSrc)) {
             pSrc = src;
-            pDst = dst;
-            visited.clear();
-            path.clear();
-            bfsQ.clear();
-            parents.clear();
             hasPath = false;
             currentPathIdx = -1;
-            // System.out.println("clearing bfs state");
+            path.clear();
+            // visited.clear();
+            parents.clear();
+            bfsQ.clear();
         }
-        if (visited.contains(dst) && path.isEmpty()) {
+
+        else if (dst != null && !dst.equals(pDst)) {
+            pDst = dst;
+            path.clear();
+        }
+        // if (dst == null || pSrc == null || !src.equals(pSrc) || !dst.equals(pDst)) {
+        //     pSrc = src;
+        //     pDst = dst;
+        //     path.clear();
+        //     hasPath = false;
+        //     currentPathIdx = -1;
+        // }
+
+        // constructs paths
+        else if (dst != null && parents.containsKey(dst) && path.isEmpty()) {
             MapLocation current = dst;
-            while (current != null) {
+            while (!current.equals(undefined_loc)) {
                 path.add(current);
                 rc.setIndicatorDot(current, 255, 0, 0);
                 current = parents.get(current);
@@ -439,31 +455,31 @@ public class Pathing {
             Pathing.hasPath = true;
             return true;
         }
-        if (bfsQ.size() == 0) {
-            // System.out.println("starting bfs " + src + " " + dst);
-            // System.out.println(visited.size());
+        else if (bfsQ.size() == 0) {
             rc.setIndicatorDot(src, 255, 0, 0);
             if (board[src.x + src.y * width] != M_HIDDEN) {
                 bfsQ.add(src);
-                parents.put(src, null);
+                parents.put(src, undefined_loc);
             }
         }
-        if (bfsQ.size() > 0){
+        else if (bfsQ.size() > 0){
             MapLocation next = bfsQ.remove();
-            if (visited.contains(next)) {
-                return false;
-            }
+            // System.out.println("" + next);
+            // if (parents.containsKey(next)) {
+            //     System.out.println("oops");
+            //     return false;
+            // }
             rc.setIndicatorDot(next, 0, 255, 0);
             for (int i = directions.length; --i >= 0;) {
                 MapLocation adj = next.add(directions[i]);
                 if (!rc.onTheMap(adj))
                     continue;
                 byte tile = board[adj.x + adj.y * width];
-                rc.setIndicatorDot(adj, 0, 0, 255);
+                // rc.setIndicatorDot(adj, 0, 0, 255);
                 switch (tile) {
                     case M_STORM:
                     case M_HIDDEN:
-                        visited.add(adj);
+                        parents.put(adj, next);
                         continue;
                     case M_CURN:
                     case M_CURS:
@@ -473,16 +489,15 @@ public class Pathing {
                     case M_CURNW:
                     case M_CURSE:
                     case M_CURSW:
-                        visited.add(adj);
+                        parents.put(adj, next);
                         continue;
                     default:
                 }
-                if (!visited.contains(adj) && !parents.containsKey(adj)) {
+                if (!parents.containsKey(adj)) {
                     bfsQ.add(adj);
                     parents.put(adj, next);
                 }
             }
-            visited.add(next);
         }
         return false;
     }

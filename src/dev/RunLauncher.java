@@ -14,7 +14,6 @@ public strictfp class RunLauncher {
     static boolean move_randomly = false;
     static MapLocation possibleEnemyLOC;
     static int fake_id = 0;
-    static MapLocation undefined_loc = new MapLocation(-1, -1);
     static MapLocation center = new MapLocation(width/2, height/2);
     static final int minimum_health = RobotType.LAUNCHER.health/2;
     static final int maximum_health = RobotType.LAUNCHER.health;
@@ -33,10 +32,6 @@ public strictfp class RunLauncher {
         attackEnemies(rc);
         if (turnCount != 1)
             updateMap(rc);
-        else
-            HQLOC = rc.getLocation();
-        
-        avoidHQ(rc);
         
         // attack enemy islands
         attackEnemyIsland(rc);
@@ -47,7 +42,7 @@ public strictfp class RunLauncher {
         if (isHealing && healingIsland != null) {
             attackEnemies(rc);
             cloudShot(rc);
-            Communication.clearObsoleteEnemies(rc);
+            // Communication.clearObsoleteEnemies(rc);
             Communication.clearOld();
             return;
         }
@@ -69,13 +64,13 @@ public strictfp class RunLauncher {
             moveLastResort(rc);
             attackEnemies(rc);
             cloudShot(rc);
-            Communication.clearObsoleteEnemies(rc);
+            // Communication.clearObsoleteEnemies(rc);
             Communication.clearOld();
             return;
         }
 
         // want to stop 'outside' HQ action radius
-        if(EnemyHQLOC != null && !EnemyHQLOC.equals(undefined_loc)) {
+        if(EnemyHQLOC != null && !EnemyHQLOC.equals(Pathing.undefined_loc)) {
             if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
                 Pathing.navigateTo(rc, EnemyHQLOC);
                 checkForFriends(rc, EnemyHQLOC);
@@ -85,9 +80,9 @@ public strictfp class RunLauncher {
         }
 
         attackEnemies(rc);
-        avoidHQ(rc);
         cloudShot(rc);
-        Communication.clearObsoleteEnemies(rc);
+        avoidHQ(rc);
+        // Communication.clearObsoleteEnemies(rc);
         Communication.clearOld();
     }
 
@@ -598,7 +593,7 @@ public strictfp class RunLauncher {
         if(rc.canSenseLocation(hq_loc)){
             RobotInfo[] friends = rc.senseNearbyRobots(hq_loc, 2, myTeam);
             if(friends.length >= 4){
-                EnemyHQLOC = undefined_loc;
+                EnemyHQLOC = Pathing.undefined_loc;
             }
         }
     }
@@ -612,6 +607,7 @@ public strictfp class RunLauncher {
         if (isHealing && rc.getHealth() >= maximum_health) {
             isHealing = false;
             healingIsland = null;
+            return;
         }
 
         // check if need to go to island

@@ -17,7 +17,9 @@ public strictfp class RunAmplifier {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runAmplifier(RobotController rc) throws GameActionException {
-        updateMap(rc);
+        
+        if (turnCount != 1)
+            updateMap(rc);
 
         me = rc.getLocation();
         enemyRobots = rc.senseNearbyRobots(-1, enemyTeam);

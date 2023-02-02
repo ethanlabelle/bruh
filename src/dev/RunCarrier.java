@@ -14,7 +14,7 @@ public strictfp class RunCarrier {
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
-    static final int CARRIER_DIFF_MOD = 6;
+    static final int CARRIER_DIFF_MOD = 4;
     static List<MapLocation> bfsQ = new LinkedList<>();
     static MapLocation exploreGoal;
     static boolean earlyAda = false;
@@ -30,7 +30,7 @@ public strictfp class RunCarrier {
             earlyAda = true;
         } else if (rc.getRoundNum() == 3 && !earlyAda) {
             earlyMana = true;
-        } else if (rc.getRoundNum() < 200) {
+        } else if (rc.getRoundNum() < 50) {
             earlyMana = true;
         }
         updateMap(rc);
@@ -50,7 +50,7 @@ public strictfp class RunCarrier {
         if (enemyRobots.length > 0) {
             for (RobotInfo robot: enemyRobots) {
                 if (robot.type == RobotType.LAUNCHER) {
-			        Communication.reportEnemy(rc, robot.location);
+			        // Communication.reportEnemy(rc, robot.location);
                     if (getTotalResources(rc) < 5)
                         runAway(rc);
                     break;
@@ -61,7 +61,7 @@ public strictfp class RunCarrier {
             carryAnchor(rc);
             return;
         }
-		
+
         // if (wellLoc == null) {
         MapLocation pWellLoc;
         if (!earlyMana && (rc.getID() % CARRIER_DIFF_MOD == 0 || earlyAda)) {
@@ -78,10 +78,17 @@ public strictfp class RunCarrier {
                 wellLoc = pWellLoc;
         }
         // }
+        
+        if (wellLoc != null && pWellLoc == null) {
+            Pathing.navigateTo(rc, HQLOC);
+            Pathing.navigateTo(rc, HQLOC);
+            Communication.tryWriteMessages(rc);
+            return;
+        }
 
         foundWell = false;
 		// find resources
-        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 39) {
+        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
             if (Pathing.hasPath) {
                 Pathing.navigateToWithPath(rc, wellLoc, true);
                 Pathing.navigateToWithPath(rc, wellLoc, true);
@@ -92,10 +99,10 @@ public strictfp class RunCarrier {
         // Try to gather from assigned well.
         if (wellLoc != null)
             rc.setIndicatorString("wellLoc " + wellLoc + " " + rc.canCollectResource(wellLoc, -1) + " "  + rc.getLocation());
-		if (wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
+		if (wellLoc != null && rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
             rc.setIndicatorString("trying to mine");
             mine(rc);
-		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 39) {
+		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
             if (isWellFull(rc, wellLoc)) {
                 bannedWells[banCounter] = wellLoc;
                 wellLoc = null;
@@ -104,7 +111,7 @@ public strictfp class RunCarrier {
         }
 
 		// try to deposite resources
-        if (getTotalResources(rc) >= 39) {
+        if (getTotalResources(rc) >= 40) {
             HQLOC = Communication.getClosestHeadquarters(rc);
             if (Pathing.hasPath) {
                 Pathing.navigateToWithPath(rc, HQLOC, false);
@@ -150,8 +157,15 @@ public strictfp class RunCarrier {
             }
         }
         Communication.tryWriteMessages(rc);
-        while (wellLoc != null && Clock.getBytecodeNum() < 10000 && !Pathing.hasPath) {
+        // System.out.println(Clock.getBytecodeNum());
+        while (Clock.getBytecodeNum() < 10000) {
+            // int before = Clock.getBytecodeNum();
             Pathing.bfs(rc, HQLOC, wellLoc);
+            // int after = Clock.getBytecodeNum();
+            // // if (Math.abs(after-before) > 1000) System.out.println(after-before);
+            // if (before > after) {
+            //     System.out.println(after-before+12500);
+            // } else System.out.println(after-before);
         }
     }
 
@@ -306,7 +320,7 @@ public strictfp class RunCarrier {
     }
 
     static boolean isWellFull(RobotController rc, MapLocation well) throws GameActionException {
-        int spots = 1;
+        int spots = 0;
         int taken = 0;
         for (int i = directions.length; --i >= 0;) {
             MapLocation miningLoc = wellLoc.add(directions[i]);
@@ -324,11 +338,11 @@ public strictfp class RunCarrier {
                     taken++;
             }
         }
-        if (rc.canSenseRobotAtLocation(wellLoc)) {
-            RobotInfo r = rc.senseRobotAtLocation(wellLoc);
-            if (r.team == myTeam)
-                taken++;
-        }
+        // if (rc.canSenseRobotAtLocation(wellLoc)) {
+        //     RobotInfo r = rc.senseRobotAtLocation(wellLoc);
+        //     if (r.team == myTeam)
+        //         taken++;
+        // }
         return spots == taken; 
     }
     

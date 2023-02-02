@@ -3,8 +3,6 @@ package dev;
 
 import java.util.HashSet;
 import battlecode.common.*;
-import java.util.Queue;
-import java.util.LinkedList;
 
 class Message {
     public int idx;
@@ -36,62 +34,61 @@ class Communication {
     private static final int TEAM_BITS = 4;
     private static final int TEAM_MASK = 0b1111;
 
+    private static final int ENEMY_LOCATION_MASK = 0b111111111111;
     private static final int HQ_FLAG = 1 << 12;
-    private static final int not_HQ_FLAG = ~HQ_FLAG;
-	// private static final int MESSAGE_QUEUE_SIZE = 500;
-    private static final int MESSAGE_LIMIT = 10;
-    private static Queue<Message> messagesQueue =  new LinkedList<Message>();
-    // private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
-	// private static int head = 0;
-	// private static int tail = 0;
+	private static final int MESSAGE_QUEUE_SIZE = 500;
+    private static final int MESSAGE_LIMIT = 5;
+    // private static Queue<Message> messagesQueue =  new LinkedList<Message>();
+    private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
+	private static int head = 0;
+	private static int tail = 0;
     public static MapLocation[] headquarterLocs = new MapLocation[GameConstants.MAX_STARTING_HEADQUARTERS];
     
     // a set of headquarterLocs
     public static HashSet<MapLocation> headquarterLocsSet = new HashSet<MapLocation>();
+    // set of well locations
+    public static HashSet<MapLocation> manaWellLocsSet = new HashSet<>();
 
-	// static void add(Message m) throws GameActionException {
-	// 	if (messagesQueue[tail] == null)
-	// 		messagesQueue[tail] = m;
-	// 	else
-	// 	   	System.out.println(messagesQueue[-1]);
-	// 	tail = ++tail % MESSAGE_QUEUE_SIZE;	
-	// }
+	static void add(Message m) throws GameActionException {
+		if (messagesQueue[tail] == null)
+			messagesQueue[tail] = m;
+		else
+		   	System.out.println(messagesQueue[-1]);
+		tail = ++tail % MESSAGE_QUEUE_SIZE;	
+	}
 
-	// static Message pop() throws GameActionException {
-	// 	if (messagesQueue[head] == null)
-	// 	   	System.out.println(messagesQueue[-1]);
-	// 	Message toRet = messagesQueue[head];
-	// 	messagesQueue[head] = null;
-	// 	head = ++head % MESSAGE_QUEUE_SIZE;
-	// 	return toRet;
-	// }
+	static Message pop() throws GameActionException {
+		if (messagesQueue[head] == null)
+		   	System.out.println(messagesQueue[-1]);
+		Message toRet = messagesQueue[head];
+		messagesQueue[head] = null;
+		head = ++head % MESSAGE_QUEUE_SIZE;
+		return toRet;
+	}
 
-	// static int queueSize() throws GameActionException {
-	// 	if (head > tail) {
-	// 		return tail + MESSAGE_QUEUE_SIZE - head;
-	// 	}
-	// 	return tail - head;
-	// }
+	static int queueSize() throws GameActionException {
+        return head > tail? tail + MESSAGE_QUEUE_SIZE - head: tail - head;
+	}
 
-    // //messagesQueue.removeIf(msg -> msg.turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount);
-	// static void clearOld() throws GameActionException {
-	// 	while (messagesQueue[head] != null) {
-	// 		if (messagesQueue[head].turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount)
-	// 			pop();	
-	// 		else 
-	// 			return;
-	// 	}
-	// }
-    static void clearOld() throws GameActionException {
-        while (messagesQueue.size() > 0) {
-            Message msg = messagesQueue.peek();
-            if (msg.turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount) {
-                messagesQueue.remove();
-            } else {
-                break;
-            }
-        }
-    }
+    //messagesQueue.removeIf(msg -> msg.turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount);
+	static void clearOld() throws GameActionException {
+		while (messagesQueue[head] != null) {
+			if (messagesQueue[head].turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount)
+				pop();	
+			else 
+				return;
+		}
+	}
+    // static void clearOld() throws GameActionException {
+    //     while (messagesQueue.size() > 0) {
+    //         Message msg = messagesQueue.peek();
+    //         if (msg.turnAdded + OUTDATED_TURNS_AMOUNT < RobotPlayer.turnCount) {
+    //             messagesQueue.remove();
+    //         } else {
+    //             break;
+    //         }
+    //     }
+    // }
 
     static void addHeadquarter(RobotController rc) throws GameActionException {
         MapLocation me = rc.getLocation();
@@ -135,29 +132,42 @@ class Communication {
         int counter = 0;
         // Can always write (0, 0), so just checks are we in range to write
         if (rc.canWriteSharedArray(0, 0)) {
-            while (messagesQueue.size() > 0 && counter < MESSAGE_LIMIT) {
-                Message msg = messagesQueue.remove();
-                if (msg.idx == EXTRA_MANA_IDX) {
+            while ((head > tail ? tail + MESSAGE_QUEUE_SIZE - head: tail - head) > 0 && counter < MESSAGE_LIMIT) {
+                Message msg = pop();
+                if (msg.idx == EXTRA_MANA_IDX && !manaWellLocsSet.contains(intToLocation(rc, msg.value))) {
                     // first check if this well is a duplicate 
                     boolean isDup = false;
-                    for (int i = MANA_WELL_IDX; i < MANA_WELL_IDX + N_SAVED_WELLS; i++) {
-                        int value = rc.readSharedArray(i);
-                        if (value == msg.value)
-                            isDup = true; 
+                    for (int i = N_SAVED_WELLS; --i >= 0;) {
+                        int value = rc.readSharedArray(MANA_WELL_IDX + i);
+                        if (value == msg.value) {
+                            isDup = true;
+                            break;
+                        }
                     }
-                    for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
-                        int value = rc.readSharedArray(i);
-                        if (value == msg.value)
-                            isDup = true; 
+                    int j = -1;
+                    if (!isDup) {
+                        for (int i = N_SAVED_WELLS; --i >= 0;) {
+                            int value = rc.readSharedArray(EXTRA_MANA_IDX + i);
+                            if (value == msg.value) {
+                                isDup = true;
+                                break;
+                            }
+                            if (value == 0) {
+                                j = i;
+                            }
+                        }
                     }
-                    if (isDup)
+                    if (isDup) {
+                        manaWellLocsSet.add(intToLocation(rc, msg.value));
                         continue;
+                    }
                     // find a good spot
                     // TODO: allow writing to empty spots if we have less than four headquarters
-                    for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
-                        int value = rc.readSharedArray(i);
-                        if (value == 0 && rc.canWriteSharedArray(i, msg.value)) {
-                            rc.writeSharedArray(i, msg.value);
+                    if (j != -1) {
+                        int value = rc.readSharedArray(j);
+                        if (value == 0 && rc.canWriteSharedArray(j, msg.value)) {
+                            manaWellLocsSet.add(intToLocation(rc, msg.value));
+                            rc.writeSharedArray(j, msg.value);
                             break;
                         }
                     }
@@ -189,7 +199,7 @@ class Communication {
         int updatedIslandValue = bitPackIslandInfo(rc, idx, closestIslandLoc);
         if (oldIslandValue != updatedIslandValue) {
             Message msg = new Message(idx, updatedIslandValue, RobotPlayer.turnCount);
-            messagesQueue.add(msg);
+            add(msg);
         }
     }
 
@@ -301,14 +311,14 @@ class Communication {
 		if (i != -1) {
 			int wellLocInt = locationToInt(rc, wellLoc);
         	Message msg = new Message(MANA_WELL_IDX + i, wellLocInt, RobotPlayer.turnCount);
-        	messagesQueue.add(msg);
+        	add(msg);
 		}
     }
 
     static void addManaWell(RobotController rc, MapLocation wellLoc) throws GameActionException {
         int wellLocInt = locationToInt(rc, wellLoc);
         Message msg = new Message(EXTRA_MANA_IDX, wellLocInt, RobotPlayer.turnCount);
-        messagesQueue.add(msg);
+        add(msg);
     }
 
     static void updateAdaWellLocation(RobotController rc, MapLocation wellLoc, MapLocation HQ) throws GameActionException {
@@ -316,20 +326,22 @@ class Communication {
 		if (i != -1) {
 			int wellLocInt = locationToInt(rc, wellLoc);
         	Message msg = new Message(ADA_WELL_IDX + i, wellLocInt, RobotPlayer.turnCount);
-        	messagesQueue.add(msg);
+        	add(msg);
 		}
     }
 
     static void clearObsoleteEnemies(RobotController rc) {
         for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
-                MapLocation mapLoc = intToLocation(rc, rc.readSharedArray(i));
+                int value = rc.readSharedArray(i);
+                value &= ENEMY_LOCATION_MASK;
+                MapLocation mapLoc = intToLocation(rc, value);
                 if (mapLoc == null) {
                     continue;
                 }
                 if (rc.canSenseLocation(mapLoc) && rc.senseNearbyRobots(mapLoc, AREA_RADIUS, rc.getTeam().opponent()).length == 0) {
                     Message msg = new Message(i, locationToInt(rc, null), RobotPlayer.turnCount);
-                    messagesQueue.add(msg);
+                    add(msg);
                 }
             } catch (GameActionException e) {
                 continue;
@@ -342,7 +354,9 @@ class Communication {
         int slot = -1;
         for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
-                MapLocation prevEnemy = intToLocation(rc, rc.readSharedArray(i));
+                int value = rc.readSharedArray(i);
+                value &= ENEMY_LOCATION_MASK;
+                MapLocation prevEnemy = intToLocation(rc, value);
                 if (prevEnemy == null) {
                     slot = i;
                     break;
@@ -355,7 +369,7 @@ class Communication {
         }
         if (slot != -1) {
             Message msg = new Message(slot, locationToInt(rc, enemy), RobotPlayer.turnCount);
-            messagesQueue.add(msg);
+            add(msg);
         }
     }
 
@@ -363,7 +377,9 @@ class Communication {
         int slot = -1;
         for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             try {
-                MapLocation prevEnemy = intToLocation(rc, rc.readSharedArray(i));
+                int value = rc.readSharedArray(i);
+                value &= ENEMY_LOCATION_MASK;
+                MapLocation prevEnemy = intToLocation(rc, value);
                 if (prevEnemy == null) {
                     slot = i;
                     break;
@@ -376,7 +392,7 @@ class Communication {
         }
         if (slot != -1) {
             Message msg = new Message(slot, locationToInt(rc, enemyHQ, true), RobotPlayer.turnCount);
-            messagesQueue.add(msg);
+            add(msg);
         }
     }
 
@@ -386,6 +402,7 @@ class Communication {
         for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
             int value = rc.readSharedArray(i);
             if ((value & HQ_FLAG) == HQ_FLAG) {
+                value &= ENEMY_LOCATION_MASK;
                 hqs[hqCounter] = intToLocation(rc, value);
                 hqCounter++;
             }
@@ -400,9 +417,10 @@ class Communication {
     static MapLocation getClosestEnemy(RobotController rc) throws GameActionException {
         MapLocation answer = null;
         for (int i = STARTING_ENEMY_IDX; i < STARTING_ENEMY_IDX + N_SAVED_ENEMIES; i++) {
-            final int value;
+            int value;
             try {
                 value = rc.readSharedArray(i);
+                value &= ENEMY_LOCATION_MASK;
                 final MapLocation m = intToLocation(rc, value);
                 if (m != null && (answer == null || rc.getLocation().distanceSquaredTo(m) < rc.getLocation().distanceSquaredTo(answer))) {
                     answer = m;
@@ -433,9 +451,6 @@ class Communication {
     }
 
     static MapLocation intToLocation(RobotController rc, int m) {
-        if ((m & HQ_FLAG) == HQ_FLAG) {
-            m &= not_HQ_FLAG;
-        }
         if (m == 0) {
             return null;
         }

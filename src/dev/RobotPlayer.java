@@ -5,7 +5,6 @@ import battlecode.common.*;
 import static dev.Communication.*;
 
 import java.util.Random;
-import java.util.Arrays;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -157,6 +156,9 @@ public strictfp class RobotPlayer {
 				} finally {
 					// Signify we've done everything we want to do, thereby ending our turn.
 					// This will make our code wait until the next turn, and then perform this loop again.
+					if (Clock.getBytecodeNum() < 1000) {
+						System.out.println("sus");
+					}
 					Clock.yield();
 				}
 				// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
