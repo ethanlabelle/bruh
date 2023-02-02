@@ -36,7 +36,7 @@ class Communication {
 
     private static final int ENEMY_LOCATION_MASK = 0b111111111111;
     private static final int HQ_FLAG = 1 << 12;
-	private static final int MESSAGE_QUEUE_SIZE = 500;
+	private static final int MESSAGE_QUEUE_SIZE = 1000;
     private static final int MESSAGE_LIMIT = 20;
     // private static Queue<Message> messagesQueue =  new LinkedList<Message>();
     private static Message[] messagesQueue = new Message[MESSAGE_QUEUE_SIZE];
@@ -134,40 +134,33 @@ class Communication {
         if (rc.canWriteSharedArray(0, 0)) {
             while ((head > tail ? tail + MESSAGE_QUEUE_SIZE - head: tail - head) > 0 && counter < MESSAGE_LIMIT) {
                 Message msg = pop();
-                if (msg.idx == EXTRA_MANA_IDX && !manaWellLocsSet.contains(intToLocation(rc, msg.value))) {
+                if (msg.idx == EXTRA_MANA_IDX) {
                     // first check if this well is a duplicate 
                     boolean isDup = false;
-                    for (int i = N_SAVED_WELLS; --i >= 0;) {
-                        int value = rc.readSharedArray(MANA_WELL_IDX + i);
+                    for (int i = MANA_WELL_IDX; i < MANA_WELL_IDX + N_SAVED_WELLS; i++) {
+                        int value = rc.readSharedArray(i);
                         if (value == msg.value) {
                             isDup = true;
                             break;
                         }
                     }
-                    int j = -1;
                     if (!isDup) {
-                        for (int i = N_SAVED_WELLS; --i >= 0;) {
-                            int value = rc.readSharedArray(EXTRA_MANA_IDX + i);
+                        for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
+                            int value = rc.readSharedArray(i);
                             if (value == msg.value) {
-                                isDup = true;
+                                isDup = true; 
                                 break;
-                            }
-                            if (value == 0) {
-                                j = i;
                             }
                         }
                     }
-                    if (isDup) {
-                        manaWellLocsSet.add(intToLocation(rc, msg.value));
+                    if (isDup)
                         continue;
-                    }
                     // find a good spot
                     // TODO: allow writing to empty spots if we have less than four headquarters
-                    if (j != -1) {
-                        int value = rc.readSharedArray(j);
-                        if (value == 0 && rc.canWriteSharedArray(j, msg.value)) {
-                            manaWellLocsSet.add(intToLocation(rc, msg.value));
-                            rc.writeSharedArray(j, msg.value);
+                    for (int i = EXTRA_MANA_IDX; i < EXTRA_MANA_IDX + N_SAVED_WELLS; i++) {
+                        int value = rc.readSharedArray(i);
+                        if (value == 0 && rc.canWriteSharedArray(i, msg.value)) {
+                            rc.writeSharedArray(i, msg.value);
                             break;
                         }
                     }

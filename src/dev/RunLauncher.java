@@ -48,7 +48,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        if (turnCount > 100) {
+        // if (turnCount > 50) {
             defLoc = Communication.getClosestEnemy(rc);
             if (defLoc != null) {
                 Pathing.navigateTo(rc, defLoc);
@@ -58,7 +58,7 @@ public strictfp class RunLauncher {
                 Communication.clearOld();
                 return;
             }
-        }
+        // }
 
         if (move_randomly) {
             moveLastResort(rc);

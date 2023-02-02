@@ -31,9 +31,9 @@ public strictfp class RunCarrier {
         } else if (rc.getRoundNum() == 3 && !earlyAda) {
             earlyMana = true;
         } 
-        else if (rc.getRoundNum() < 200) {
-            earlyMana = true;
-        }
+        // else if (rc.getRoundNum() < 200) {
+        //     earlyMana = true;
+        // }
         updateMap(rc);
         Communication.clearObsoleteEnemies(rc);
 

@@ -69,49 +69,49 @@ public class Pathing {
                 return false;
             // else return d != Direction.CENTER && d != currentDirection;
         }
-        // if (rc.getType() == RobotType.LAUNCHER) {
-        //     if (board[loc.x + loc.y * width] == M_CLOUD) {
-        //         return true;
-        //     }
-        // }
+        if (rc.getType() == RobotType.LAUNCHER) {
+            if (board[loc.x + loc.y * width] == M_CLOUD) {
+                return true;
+            }
+        }
         // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
         return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
         // return d != Direction.CENTER && d != currentDirection;
     }    
     
     static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
-        MapLocation me = rc.getLocation();
-        if (rc.getType() == RobotType.LAUNCHER) {
-            MapLocation tile = me.add(dir);
-            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, dir) && rc.canMove(dir)) {
-                rc.move(dir);
-                return true;
-            }
-            Direction right = dir.rotateRight();
-            tile = me.add(right);
-            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, right) && rc.canMove(right)) {
-                rc.move(right);
-                return true;
-            }
-            Direction left = dir.rotateLeft();
-            tile = me.add(left);
-            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, left) && rc.canMove(left)) {
-                rc.move(left);
-                return true;
-            }
-            Direction rightRight = dir.rotateRight().rotateRight();
-            tile = me.add(rightRight);
-            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, rightRight) && rc.canMove(rightRight)) {
-                rc.move(rightRight);
-                return true;
-            }
-            Direction leftLeft = dir.rotateLeft().rotateLeft();
-            tile = me.add(leftLeft);
-            if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, leftLeft) && rc.canMove(leftLeft)) {
-                rc.move(leftLeft);
-                return true;
-            }
-        }
+        // MapLocation me = rc.getLocation();
+        // if (rc.getType() == RobotType.LAUNCHER) {
+        //     MapLocation tile = me.add(dir);
+        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, dir) && rc.canMove(dir)) {
+        //         rc.move(dir);
+        //         return true;
+        //     }
+        //     Direction right = dir.rotateRight();
+        //     tile = me.add(right);
+        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, right) && rc.canMove(right)) {
+        //         rc.move(right);
+        //         return true;
+        //     }
+        //     Direction left = dir.rotateLeft();
+        //     tile = me.add(left);
+        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, left) && rc.canMove(left)) {
+        //         rc.move(left);
+        //         return true;
+        //     }
+        //     Direction rightRight = dir.rotateRight().rotateRight();
+        //     tile = me.add(rightRight);
+        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, rightRight) && rc.canMove(rightRight)) {
+        //         rc.move(rightRight);
+        //         return true;
+        //     }
+        //     Direction leftLeft = dir.rotateLeft().rotateLeft();
+        //     tile = me.add(leftLeft);
+        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, leftLeft) && rc.canMove(leftLeft)) {
+        //         rc.move(leftLeft);
+        //         return true;
+        //     }
+        // }
         if (!hasObstacle(rc, dir) && rc.canMove(dir)) {
             rc.move(dir);
             return true;

@@ -8,7 +8,7 @@ import static dev.RobotPlayer.*;
 
 public strictfp class RunHeadquarters {
 
-	static final int LAUNCHER_MOD = 30;
+	static final int LAUNCHER_MOD = 34;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
 	static final int CARRIER_MOD = 20;
 	static final int MAX_CARRIERS = 10;
@@ -65,18 +65,9 @@ public strictfp class RunHeadquarters {
 			return;
 		}
 
-        // Pick a direction to build in.
-        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0 && turnCount % 100 == 0) {
-            // If we can build an anchor do it!
-            rc.buildAnchor(Anchor.STANDARD);
-            rc.setIndicatorString("Building anchor!");
-			launcherCount = 0;
-			carrierCount = 0;
-        }
-
 		MapLocation loc;
         //if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
-        if (turnCount % 100 == 0) {
+        if (turnCount % 100 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);
@@ -85,6 +76,16 @@ public strictfp class RunHeadquarters {
                 return;
             }
         }
+
+        // Pick a direction to build in.
+        if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0) {
+            // If we can build an anchor do it!
+            rc.buildAnchor(Anchor.STANDARD);
+            rc.setIndicatorString("Building anchor!");
+			launcherCount = 0;
+			carrierCount = 0;
+        }
+		
         // Let's try to build a launcher.
 		// if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
             // rc.setIndicatorString("Trying to build launchers");

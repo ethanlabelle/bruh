@@ -212,9 +212,9 @@ public strictfp class RobotPlayer {
 							break;
 						default:
 					}
-				}
-				if (rc.senseCloud(loc)) {
-					board[loc.x + loc.y * width] = M_CLOUD;
+					if (rc.senseCloud(loc)) {
+						board[loc.x + loc.y * width] = M_CLOUD;
+					}
 				}
 			}
 
