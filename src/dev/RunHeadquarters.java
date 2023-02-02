@@ -17,8 +17,7 @@ public strictfp class RunHeadquarters {
 	static int carrierCount = 0;
 
 	// number of enemy robots for lockdown
-	static final int MAX_ENEMIES = 4;
-	static final int SPAWN_AMOUNT = 5;
+	static final int MIN_ENEMIES = 10;
 
 	static boolean hasSpawnedAmplifier = false;
 
@@ -31,7 +30,7 @@ public strictfp class RunHeadquarters {
 		// scan for enemies- calls for help if needed
 		RobotInfo[] robotInfos = rc.senseNearbyRobots();
 		RobotInfo[] carriers = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-		RobotInfo[] enemies = Arrays.stream(robotInfos).filter(robot -> robot.team != myTeam).toArray(RobotInfo[]::new);	
+		RobotInfo[] enemies = Arrays.stream(robotInfos).filter(robot -> robot.team != myTeam && robot.type == RobotType.CARRIER).toArray(RobotInfo[]::new);	
 
 		if (enemies.length > 0) {
             for (RobotInfo robot: enemies) {
@@ -46,23 +45,24 @@ public strictfp class RunHeadquarters {
 		Communication.clearObsoleteEnemies(rc);
 
 		// if max enemies are reached wait to build robots
-		if (enemies.length > 0 && rc.getResourceAmount(ResourceType.MANA) > enemies.length * RobotType.LAUNCHER.buildCostMana * 2) {
-			MapLocation loc = null;
-			while (rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
-				while (rc.isActionReady()) {
-					rc.setIndicatorString("Trying to build launchers");
-					loc = getSpawnLocation(rc, RobotType.LAUNCHER);
-					if (loc != null) {
-						rc.buildRobot(RobotType.LAUNCHER, loc);
-						launcherCount++;
-					} else {
-						break;
+		if (enemies.length >= MIN_ENEMIES) {
+			if (rc.getResourceAmount(ResourceType.MANA) > enemies.length * RobotType.LAUNCHER.buildCostMana * 2) {
+				MapLocation loc = null;
+				while (rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
+					while (rc.isActionReady()) {
+						rc.setIndicatorString("Trying to build launchers");
+						loc = getSpawnLocation(rc, RobotType.LAUNCHER);
+						if (loc != null) {
+							rc.buildRobot(RobotType.LAUNCHER, loc);
+							launcherCount++;
+						} else {
+							break;
+						}
 					}
+					Clock.yield();
+					turnCount++;
 				}
-				Clock.yield();
-				turnCount++;
 			}
-			return;
 		}
 
 		MapLocation loc;
@@ -119,28 +119,28 @@ public strictfp class RunHeadquarters {
 		}
     }
 	// max out elixir for destabilizers then go to launchers, perhaps better implementation later
-	static RobotType [] getBuild (RobotController rc) {
-		int numDestabilizers = rc.getResourceAmount(ResourceType.ELIXIR) / RobotType.DESTABILIZER.buildCostElixir;
-		if (numDestabilizers >= SPAWN_AMOUNT) {
-			RobotType [] holder = new RobotType [SPAWN_AMOUNT];
-			for (int index = 0; index < SPAWN_AMOUNT; index ++) {
-				holder[index] = RobotType.DESTABILIZER;
-			}
-			return holder;
-		}
-		int numLaunchers = rc.getResourceAmount(ResourceType.MANA) / RobotType.LAUNCHER.buildCostMana;
-		if (numDestabilizers + numLaunchers >= SPAWN_AMOUNT) {
-			RobotType [] holder = new RobotType [SPAWN_AMOUNT];
-			for (int index = 0; index < numDestabilizers; index ++) {
-				holder[index] = RobotType.DESTABILIZER;
-			}
-			for (int index = numDestabilizers; index < SPAWN_AMOUNT; index ++) {
-				holder[index] = RobotType.LAUNCHER;
-			}
-			return holder;
-		}
-		return null;
-	}
+	// static RobotType [] getBuild (RobotController rc) {
+	// 	int numDestabilizers = rc.getResourceAmount(ResourceType.ELIXIR) / RobotType.DESTABILIZER.buildCostElixir;
+	// 	if (numDestabilizers >= SPAWN_AMOUNT) {
+	// 		RobotType [] holder = new RobotType [SPAWN_AMOUNT];
+	// 		for (int index = 0; index < SPAWN_AMOUNT; index ++) {
+	// 			holder[index] = RobotType.DESTABILIZER;
+	// 		}
+	// 		return holder;
+	// 	}
+	// 	int numLaunchers = rc.getResourceAmount(ResourceType.MANA) / RobotType.LAUNCHER.buildCostMana;
+	// 	if (numDestabilizers + numLaunchers >= SPAWN_AMOUNT) {
+	// 		RobotType [] holder = new RobotType [SPAWN_AMOUNT];
+	// 		for (int index = 0; index < numDestabilizers; index ++) {
+	// 			holder[index] = RobotType.DESTABILIZER;
+	// 		}
+	// 		for (int index = numDestabilizers; index < SPAWN_AMOUNT; index ++) {
+	// 			holder[index] = RobotType.LAUNCHER;
+	// 		}
+	// 		return holder;
+	// 	}
+	// 	return null;
+	// }
 
      static int buildNLaunchers(RobotController rc, int n) throws GameActionException {
         int i = 0;

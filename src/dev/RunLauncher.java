@@ -246,21 +246,45 @@ public strictfp class RunLauncher {
                     possibleHQLocs[2 * 3] = null;
                     possibleHQLocs[3 * 3] = null;
                 }
-                // pick closest HQ that is outside of known HQs' action radius
+
+                // eliminate symmetries based on what our HQ can see
+                // HQs will report other headquarters they see
                 int ind = -1;
                 for (int i = possibleHQLocs.length; --i >= 0;) {
-                    if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-                        boolean inFriendlyHQVision = false;
+                    if (possibleHQLocs[i] != null) {
                         for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
                             if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.visionRadiusSquared) {
-                                inFriendlyHQVision = true;
+                                switch(i % 3) {
+                                case 0:
+                                    possibleHQLocs[0 * 3] = null;
+                                    possibleHQLocs[1 * 3] = null;
+                                    possibleHQLocs[2 * 3] = null;
+                                    possibleHQLocs[3 * 3] = null;
+                                    break;
+                                case 1:
+                                    possibleHQLocs[0 * 3 + 1] = null;
+                                    possibleHQLocs[1 * 3 + 1] = null;
+                                    possibleHQLocs[2 * 3 + 1] = null;
+                                    possibleHQLocs[3 * 3 + 1] = null;
+                                    break;
+                                case 2:
+                                    possibleHQLocs[0 * 3 + 2] = null;
+                                    possibleHQLocs[1 * 3 + 2] = null;
+                                    possibleHQLocs[2 * 3 + 2] = null;
+                                    possibleHQLocs[3 * 3 + 2] = null;
+                                    break;
+                                }
+                                break;
                             }
                         }
-                        if (!inFriendlyHQVision) {
-                            closest_predicted = possibleHQLocs[i];
-                            min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-                            ind = i;
-                        }
+                    }
+                }
+                // find closest
+                for (int i = possibleHQLocs.length; --i >= 0;) {
+                    if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
+                        closest_predicted = possibleHQLocs[i];
+                        min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
+                        ind = i;
                     }
                 }
                 possibleEnemyLOC = closest_predicted;
@@ -284,19 +308,12 @@ public strictfp class RunLauncher {
                     int min_dist = 7200;
                     // pick closest HQ that is outside of known HQs' action radius
                     int ind = -1;
+                    // find closest
                     for (int i = possibleHQLocs.length; --i >= 0;) {
                         if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-                            boolean inFriendlyHQVision = false;
-                            for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-                                if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.actionRadiusSquared) {
-                                    inFriendlyHQVision = true;
-                                }
-                            }
-                            if (!inFriendlyHQVision) {
-                                closest_predicted = possibleHQLocs[i];
-                                min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-                                ind = i;
-                            }
+                            closest_predicted = possibleHQLocs[i];
+                            min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
+                            ind = i;
                         }
                     }
                     if (ind == -1) {
@@ -309,157 +326,7 @@ public strictfp class RunLauncher {
             }
         }
     }
-    // static void travelToPossibleHQ(RobotController rc) throws GameActionException {
-    //     /*
-    //      * INSPO
-    //      * 
-    //      if(possibleEnemyLOC == null){
-    //         // set possible enemy loc based on symmetry of our HQ
-    //         int id = fake_id;
-    //         if(id % 3 == 0)
-    //             possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), abs(HQLOC.y + 1 - height));
-    //         else if(id % 3 == 1)
-    //             possibleEnemyLOC = new MapLocation(abs(HQLOC.x + 1 - width), HQLOC.y);
-    //         else
-    //             possibleEnemyLOC = new MapLocation(HQLOC.x, abs(HQLOC.y + 1 - height));
-    //     }
-    //     if (rc.canSenseLocation(possibleEnemyLOC)) {
-    //         RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-    //         RobotInfo[] friends = rc.senseNearbyRobots(possibleEnemyLOC, -1, myTeam);
-    //         if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam && friends.length < 3) {
-    //             EnemyHQLOC = possibleEnemyLOC;
-    //             return;
-    //         }
-    //         else{
-    //             possibleEnemyLOC = null;
-    //             EnemyHQLOC = undefined_loc;
-    //             fake_id += 1;
-    //             if(fake_id == 6){
-    //                 move_randomly = true;
-    //             }
-    //         }
-    //     }
-    //     if(possibleEnemyLOC != null)
-    //         navigateTo(rc, possibleEnemyLOC);
-    //      */
-    //     if(possibleEnemyLOC == null){
-    //         // set possible enemy loc based on symmetry of our HQ
-    //         MapLocation closest_predicted = null;
-    //         int min_dist = 7200;
-
-    //         // generate list of possible hqs
-    //         for(int i = Communication.headquarterLocs.length; --i >= 0;) {
-    //             MapLocation curr_hq = Communication.headquarterLocs[i];
-    //             if (curr_hq == null)
-    //                 continue;
-    //             MapLocation rotationalSym = new MapLocation(abs(curr_hq.x + 1 - width), abs(curr_hq.y + 1 - height));
-    //             MapLocation verticalSym = new MapLocation(abs(curr_hq.x + 1 - width), curr_hq.y);
-    //             MapLocation horizontalSym = new MapLocation(curr_hq.x, abs(curr_hq.y + 1 - height));
-    //             possibleHQLocs[i * 3] = rotationalSym;
-    //             possibleHQLocs[i * 3 + 1] = verticalSym;
-    //             possibleHQLocs[i * 3 + 2] = horizontalSym;
-    //         }
-    //         int count = 0;
-    //         for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-    //             if (Communication.headquarterLocs[i] != null) {
-    //                 count++;
-    //             }
-    //         }
-    //         if (count > 1) {
-    //             // check if horrizontal symmetry is possible with our headquarters
-    //             int mid = width / 2;
-    //             int leftOfMid = 0;
-    //             for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-    //                 if (Communication.headquarterLocs[i] != null) {
-    //                     if (Communication.headquarterLocs[i].x < mid)
-    //                         leftOfMid++;
-    //                 }
-    //             }
-    //             if (leftOfMid == count || leftOfMid == 0) {
-    //                 possibleHQLocs[0 * 3 + 2] = null;
-    //                 possibleHQLocs[1 * 3 + 2] = null;
-    //                 possibleHQLocs[2 * 3 + 2] = null;
-    //                 possibleHQLocs[3 * 3 + 2] = null;
-    //             }
-    //             // check if vertical symmetry is possible with our headquarters
-    //             mid = height / 2;
-    //             int belowMid = 0;
-    //             for (int i = Communication.headquarterLocs.length; --i >= 0; ) {
-    //                 if (Communication.headquarterLocs[i] != null) {
-    //                     if (Communication.headquarterLocs[i].y < mid)
-    //                         belowMid++;
-    //                 }
-    //             }
-    //             if (belowMid == count || belowMid == 0) {
-    //                 possibleHQLocs[0 * 3 + 1] = null;
-    //                 possibleHQLocs[1 * 3 + 1] = null;
-    //                 possibleHQLocs[2 * 3 + 1] = null;
-    //                 possibleHQLocs[3 * 3 + 1] = null;
-    //             }
-    //             // pick closest HQ that is outside of known HQs' action radius
-    //             int ind = -1;
-    //             for (int i = possibleHQLocs.length; --i >= 0;) {
-    //                 if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-    //                     boolean inFriendlyHQVision = false;
-    //                     for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-    //                         if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.visionRadiusSquared) {
-    //                             inFriendlyHQVision = true;
-    //                         }
-    //                     }
-    //                     if (!inFriendlyHQVision) {
-    //                         closest_predicted = possibleHQLocs[i];
-    //                         min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-    //                         ind = i;
-    //                     }
-    //                 }
-    //             }
-    //             possibleEnemyLOC = closest_predicted;
-    //             possibleHQLocs[ind] = null;
-    //         } else {
-    //             possibleEnemyLOC = possibleHQLocs[0];
-    //             possibleHQLocs[0] = null;
-    //         }
-    //     }
-
-    //     if (possibleEnemyLOC != null) {
-    //         Pathing.navigateTo(rc, possibleEnemyLOC);
-    //         if (rc.canSenseLocation(possibleEnemyLOC)) {
-    //             RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
-    //             if (robot != null && robot.getType() == RobotType.HEADQUARTERS && robot.team != RobotPlayer.myTeam) {
-    //                 EnemyHQLOC = possibleEnemyLOC;
-    //                 possibleEnemyLOC = null;
-    //                 return;
-    //             } else {
-    //                 MapLocation closest_predicted = null;
-    //                 int min_dist = 7200;
-    //                 // pick closest HQ that is outside of known HQs' action radius
-    //                 int ind = -1;
-    //                 for (int i = possibleHQLocs.length; --i >= 0;) {
-    //                     if (possibleHQLocs[i] != null && possibleHQLocs[i].distanceSquaredTo(rc.getLocation()) < min_dist) {
-    //                         boolean inFriendlyHQVision = false;
-    //                         for (int j = Communication.headquarterLocs.length; --j >= 0; ) {
-    //                             if (Communication.headquarterLocs[j] != null && possibleHQLocs[i].distanceSquaredTo(Communication.headquarterLocs[j]) <= RobotType.HEADQUARTERS.actionRadiusSquared) {
-    //                                 inFriendlyHQVision = true;
-    //                             }
-    //                         }
-    //                         if (!inFriendlyHQVision) {
-    //                             closest_predicted = possibleHQLocs[i];
-    //                             min_dist = possibleHQLocs[i].distanceSquaredTo(rc.getLocation());
-    //                             ind = i;
-    //                         }
-    //                     }
-    //                 }
-    //                 if (ind == -1) {
-    //                     move_randomly = true;
-    //                 } else {
-    //                     possibleEnemyLOC = closest_predicted;
-    //                     possibleHQLocs[ind] = null;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
+    
     static boolean adjacentTo(RobotController rc, MapLocation loc) throws GameActionException {
         int dist = rc.getLocation().distanceSquaredTo(loc);
         return dist == 1 || dist == 2;
