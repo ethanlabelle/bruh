@@ -78,7 +78,6 @@ public strictfp class RunHeadquarters {
         if (rc.canBuildAnchor(Anchor.STANDARD) && rc.getNumAnchors(Anchor.STANDARD) == 0) {
             // If we can build an anchor do it!
             rc.buildAnchor(Anchor.STANDARD);
-            rc.setIndicatorString("Building anchor!");
 			launcherCount = 0;
 			carrierCount = 0;
         }
@@ -86,7 +85,6 @@ public strictfp class RunHeadquarters {
         // Let's try to build a launcher.
 		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
 			while (rc.isActionReady()) {
-				rc.setIndicatorString("Trying to build launchers");
 				loc = getSpawnLocation(rc, RobotType.LAUNCHER);
 				if (loc != null) {
 					rc.buildRobot(RobotType.LAUNCHER, loc);
@@ -100,7 +98,6 @@ public strictfp class RunHeadquarters {
         // Let's try to build a carrier.
 		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS)) {
         	while (rc.isActionReady()) {
-				rc.setIndicatorString("Trying to build a carrier");
 				loc = getSpawnLocation(rc, RobotType.CARRIER);
 				if (loc != null) {
 					rc.buildRobot(RobotType.CARRIER, loc);
@@ -146,7 +143,6 @@ public strictfp class RunHeadquarters {
 		Communication.tryWriteMessages(rc);
 		int i = 0;
 		while (i < 4) {
-			rc.setIndicatorString("Trying to build a launcher");
 			MapLocation loc = getSpawnLocation(rc, RobotType.LAUNCHER);
 			if (loc != null) {
 				rc.buildRobot(RobotType.LAUNCHER, loc);
@@ -158,7 +154,6 @@ public strictfp class RunHeadquarters {
 		}	
 		i = 0;
 		while (i < 4) {
-			rc.setIndicatorString("Trying to build a carrier");
 			MapLocation loc = getSpawnLocation(rc, RobotType.CARRIER);
 			if (loc != null) {
 				rc.buildRobot(RobotType.CARRIER, loc);
