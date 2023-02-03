@@ -619,7 +619,22 @@ public strictfp class RunLauncher {
                         return;
                     }
                 }
-            } 
+            } else if (turnCount % 3 != 0) {
+                MapLocation attackLoc;
+                switch(Pathing.currentDirection) {
+                    case NORTHWEST:
+                    case SOUTHWEST:
+                    case NORTHEAST:
+                    case SOUTHEAST:
+                        attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
+                        break;
+                    default:
+                        attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
+                }
+                if (rc.canAttack(attackLoc)) {
+                    rc.attack(attackLoc);
+                }
+            }
             
             // else {
             //     MapLocation attackLoc;

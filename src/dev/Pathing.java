@@ -70,7 +70,7 @@ public class Pathing {
             // else return d != Direction.CENTER && d != currentDirection;
         }
         if (rc.getType() == RobotType.LAUNCHER) {
-            if (board[loc.x + loc.y * width] == M_CLOUD) {
+            if (RunLauncher.enemies.length > 0 && board[loc.x + loc.y * width] == M_CLOUD) {
                 return true;
             }
         }
@@ -292,14 +292,16 @@ public class Pathing {
                 hitPoint = rc.getLocation();
             } else {
                 //bugRandom(rc, goalLoc);
-                Direction a = currentDirection.rotateLeft().rotateLeft();
-                if (rc.canMove(a))
+                Direction a = currentDirection.rotateLeft();
+                if (rc.canMove(a)) {
                     rc.move(a);
-                else {
-                    a = currentDirection.rotateRight().rotateRight();
-                    if (rc.canMove(a))
+                    currentDirection = a;
+                } else {
+                    a = currentDirection.rotateRight();
+                    if (rc.canMove(a)) {
                         rc.move(a);
-                    else 
+                        currentDirection = a;
+                    } else 
                         bugRandom(rc, goalLoc);
                 }
 				// if (hasObstacle(rc, goalDir)) {

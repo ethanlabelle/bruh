@@ -124,7 +124,7 @@ public strictfp class RobotPlayer {
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
 			
-            turnCount += 1;  // We have now been alive for one more turn!
+            turnCount++;  // We have now been alive for one more turn!
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
 				// The same run() function is called for every robot on your team, even if they are

@@ -17,7 +17,7 @@ public strictfp class RunHeadquarters {
 	static int carrierCount = 0;
 
 	// number of enemy robots for lockdown
-	static final int MIN_ENEMIES = 10;
+	static final int MIN_ENEMIES = 5;
 
 	static boolean hasSpawnedAmplifier = false;
 
@@ -30,7 +30,7 @@ public strictfp class RunHeadquarters {
 		// scan for enemies- calls for help if needed
 		RobotInfo[] robotInfos = rc.senseNearbyRobots();
 		RobotInfo[] carriers = Arrays.stream(robotInfos).filter(robot -> robot.type == RobotType.CARRIER && robot.team == myTeam).toArray(RobotInfo[]::new);	
-		RobotInfo[] enemies = Arrays.stream(robotInfos).filter(robot -> robot.team != myTeam && robot.type == RobotType.CARRIER).toArray(RobotInfo[]::new);	
+		RobotInfo[] enemies = Arrays.stream(robotInfos).filter(robot -> robot.team != myTeam && robot.type == RobotType.LAUNCHER).toArray(RobotInfo[]::new);	
 
 		if (enemies.length > 0) {
             for (RobotInfo robot: enemies) {
@@ -62,7 +62,7 @@ public strictfp class RunHeadquarters {
 					Clock.yield();
 					turnCount++;
 				}
-			}
+			} else return;
 		}
 
 		MapLocation loc;
