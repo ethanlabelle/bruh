@@ -106,13 +106,10 @@ public strictfp class RunLauncher {
 
     static MapLocation getPossCloud (RobotController rc) throws GameActionException {
         for (RobotInfo enemy : pastEnemies) {
-            MapLocation possLoc;
-            for (int index = directions.length; --index > 0;) {
-                possLoc = enemy.getLocation().add(directions[index]);
-                // checks to see if possible to leave vision then returns for a better target
-                if (!rc.canSenseLocation(possLoc) && rc.onTheMap(possLoc) && board[possLoc.x + possLoc.y * width] == M_CLOUD) {
-                    return possLoc;
-                }
+            MapLocation possLoc = enemy.getLocation();
+            // checks to see if possible to leave vision then returns for a better target
+            if (!rc.canSenseLocation(possLoc) && rc.onTheMap(possLoc) && board[possLoc.x + possLoc.y * width] == M_CLOUD) {
+                return possLoc;
             }
         }
         return null;
