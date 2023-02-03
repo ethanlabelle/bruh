@@ -69,11 +69,11 @@ public class Pathing {
                 return false;
             // else return d != Direction.CENTER && d != currentDirection;
         }
-        if (rc.getType() == RobotType.LAUNCHER) {
-            if (RunLauncher.enemies.length > 0 && board[loc.x + loc.y * width] == M_CLOUD) {
-                return true;
-            }
-        }
+        // if (rc.getType() == RobotType.LAUNCHER) {
+        //     if (RunLauncher.enemies.length > 0 && board[loc.x + loc.y * width] == M_CLOUD) {
+        //         return true;
+        //     }
+        // }
         // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
         return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
         // return d != Direction.CENTER && d != currentDirection;

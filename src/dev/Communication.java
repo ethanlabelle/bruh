@@ -51,8 +51,6 @@ class Communication {
     
     // a set of headquarterLocs
     public static HashSet<MapLocation> headquarterLocsSet = new HashSet<MapLocation>();
-    // set of well locations
-    public static HashSet<MapLocation> manaWellLocsSet = new HashSet<>();
 
 	static void add(Message m) throws GameActionException {
 		if (messagesQueue[tail] == null)

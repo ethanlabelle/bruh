@@ -90,7 +90,7 @@ public strictfp class RunCarrier {
                 return;
             } else if (getTotalResources(rc) < 40 && rc.isActionReady()) {
                 // try to find well or mine from well
-                if (rc.canCollectResource(wellLoc, -1)) {
+                if (rc.isActionReady() && rc.canCollectResource(wellLoc, -1)) {
                     mine(rc);
                 } else if (me.isWithinDistanceSquared(wellLoc, 9) && isWellFull(rc, wellLoc)) {
                     bannedWells[banCounter] = wellLoc;
@@ -102,6 +102,9 @@ public strictfp class RunCarrier {
                         Pathing.navigateToWithPath(rc, wellLoc, true);
                     }
                     Pathing.navigateTo(rc, wellLoc);
+                    if (rc.isActionReady() && rc.canCollectResource(wellLoc, -1)) {
+                        mine(rc);
+                    }
                 }
             }
         }
@@ -298,9 +301,11 @@ public strictfp class RunCarrier {
                 rc.getResourceAmount(ResourceType.ADAMANTIUM) +
                 " MN: " + rc.getResourceAmount(ResourceType.MANA) +
                 " EX: " + rc.getResourceAmount(ResourceType.ELIXIR));
-        foundWell = true;
-        // if there are too many carriers about this well, forget and ban well
-        if (getTotalResources(rc) >= 39) {
+        if (getTotalResources(rc) >= 40) {
+            return;
+        }
+        if (rc.canMove(me.directionTo(wellLoc))) {
+            rc.move(me.directionTo(wellLoc));
             return;
         }
         for (int i = directions.length; --i >= 0;) {
@@ -311,14 +316,11 @@ public strictfp class RunCarrier {
                 rc.move(me.directionTo(miningLoc));
                 break;
             }
-        } 
-        if (rc.canMove(me.directionTo(wellLoc))) {
-            rc.move(me.directionTo(wellLoc));
         }
     }
 
     static boolean isWellFull(RobotController rc, MapLocation well) throws GameActionException {
-        int spots = 0;
+        int spots = 1;
         int taken = 0;
         for (int i = directions.length; --i >= 0;) {
             MapLocation miningLoc = wellLoc.add(directions[i]);
@@ -336,11 +338,11 @@ public strictfp class RunCarrier {
                     taken++;
             }
         }
-        // if (rc.canSenseRobotAtLocation(wellLoc)) {
-        //     RobotInfo r = rc.senseRobotAtLocation(wellLoc);
-        //     if (r.team == myTeam)
-        //         taken++;
-        // }
+        if (rc.canSenseRobotAtLocation(wellLoc)) {
+            RobotInfo r = rc.senseRobotAtLocation(wellLoc);
+            if (r.team == myTeam)
+                taken++;
+        }
         return spots == taken; 
     }
     

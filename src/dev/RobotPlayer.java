@@ -108,7 +108,6 @@ public strictfp class RobotPlayer {
 		if (rc.getType() == RobotType.HEADQUARTERS) {
 			Communication.addHeadquarter(rc);
 			HQLOC = rc.getLocation();
-			updateMap(rc);
 			Communication.tryWriteMessages(rc);
 			RunHeadquarters.setup(rc);
 			Communication.updateHeadquarterInfo(rc);
@@ -132,236 +131,171 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
                 switch (rc.getType()) {
-						case HEADQUARTERS:     RunHeadquarters.runHeadquarters(rc);  break;
-						case CARRIER:      RunCarrier.runCarrier(rc);   break;
-						case LAUNCHER: RunLauncher.runLauncher(rc); break;
-						case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
-						case DESTABILIZER: // You might want to give them a try!
-						case AMPLIFIER:       RunAmplifier.runAmplifier(rc); break;
-					}
-
-				} catch (GameActionException e) {
-					// Oh no! It looks like we did something illegal in the Battlecode world. You should
-					// handle GameActionExceptions judiciously, in case unexpected events occur in the game
-					// world. Remember, uncaught exceptions cause your robot to explode!
-					System.out.println(rc.getType() + " Exception");
-					e.printStackTrace();
-					
-				} catch (Exception e) {
-					// Oh no! It looks like our code tried to do something bad. This isn't a
-					// GameActionException, so it's more likely to be a bug in our code.
-					System.out.println(rc.getType() + " Exception");
-					e.printStackTrace();
-
-				} finally {
-					// Signify we've done everything we want to do, thereby ending our turn.
-					// This will make our code wait until the next turn, and then perform this loop again.
-					if (Clock.getBytecodeNum() < 1000) {
-						System.out.println("sus");
-					}
-					Clock.yield();
+					case HEADQUARTERS:     RunHeadquarters.runHeadquarters(rc);  break;
+					case CARRIER:      RunCarrier.runCarrier(rc);   break;
+					case LAUNCHER: RunLauncher.runLauncher(rc); break;
+					case BOOSTER: // Examplefuncsplayer doesn't use any of these robot types below.
+					case DESTABILIZER: // You might want to give them a try!
+					case AMPLIFIER:       RunAmplifier.runAmplifier(rc); break;
 				}
-				// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
-			}
 
-			// Your code should never reach here (unless it's intentional)! Self-destruction imminent...
+			} catch (GameActionException e) {
+				// Oh no! It looks like we did something illegal in the Battlecode world. You should
+				// handle GameActionExceptions judiciously, in case unexpected events occur in the game
+				// world. Remember, uncaught exceptions cause your robot to explode!
+				System.out.println(rc.getType() + " Exception");
+				e.printStackTrace();
+				
+			} catch (Exception e) {
+				// Oh no! It looks like our code tried to do something bad. This isn't a
+				// GameActionException, so it's more likely to be a bug in our code.
+				System.out.println(rc.getType() + " Exception");
+				e.printStackTrace();
+
+			} finally {
+				// Signify we've done everything we want to do, thereby ending our turn.
+				// This will make our code wait until the next turn, and then perform this loop again.
+				if (Clock.getBytecodeNum() < 2000) {
+					System.out.println("sus");
+				}
+				Clock.yield();
+			}
+			// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
 		}
+		// Your code should never reach here (unless it's intentional)! Self-destruction imminent...
+	}
 
-		// Fills out the static board array for RobotPlayer board 
-		// About 3000 bytecode or so 
-		// TODO: Clouds, currents 
-		static void updateMap(RobotController rc) throws GameActionException {
-			mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
-			robotInfos = rc.senseNearbyRobots();
-			islands = rc.senseNearbyIslands(); // 200 bytecode
-			nearbyWells = rc.senseNearbyWells(); // 100 bytecode
+	// Fills out the static board array for RobotPlayer board 
+	// About 3000 bytecode or so 
+	// TODO: Clouds, currents 
+	static void updateMap(RobotController rc) throws GameActionException {
+		mapInfos = rc.senseNearbyMapInfos(); // 200 bytecode
+		robotInfos = rc.senseNearbyRobots();
+		islands = rc.senseNearbyIslands(); // 200 bytecode
+		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
 
-			int length = mapInfos.length;
-			for (int i = length; --i >= 0;) {
-				MapInfo mapInf = mapInfos[i];
-				MapLocation loc = mapInf.getMapLocation();
-				if (board[loc.x + loc.y * width] == M_HIDDEN) {
-					if (!rc.sensePassability(loc))
-						board[loc.x + loc.y * width] = M_STORM;
-					else
-						board[loc.x + loc.y * width] = M_EMPTY;
-					switch (mapInf.getCurrentDirection()) {
-						case NORTH:
-							board[loc.x + loc.y * width] = M_CURN;
-							break;
-						case SOUTH:
-							board[loc.x + loc.y * width] = M_CURS;
-							break;
-						case EAST:
-							board[loc.x + loc.y * width] = M_CURE;
-							break;
-						case WEST:
-							board[loc.x + loc.y * width] = M_CURW;
-							break;
-						case SOUTHWEST:
-							board[loc.x + loc.y * width] = M_CURSW;
-							break;
-						case SOUTHEAST:
-							board[loc.x + loc.y * width] = M_CURSE;
-							break;
-						case NORTHWEST:
-							board[loc.x + loc.y * width] = M_CURNW;
-							break;
-						case NORTHEAST:
-							board[loc.x + loc.y * width] = M_CURNE;
-							break;
-						default:
-					}
-					if (rc.senseCloud(loc)) {
-						board[loc.x + loc.y * width] = M_CLOUD;
-					}
-				}
-			}
-
-			length = robotInfos.length;
-			for (int i = length; --i >= 0;) {
-				RobotInfo robot = robotInfos[i];
-				if (robot.getType() == RobotType.HEADQUARTERS) {
-					MapLocation loc = robot.getLocation();
-					Team team = robot.getTeam();
-					if (team == Team.A) {
-						board[loc.x + loc.y * width] = M_AHQ;	
-					} else {
-						board[loc.x + loc.y * width] = M_BHQ;	
-					}
-					if (myTeam == team) {
-						HQLOC = loc;
-					}
-					if (myTeam != team && EnemyHQLOC == null){
-						EnemyHQLOC = loc;
-					}
-				}
-			}
-
-			length = nearbyWells.length;
-			for (int i = length; --i >= 0;) {
-				WellInfo wellInfo = nearbyWells[i];
-				MapLocation arrayLoc;
-				MapLocation loc = wellInfo.getMapLocation();
-				switch (wellInfo.getResourceType()) {
-					case MANA:
-						board[loc.x + loc.y * width] = M_MANA;
-						arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
-						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
-							Communication.updateManaWellLocation(rc, loc, HQLOC);
-						Communication.addManaWell(rc, loc);
-						if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
-                            if (!RunCarrier.onBanList(loc))
-							    if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.earlyAda))
-								wellLoc = loc;
-						}
+		int length = mapInfos.length;
+		for (int i = length; --i >= 0;) {
+			MapInfo mapInf = mapInfos[i];
+			MapLocation loc = mapInf.getMapLocation();
+			if (board[loc.x + loc.y * width] == M_HIDDEN) {
+				if (!rc.sensePassability(loc))
+					board[loc.x + loc.y * width] = M_STORM;
+				else
+					board[loc.x + loc.y * width] = M_EMPTY;
+				switch (mapInf.getCurrentDirection()) {
+					case NORTH:
+						board[loc.x + loc.y * width] = M_CURN;
 						break;
-					case ADAMANTIUM:
-						arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
-						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
-							Communication.updateAdaWellLocation(rc, loc, HQLOC);
-						if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
-                            if (!RunCarrier.onBanList(loc))
-							    if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.earlyMana))
-							    	wellLoc = loc;
-						}
-						board[loc.x + loc.y * width] = M_ADA;
+					case SOUTH:
+						board[loc.x + loc.y * width] = M_CURS;
 						break;
-					case ELIXIR:	
-						board[loc.x + loc.y * width] = M_ELIX;
+					case EAST:
+						board[loc.x + loc.y * width] = M_CURE;
+						break;
+					case WEST:
+						board[loc.x + loc.y * width] = M_CURW;
+						break;
+					case SOUTHWEST:
+						board[loc.x + loc.y * width] = M_CURSW;
+						break;
+					case SOUTHEAST:
+						board[loc.x + loc.y * width] = M_CURSE;
+						break;
+					case NORTHWEST:
+						board[loc.x + loc.y * width] = M_CURNW;
+						break;
+					case NORTHEAST:
+						board[loc.x + loc.y * width] = M_CURNE;
 						break;
 					default:
+				}
+				if (rc.senseCloud(loc)) {
+					board[loc.x + loc.y * width] = M_CLOUD;
+				}
+			}
+		}
+
+		length = robotInfos.length;
+		for (int i = length; --i >= 0;) {
+			RobotInfo robot = robotInfos[i];
+			if (robot.getType() == RobotType.HEADQUARTERS) {
+				MapLocation loc = robot.getLocation();
+				Team team = robot.getTeam();
+				if (team == Team.A) {
+					board[loc.x + loc.y * width] = M_AHQ;	
+				} else {
+					board[loc.x + loc.y * width] = M_BHQ;	
+				}
+				if (myTeam == team) {
+					HQLOC = loc;
+				}
+				if (myTeam != team && EnemyHQLOC == null){
+					EnemyHQLOC = loc;
+				}
+			}
+		}
+
+		length = nearbyWells.length;
+		for (int i = length; --i >= 0;) {
+			WellInfo wellInfo = nearbyWells[i];
+			MapLocation arrayLoc;
+			MapLocation loc = wellInfo.getMapLocation();
+			switch (wellInfo.getResourceType()) {
+				case MANA:
+					board[loc.x + loc.y * width] = M_MANA;
+					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+						Communication.updateManaWellLocation(rc, loc, HQLOC);
+					Communication.addManaWell(rc, loc);
+					if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
+						if (!RunCarrier.onBanList(loc))
+							if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.earlyAda))
+							wellLoc = loc;
+					}
+					break;
+				case ADAMANTIUM:
+					arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+						Communication.updateAdaWellLocation(rc, loc, HQLOC);
+					if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
+						if (!RunCarrier.onBanList(loc))
+							if (RunCarrier.earlyAda || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD == 0 && !RunCarrier.earlyMana))
+								wellLoc = loc;
+					}
+					board[loc.x + loc.y * width] = M_ADA;
+					break;
+				case ELIXIR:	
+					board[loc.x + loc.y * width] = M_ELIX;
+					break;
+				default:
+					break;
+			}
+			Communication.tryWriteMessages(rc);
+		}
+
+		length = islands.length;
+		for (int i = length; --i >= 0;) {
+			int id = islands[i];
+			MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
+			Team team = rc.senseTeamOccupyingIsland(id);
+			Communication.updateIslandInfo(rc, id);
+			int _length = islandLocs.length;
+			for (int j = _length; --j >= 0;) {
+				MapLocation loc = islandLocs[j];
+				switch (team) {
+					case A:
+						board[loc.x + loc.y * width] = M_AISL;
 						break;
-				}
-				Communication.tryWriteMessages(rc);
-			}
-
-			length = islands.length;
-			for (int i = length; --i >= 0;) {
-				int id = islands[i];
-				MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
-				Team team = rc.senseTeamOccupyingIsland(id);
-				Communication.updateIslandInfo(rc, id);
-				int _length = islandLocs.length;
-				for (int j = _length; --j >= 0;) {
-					MapLocation loc = islandLocs[j];
-					switch (team) {
-						case A:
-							board[loc.x + loc.y * width] = M_AISL;
-							break;
-						case B:
-							board[loc.x + loc.y * width] = M_BISL;
-							break;
-						default:
-							board[loc.x + loc.y * width] = M_NISL;
-					}
+					case B:
+						board[loc.x + loc.y * width] = M_BISL;
+						break;
+					default:
+						board[loc.x + loc.y * width] = M_NISL;
 				}
 			}
 		}
-
-		static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
-			// this is the possible locations it can be the closest to
-			MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
-			int minDist = 7200;
-			MapLocation bestLoc = null;
-			for (MapLocation checkLoc : possLoc) {
-				// rc.canSenseRobotAtLocation(MapLocation loc) always returned false, spawned robot on top of robot and deleted headquarters
-				if (!checkLoc.equals(rc.getLocation()) && rc.canBuildRobot(unit, checkLoc)) {
-					int checkDist = checkLoc.distanceSquaredTo(loc);
-					if (checkDist < minDist) {
-						bestLoc = checkLoc;
-						minDist = checkDist;
-					}
-				}
-			}
-			return bestLoc;
-		}
-
-		static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
-			WellInfo [] wells = rc.senseNearbyWells();
-			if (unit == RobotType.CARRIER) {
-				if (wells.length > 0) {
-					MapLocation manaWell = getClosestWell(rc, ResourceType.MANA);
-					if (manaWell != null) {
-						MapLocation closeTile = getClosestLocation(rc, manaWell, unit);
-						if (closeTile != null) {
-							return closeTile;
-						}
-					}
-					// for (WellInfo well : wells) {
-					// 	if (well.getResourceType() == ResourceType.MANA) {
-					// 		MapLocation closeWell = getClosestLocation(rc, well.getMapLocation(), unit);
-					// 		if (closeWell != null) {
-					// 			return closeWell;
-					// 		}
-					// 	}
-					// }
-					MapLocation closeWell = getClosestLocation(rc, wells[0].getMapLocation(), unit);
-					if (closeWell != null) {
-						return closeWell;
-					}
-				}
-			} 
-			// else if (unit == RobotType.LAUNCHER) {
-			// 	MapLocation center = new MapLocation(width/2, height/2);
-			// 	MapLocation spawnLoc = getClosestLocation(rc, center, unit);
-			// 	if (spawnLoc != null) {
-			// 		return spawnLoc;
-			// 	}
-			// }
-
-			MapLocation center = new MapLocation(width/2, height/2);
-			MapLocation spawnLoc = getClosestLocation(rc, center, unit);
-			// pick a random location within the action radius
-			// MapLocation [] possBuild = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
-			// Arrays.sort(possBuild, (a, b) -> rc.getLocation().distanceSquaredTo(a) - rc.getLocation().distanceSquaredTo(b));
-			// for (int index = possBuild.length; --index > 0;) {
-			// 	if (rc.canBuildRobot(unit, possBuild[index])) {
-			// 		return possBuild[index];
-			// 	}
-			// }
-			return spawnLoc;
-		}
+	}
 	
 	static int getTotalResources(RobotController rc) throws GameActionException {
 		return rc.getResourceAmount(ResourceType.ADAMANTIUM) + rc.getResourceAmount(ResourceType.MANA) + rc.getResourceAmount(ResourceType.ELIXIR);

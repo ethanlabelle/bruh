@@ -8,14 +8,14 @@ import static dev.RobotPlayer.*;
 
 public strictfp class RunHeadquarters {
 
-	static final int LAUNCHER_MOD = 34;
+	static final int LAUNCHER_MOD = 40;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 20;
-	static final int MAX_CARRIERS = 10;
+	static final int CARRIER_MOD = 30;
+	static final int MAX_CARRIERS = 20;
 	static final int EXCESS = 100;
 	static int launcherCount = 0;
 	static int carrierCount = 0;
-
+	static WellInfo[] nearbyWells;
 	// number of enemy robots for lockdown
 	static final int MIN_ENEMIES = 5;
 
@@ -66,13 +66,11 @@ public strictfp class RunHeadquarters {
 		}
 
 		MapLocation loc;
-        //if ((launcherCount + 1) % LAUNCHERS_PER_AMPLIFIER == 0) {
-        if (turnCount % 100 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
+        if (turnCount % 200 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);
 				hasSpawnedAmplifier = true;
-                //launcherCount++;
                 return;
             }
         }
@@ -87,9 +85,6 @@ public strictfp class RunHeadquarters {
         }
 		
         // Let's try to build a launcher.
-		// if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
-            // rc.setIndicatorString("Trying to build launchers");
-            //launcherCount += buildNLaunchers(rc, 2);
 		if (launcherCount < LAUNCHER_MOD || rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
 			while (rc.isActionReady()) {
 				rc.setIndicatorString("Trying to build launchers");
@@ -102,7 +97,6 @@ public strictfp class RunHeadquarters {
 				}
 			}
 		}
-		// }
 
         // Let's try to build a carrier.
 		if ((carriers.length <= MAX_CARRIERS) && (carrierCount < CARRIER_MOD || rc.getResourceAmount(ResourceType.ADAMANTIUM) > EXCESS)) {
@@ -118,29 +112,6 @@ public strictfp class RunHeadquarters {
 			}
 		}
     }
-	// max out elixir for destabilizers then go to launchers, perhaps better implementation later
-	// static RobotType [] getBuild (RobotController rc) {
-	// 	int numDestabilizers = rc.getResourceAmount(ResourceType.ELIXIR) / RobotType.DESTABILIZER.buildCostElixir;
-	// 	if (numDestabilizers >= SPAWN_AMOUNT) {
-	// 		RobotType [] holder = new RobotType [SPAWN_AMOUNT];
-	// 		for (int index = 0; index < SPAWN_AMOUNT; index ++) {
-	// 			holder[index] = RobotType.DESTABILIZER;
-	// 		}
-	// 		return holder;
-	// 	}
-	// 	int numLaunchers = rc.getResourceAmount(ResourceType.MANA) / RobotType.LAUNCHER.buildCostMana;
-	// 	if (numDestabilizers + numLaunchers >= SPAWN_AMOUNT) {
-	// 		RobotType [] holder = new RobotType [SPAWN_AMOUNT];
-	// 		for (int index = 0; index < numDestabilizers; index ++) {
-	// 			holder[index] = RobotType.DESTABILIZER;
-	// 		}
-	// 		for (int index = numDestabilizers; index < SPAWN_AMOUNT; index ++) {
-	// 			holder[index] = RobotType.LAUNCHER;
-	// 		}
-	// 		return holder;
-	// 	}
-	// 	return null;
-	// }
 
      static int buildNLaunchers(RobotController rc, int n) throws GameActionException {
         int i = 0;
@@ -157,11 +128,35 @@ public strictfp class RunHeadquarters {
 	static void setup(RobotController rc) throws GameActionException {
 		Communication.initSymmetry(rc);
 		RobotInfo[] robotInfos = rc.senseNearbyRobots(-1, enemyTeam);
+		nearbyWells = rc.senseNearbyWells(); // 100 bytecode
 		for (int i = robotInfos.length; --i >= 0; ) {
 			if (robotInfos[i].type == RobotType.HEADQUARTERS) {
 				Communication.reportEnemyHeadquarters(rc, robotInfos[i].location);
 			}
 		}
+		for (int i = nearbyWells.length; --i >= 0;) {
+			WellInfo wellInfo = nearbyWells[i];
+			MapLocation arrayLoc;
+			MapLocation loc = wellInfo.getMapLocation();
+			switch (wellInfo.getResourceType()) {
+				case MANA:
+					arrayLoc = Communication.readManaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+						Communication.updateManaWellLocation(rc, loc, HQLOC);
+					Communication.addManaWell(rc, loc);
+					break;
+				case ADAMANTIUM:
+					arrayLoc = Communication.readAdaWellLocation(rc, HQLOC);
+					if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
+						Communication.updateAdaWellLocation(rc, loc, HQLOC);
+					break;
+				case ELIXIR:
+					break;
+				default:
+					break;
+			}
+		}
+		Communication.tryWriteMessages(rc);
 		int i = 0;
 		while (i < 4) {
 			rc.setIndicatorString("Trying to build a launcher");
@@ -186,5 +181,58 @@ public strictfp class RunHeadquarters {
 				turnCount++;
 			}
 		}
+	}
+
+	static MapLocation getClosestLocation (RobotController rc, MapLocation loc, RobotType unit) throws GameActionException {
+		// this is the possible locations it can be the closest to
+		MapLocation[] possLoc = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), RobotType.HEADQUARTERS.actionRadiusSquared);
+		int minDist = 7200;
+		MapLocation bestLoc = null;
+		for (MapLocation checkLoc : possLoc) {
+			// rc.canSenseRobotAtLocation(MapLocation loc) always returned false, spawned robot on top of robot and deleted headquarters
+			if (!checkLoc.equals(rc.getLocation()) && rc.canBuildRobot(unit, checkLoc)) {
+				int checkDist = checkLoc.distanceSquaredTo(loc);
+				if (checkDist < minDist) {
+					bestLoc = checkLoc;
+					minDist = checkDist;
+				}
+			}
+		}
+		return bestLoc;
+	}
+
+	static MapLocation getSpawnLocation(RobotController rc, RobotType unit) throws GameActionException {
+		if (unit == RobotType.CARRIER) {
+			switch (rc.getRoundNum()) {
+				case 1:
+					MapLocation adaWell = Communication.getClosestWell(rc, ResourceType.ADAMANTIUM);
+					if (adaWell != null) {
+						MapLocation closeTile = getClosestLocation(rc, adaWell, unit);
+						if (closeTile != null) {
+							return closeTile;
+						}
+					}
+					break;
+				default:
+					MapLocation manaWell = Communication.getClosestWell(rc, ResourceType.MANA);
+					if (manaWell != null) {
+						MapLocation closeTile = getClosestLocation(rc, manaWell, unit);
+						if (closeTile != null) {
+							return closeTile;
+						}
+					}
+					break;
+			}
+			if (nearbyWells.length > 0) {
+				MapLocation closeWell = getClosestLocation(rc, nearbyWells[0].getMapLocation(), unit);
+				if (closeWell != null) {
+					return closeWell;
+				}
+			}
+		}
+
+		MapLocation center = new MapLocation(width/2, height/2);
+		MapLocation spawnLoc = getClosestLocation(rc, center, unit);
+		return spawnLoc;
 	}
 }

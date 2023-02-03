@@ -52,7 +52,7 @@ public strictfp class RunLauncher {
         }
         
 		// look for targets to defend
-        // if (turnCount > 50) {
+        // if (turnCount > 30) {
             defLoc = Communication.getClosestEnemy(rc);
             if (defLoc != null) {
                 Pathing.navigateTo(rc, defLoc);
@@ -619,7 +619,7 @@ public strictfp class RunLauncher {
                         return;
                     }
                 }
-            } else if (turnCount % 3 != 0) {
+            } else {
                 MapLocation attackLoc;
                 switch(Pathing.currentDirection) {
                     case NORTHWEST:
