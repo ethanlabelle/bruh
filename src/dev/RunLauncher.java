@@ -27,6 +27,10 @@ public strictfp class RunLauncher {
     static MapLocation defLoc;
     static boolean swarm = false;
     static MapLocation[] possibleHQLocs = new MapLocation[3 * GameConstants.MAX_STARTING_HEADQUARTERS];
+    static int currentPredictedHQIndex = 0;
+    static boolean verticalSymmetry = true;
+    static boolean horizontalSymmetry = true;
+    static boolean rotationalSymmetry = true;
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
@@ -136,13 +140,42 @@ public strictfp class RunLauncher {
         if(possibleEnemyLOC != null)
             navigateTo(rc, possibleEnemyLOC);
          */
+        int symmetries = Communication.getSymmetry(rc);
+
+        if (verticalSymmetry) {
+            verticalSymmetry = Communication.getBit(symmetries, 2);
+            if (!verticalSymmetry) {
+                possibleHQLocs[0 * 3 + 1] = null;
+                possibleHQLocs[1 * 3 + 1] = null;
+                possibleHQLocs[2 * 3 + 1] = null;
+                possibleHQLocs[3 * 3 + 1] = null;
+            }
+        }
+
+        if (horizontalSymmetry) {
+            horizontalSymmetry = Communication.getBit(symmetries, 1);
+            if (!horizontalSymmetry) {
+                possibleHQLocs[0 * 3 + 2] = null;
+                possibleHQLocs[1 * 3 + 2] = null;
+                possibleHQLocs[2 * 3 + 2] = null;
+                possibleHQLocs[3 * 3 + 2] = null;
+            }
+        }
+
+        if (rotationalSymmetry) {
+            rotationalSymmetry = Communication.getBit(symmetries, 0);
+            if (!rotationalSymmetry) {
+                possibleHQLocs[0 * 3] = null;
+                possibleHQLocs[1 * 3] = null;
+                possibleHQLocs[2 * 3] = null;
+                possibleHQLocs[3 * 3] = null;
+            }
+        }
         if(possibleEnemyLOC == null){
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            boolean horizontalSymmetry = true;
-            boolean verticalSymmetry = true;
-            boolean rotationalSymmetry = true;
+            // System.out.println("THE SYMMETRY IS " + verticalSymmetry + " " + horizontalSymmetry + " " + rotationalSymmetry);
 
             // generate list of possible hqs
             int count = 0;
@@ -288,6 +321,7 @@ public strictfp class RunLauncher {
                     }
                 }
                 possibleEnemyLOC = closest_predicted;
+                currentPredictedHQIndex = ind;
                 possibleHQLocs[ind] = null;
             } else {
                 possibleEnemyLOC = possibleHQLocs[0];
@@ -296,6 +330,8 @@ public strictfp class RunLauncher {
         }
 
         if (possibleEnemyLOC != null) {
+
+
             Pathing.navigateTo(rc, possibleEnemyLOC);
             if (rc.canSenseLocation(possibleEnemyLOC)) {
                 RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
@@ -304,6 +340,33 @@ public strictfp class RunLauncher {
                     possibleEnemyLOC = null;
                     return;
                 } else {
+                    // remove symmetry
+                    switch (currentPredictedHQIndex % 3) {
+                        // rotational
+                        case 0:
+                            Communication.setImpossibleSymmetry(rc, Communication.ROTATIONAL_MASK);
+                            possibleHQLocs[0 * 3] = null;
+                            possibleHQLocs[1 * 3] = null;
+                            possibleHQLocs[2 * 3] = null;
+                            possibleHQLocs[3 * 3] = null;
+                            break;
+                        // vertical
+                        case 1:
+                            Communication.setImpossibleSymmetry(rc, Communication.VERTICAL_MASK);
+                            possibleHQLocs[0 * 3 + 1] = null;
+                            possibleHQLocs[1 * 3 + 1] = null;
+                            possibleHQLocs[2 * 3 + 1] = null;
+                            possibleHQLocs[3 * 3 + 1] = null;
+                            break;
+                        // horizontal
+                        case 2:
+                            Communication.setImpossibleSymmetry(rc, Communication.HORIZONTAL_MASK);
+                            possibleHQLocs[0 * 3 + 2] = null;
+                            possibleHQLocs[1 * 3 + 2] = null;
+                            possibleHQLocs[2 * 3 + 2] = null;
+                            possibleHQLocs[3 * 3 + 2] = null;
+                            break;
+                    }
                     MapLocation closest_predicted = null;
                     int min_dist = 7200;
                     // pick closest HQ that is outside of known HQs' action radius
@@ -320,6 +383,7 @@ public strictfp class RunLauncher {
                         move_randomly = true;
                     } else {
                         possibleEnemyLOC = closest_predicted;
+                        currentPredictedHQIndex = ind;
                         possibleHQLocs[ind] = null;
                     }
                 }

@@ -33,6 +33,11 @@ class Communication {
     private static final int MAPLOC_BITS = 12;
     private static final int TEAM_BITS = 4;
     private static final int TEAM_MASK = 0b1111;
+    private static final int SYMMETRY_MASK = 0b111;
+    public static final int VERTICAL_MASK =   0b111111111111011;
+    public static final int HORIZONTAL_MASK = 0b111111111111101;
+    public static final int ROTATIONAL_MASK = 0b111111111111110;
+    private static final int SYMMETRY_BITS = 3;
 
     private static final int ENEMY_LOCATION_MASK = 0b111111111111;
     private static final int HQ_FLAG = 1 << 12;
@@ -90,9 +95,49 @@ class Communication {
     //     }
     // }
 
+    static void initSymmetry(RobotController rc) throws GameActionException {
+        int sharedArrayInfo = rc.readSharedArray(0);
+        if ((sharedArrayInfo & SYMMETRY_MASK) != 0) {
+            return;
+        }
+        sharedArrayInfo = sharedArrayInfo | 0b111;
+        rc.writeSharedArray(0, sharedArrayInfo);
+    }
+
+    static void setImpossibleSymmetry(RobotController rc, int symmetry) throws GameActionException {
+        /*
+         * first bit is vertical, second is horizontal, third is rotational
+         * 0b101 means horizontal symmetry is impossible
+         * to eliminate horizontal symmetry, call setImpossibleSymmetry(rc, 0b101)
+         */
+        int sharedArrayInfo = rc.readSharedArray(0);
+        sharedArrayInfo = sharedArrayInfo & symmetry;
+        Message msg = new Message(0, sharedArrayInfo, RobotPlayer.turnCount);
+        add(msg);
+    }
+
+    static int getSymmetry(RobotController rc) throws GameActionException {
+        int sharedArrayInfo = rc.readSharedArray(0);
+        return sharedArrayInfo & SYMMETRY_MASK;
+    }
+
+    static boolean getBit(int n, int k) {
+        return ((n >> k) & 1) == 1;
+    }
+
     static void addHeadquarter(RobotController rc) throws GameActionException {
         MapLocation me = rc.getLocation();
-        for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
+        // first headquarter contains map symmetry info as well
+        int sharedArrayInfo = rc.readSharedArray(0);
+        if ((sharedArrayInfo >> SYMMETRY_BITS) == 0) {
+            int symmetryInfo = sharedArrayInfo & SYMMETRY_MASK;
+            rc.writeSharedArray(0, (locationToInt(rc, me) << SYMMETRY_BITS) | symmetryInfo);
+            headquarterLocs[0] = me;
+            headquarterLocsSet.add(me);
+            return;
+        }
+
+        for (int i = 1; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
             if (rc.readSharedArray(i) == 0) {
                 rc.writeSharedArray(i, locationToInt(rc, me));
 				headquarterLocs[i] = me;
@@ -103,13 +148,23 @@ class Communication {
     }
 
     static void updateHeadquarterInfo(RobotController rc) throws GameActionException {
-        for (int i = 0; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
-            MapLocation loc = intToLocation(rc, rc.readSharedArray(i));
+        // first headquarter contains map symmetry info as well
+        int sharedArrayInfo = rc.readSharedArray(0);
+
+        if ((sharedArrayInfo >> SYMMETRY_BITS) == 0) {
+            return;
+        }
+        MapLocation loc = intToLocation(rc, sharedArrayInfo >> SYMMETRY_BITS);
+        headquarterLocs[0] = loc;
+        headquarterLocsSet.add(loc);
+
+        for (int i = 1; i < GameConstants.MAX_STARTING_HEADQUARTERS; i++) {
+            if (rc.readSharedArray(i) == 0) {
+                break;
+            }
+            loc = intToLocation(rc, rc.readSharedArray(i));
        	    headquarterLocs[i] = loc;
             headquarterLocsSet.add(loc);
-       	    if (rc.readSharedArray(i) == 0) {
-       	        break;
-       	    }
        	}
     }
 
@@ -119,11 +174,13 @@ class Communication {
         MapLocation me = rc.getLocation();
         for (int i = GameConstants.MAX_STARTING_HEADQUARTERS; --i >= 0;) {
             MapLocation loc = headquarterLocs[i];
+            // System.out.println("HQ " + i + " is at " + loc);
 			if (loc != null && loc.distanceSquaredTo(me) < minDist) {
 				minDist = loc.distanceSquaredTo(me);
 				closestHQ = loc;
 			}
         }
+        // System.out.println("THE CLOSEST HQ IS " + closestHQ);
         return closestHQ;
     }
 

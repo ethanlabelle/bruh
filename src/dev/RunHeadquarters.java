@@ -155,6 +155,7 @@ public strictfp class RunHeadquarters {
     }
 
 	static void setup(RobotController rc) throws GameActionException {
+		Communication.initSymmetry(rc);
 		RobotInfo[] robotInfos = rc.senseNearbyRobots(-1, enemyTeam);
 		for (int i = robotInfos.length; --i >= 0; ) {
 			if (robotInfos[i].type == RobotType.HEADQUARTERS) {
