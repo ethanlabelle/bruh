@@ -643,6 +643,9 @@ public strictfp class RunLauncher {
                     }
                 }
             }
+            if (EnemyHQLOC != null && me.isWithinDistanceSquared(EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared)) {
+                Pathing.tryMove(rc, me.directionTo(EnemyHQLOC).opposite());
+            }
         }
     }
 }
