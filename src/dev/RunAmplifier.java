@@ -143,7 +143,6 @@ public strictfp class RunAmplifier {
                 healingIsland = getClosestControlledIsland(rc);
             }
             if (healingIsland != null) {
-                rc.setIndicatorString("trying to heal!!");
                 me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x + me.y * width] == islandNum) {

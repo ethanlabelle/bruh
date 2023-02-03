@@ -45,14 +45,11 @@ public strictfp class RunLauncher {
         if (isHealing && healingIsland != null) {
             attackEnemies(rc);
             cloudShot(rc);
-            // Communication.clearObsoleteEnemies(rc);
+            Communication.clearObsoleteEnemies(rc);
             Communication.clearOld();
             return;
         }
 
-		// look for targets to defend
-        // if (turnCount > 30) {
-        // if (turnCount == 1) {
         defLoc = Communication.getClosestEnemy(rc);
         if (defLoc != null) {
             Pathing.navigateTo(rc, defLoc);
@@ -77,45 +74,10 @@ public strictfp class RunLauncher {
                     checkForFriends(rc, EnemyHQLOC);
                 }
             } else {
-                // int before = Clock.getBytecodeNum();
                 travelToPossibleHQ(rc);
-                // int after = Clock.getBytecodeNum();
-                // System.out.println(after-before);
             }
         }
-        // } else if (!attackEnemyIsland(rc)) {
-        //     defLoc = Communication.getClosestEnemy(rc);
-        //     if (defLoc != null) {
-        //         Pathing.navigateTo(rc, defLoc);
-        //         attackEnemies(rc);
-        //         cloudShot(rc);
-        //         Communication.clearObsoleteEnemies(rc);
-        //         Communication.clearOld();
-        //         return;
-        //     } else {
-        //         if (move_randomly) {
-        //             moveLastResort(rc);
-        //             attackEnemies(rc);
-        //             cloudShot(rc);
-        //             // Communication.clearObsoleteEnemies(rc);
-        //             Communication.clearOld();
-        //             return;
-        //         }
-    
-        //         // want to stop 'outside' HQ action radius
-        //         if(EnemyHQLOC != null && !EnemyHQLOC.equals(Pathing.undefined_loc)) {
-        //             if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-        //                 Pathing.navigateTo(rc, EnemyHQLOC);
-        //                 checkForFriends(rc, EnemyHQLOC);
-        //             }
-        //         } else {
-        //             // int before = Clock.getBytecodeNum();
-        //             travelToPossibleHQ(rc);
-        //             // int after = Clock.getBytecodeNum();
-        //             // System.out.println(after-before);
-        //         }
-        //     }
-        // } 
+
 
         attackEnemies(rc);
         cloudShot(rc);
@@ -208,7 +170,6 @@ public strictfp class RunLauncher {
             // set possible enemy loc based on symmetry of our HQ
             MapLocation closest_predicted = null;
             int min_dist = 7200;
-            // System.out.println("THE SYMMETRY IS " + verticalSymmetry + " " + horizontalSymmetry + " " + rotationalSymmetry);
 
             // generate list of possible hqs
             int count = 0;
@@ -229,9 +190,6 @@ public strictfp class RunLauncher {
                 possibleHQLocs[i * 3] = rotationalSym;
                 possibleHQLocs[i * 3 + 1] = verticalSym;
                 possibleHQLocs[i * 3 + 2] = horizontalSym;
-                rc.setIndicatorDot(verticalSym, 255, 0, 0);
-                rc.setIndicatorDot(horizontalSym, 255, 0, 0);
-                rc.setIndicatorDot(rotationalSym, 255, 0, 0);
             }
 
             if (count > 1) {
@@ -584,7 +542,6 @@ public strictfp class RunLauncher {
                 healingIsland = getClosestControlledIsland(rc);
             }
             if (healingIsland != null) {
-                rc.setIndicatorString("trying to heal!!");
                 me = rc.getLocation();
                 short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
                 if (board[me.x + me.y * width] == islandNum) {
@@ -631,9 +588,7 @@ public strictfp class RunLauncher {
     }
     
     static void cloudShot(RobotController rc) throws GameActionException {
-        rc.setIndicatorString("cloud shot");
         if (rc.isActionReady()) {
-            rc.setIndicatorString("head empty");
             if (!rc.senseCloud(rc.getLocation())) {
                 // sense nearby clouds and attack a location in there
                 MapLocation[] clouds = rc.senseNearbyCloudLocations();
@@ -671,8 +626,6 @@ public strictfp class RunLauncher {
                     rc.attack(attackLoc);
                 }
             }
-        } else {
-            rc.setIndicatorString("not action ready");
         }
     }
 

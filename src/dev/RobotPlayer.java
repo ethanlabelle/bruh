@@ -96,15 +96,10 @@ public strictfp class RobotPlayer {
      **/
 	@SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-		// TODO: clean up initialization
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
 		rng = new Random(rc.getID());
-		// int before = Clock.getBytecodeNum();
 		board = new byte[width * height];
-		// int after = Clock.getBytecodeNum();
-		// System.out.println(after-before);
-        rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		enemyTeam = myTeam.opponent();
 		
@@ -158,9 +153,6 @@ public strictfp class RobotPlayer {
 			} finally {
 				// Signify we've done everything we want to do, thereby ending our turn.
 				// This will make our code wait until the next turn, and then perform this loop again.
-				if (Clock.getBytecodeNum() < 200) {
-					System.out.println("sus");
-				}
 				Clock.yield();
 			}
 			// End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
@@ -169,8 +161,7 @@ public strictfp class RobotPlayer {
 	}
 
 		// Fills out the static board array for RobotPlayer board 
-		// About 3000 bytecode or so 
-		// TODO: Clouds, currents 
+		// About 3000 bytecode or so
 		static void updateMap(RobotController rc) throws GameActionException {
 			if (lastLocation == null || !lastLocation.equals(rc.getLocation())) {
 				lastLocation = rc.getLocation();

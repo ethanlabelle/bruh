@@ -79,51 +79,12 @@ public class Pathing {
         if (rc.getType() == RobotType.CARRIER) {
             if (rc.getWeight() < 10)
                 return false;
-            // else return d != Direction.CENTER && d != currentDirection;
         }
-        // if (rc.getType() == RobotType.LAUNCHER) {
-        //     if (RunLauncher.enemies.length > 0 && board[loc.x + loc.y * width] == M_CLOUD) {
-        //         return true;
-        //     }
-        // }
-        // return d != Direction.CENTER && d != currentDirection && d != currentDirection.rotateLeft() && d != currentDirection.rotateRight();
         return d != Direction.CENTER && (d.dx * dir.dx) + (d.dy * dir.dy) <= 0;
-        // return d != Direction.CENTER && d != currentDirection;
     }    
     
     static boolean tryMove(RobotController rc, Direction dir) throws GameActionException {
-        // MapLocation me = rc.getLocation();
-        // if (rc.getType() == RobotType.LAUNCHER) {
-        //     MapLocation tile = me.add(dir);
-        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, dir) && rc.canMove(dir)) {
-        //         rc.move(dir);
-        //         return true;
-        //     }
-        //     Direction right = dir.rotateRight();
-        //     tile = me.add(right);
-        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, right) && rc.canMove(right)) {
-        //         rc.move(right);
-        //         return true;
-        //     }
-        //     Direction left = dir.rotateLeft();
-        //     tile = me.add(left);
-        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, left) && rc.canMove(left)) {
-        //         rc.move(left);
-        //         return true;
-        //     }
-        //     Direction rightRight = dir.rotateRight().rotateRight();
-        //     tile = me.add(rightRight);
-        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, rightRight) && rc.canMove(rightRight)) {
-        //         rc.move(rightRight);
-        //         return true;
-        //     }
-        //     Direction leftLeft = dir.rotateLeft().rotateLeft();
-        //     tile = me.add(leftLeft);
-        //     if (rc.onTheMap(tile) && board[tile.x + tile.y * width] != M_CLOUD && !hasObstacle(rc, leftLeft) && rc.canMove(leftLeft)) {
-        //         rc.move(leftLeft);
-        //         return true;
-        //     }
-        // }
+
         if (!hasObstacle(rc, dir) && rc.canMove(dir)) {
             rc.move(dir);
             return true;
@@ -197,7 +158,6 @@ public class Pathing {
 
     static void bugRandom(RobotController rc, MapLocation loc) throws GameActionException {
         // head towards goal
-        rc.setIndicatorString("Navigating to " + loc);
         Direction goalDir = rc.getLocation().directionTo(loc);
         if (rc.canMove(goalDir)) {
             rc.move(goalDir);
@@ -213,7 +173,6 @@ public class Pathing {
 
     static void bug0(RobotController rc, MapLocation loc) throws GameActionException {
         // head towards goal
-        rc.setIndicatorString("Navigating to " + loc);
         Direction goalDir = rc.getLocation().directionTo(loc);
         if (rc.canMove(goalDir)) {
             rc.move(goalDir);
@@ -233,7 +192,6 @@ public class Pathing {
                     }
                 }
             } else {
-                rc.setIndicatorString("on obstacle");
                 // follow obstacle using right hand rule
                 boolean frontRight = senseFrontRight(rc);
                 if (!frontRight) {
@@ -293,7 +251,6 @@ public class Pathing {
             navCount = 0;
         }
         navCount++;
-        rc.setIndicatorLine(startPoint, goalLoc, 0, 0, 255);
         Direction goalDir = rc.getLocation().directionTo(goalLoc);
         // head towards goal
         if (!wallMode && !tryMove(rc, goalDir) && rc.getMovementCooldownTurns() == 0) {
@@ -303,7 +260,6 @@ public class Pathing {
                 currentDirection = currentDirection.rotateLeft().rotateLeft();
                 hitPoint = rc.getLocation();
             } else {
-                //bugRandom(rc, goalLoc);
                 Direction a = currentDirection.rotateLeft();
                 if (rc.canMove(a)) {
                     rc.move(a);
@@ -356,17 +312,11 @@ public class Pathing {
         
 
         if (wallMode) {
-            rc.setIndicatorLine(startPoint, goalLoc, 255, 0, 0);
 
             // check if we are on the line
-
-            // if (onMLine(rc.getLocation())) {
-            //     rc.setIndicatorString("On m-line: " + rc.getLocation().distanceSquaredTo(goalLoc) + " < " + hitPoint.distanceSquaredTo(goalLoc) + "?"); 
-            // }
             if (onMLine(rc.getLocation()) && rc.getLocation().distanceSquaredTo(goalLoc) < hitPoint.distanceSquaredTo(goalLoc)) {
                 // if we are on the line, we are done wall following
                 wallMode = false;
-                // rc.setIndicatorString("left wall");
                 return;
             }
 
@@ -378,29 +328,22 @@ public class Pathing {
                 Direction moveDirection = currentDirection.rotateRight().rotateRight();
                 if (tryMove(rc, moveDirection)) {
                     currentDirection = moveDirection;
-                    // rc.setIndicatorString("turning right " + currentDirection);
                 } else if (rc.getMovementCooldownTurns() == 0) {
-                    // rc.setIndicatorString("could not turn right " + moveDirection);
                     bugRandom(rc, goalLoc);
                 }
             } else if (!frontRight) {
                 Direction moveDirection = currentDirection.rotateRight();
                 if (tryMove(rc, moveDirection)) {
                     currentDirection = moveDirection;
-                    // rc.setIndicatorString("turning front right " + currentDirection);
                 } else if (rc.getMovementCooldownTurns() == 0){
-                    // rc.setIndicatorString("could not turn front right " + moveDirection);
                     bugRandom(rc, goalLoc);
                 }
             } else if (!front) {
                 tryMove(rc, currentDirection);
-                    // rc.setIndicatorString("moving forward " + currentDirection);
             } else {
                 turnLeft();
-                // rc.setIndicatorString("turning left " + currentDirection);
             }
         }
-        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDirection), 0, 255, 0);
         if (!touchingObstacle(rc) || navCount > 200)
             goalLoc = null;
         
@@ -432,63 +375,8 @@ public class Pathing {
         return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
     }
 
-    // static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
-    //     if (path.size() == 0 || !(loc.equals(path.getLast()) || loc.equals(path.getFirst()))) {
-    //         // reset path state
-    //         pSrc = null;
-    //         pDst = null;
-    //         // visited.clear();
-    //         path.clear();
-    //         // bfsQ.clear();
-    //         // parents.clear();
-    //         hasPath = false;
-    //         currentPathIdx = -1;
-    //         // System.out.println("clearing bfs state");
-    //     }
-    //     if (path.size() > 2) {
-    //         if (toHQ) {
-    //             if (currentPathIdx == -1) {
-    //                 currentPathIdx = path.size() - 2;
-    //             }
-    //             MapLocation nextTile = path.get(currentPathIdx);
-    //             rc.setIndicatorString("toHQ moving to " + nextTile);
-    //             bug2(rc, nextTile);
-    //             if (rc.getLocation().distanceSquaredTo(nextTile) <= 1)
-    //                 currentPathIdx--;
-    //         }
-    //         else {
-    //             if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 1) {
-    //                 return;
-    //             }
-    //             if (currentPathIdx == -1 || currentPathIdx == 0) {
-    //                 currentPathIdx = 1;
-    //             }
-    //             MapLocation nextTile = path.get(currentPathIdx);
-    //             rc.setIndicatorString("to well moving to " + nextTile);
-    //             rc.setIndicatorDot(nextTile, 255, 0, 0);
-    //             bug2(rc, nextTile);
-    //             if (rc.getLocation().distanceSquaredTo(nextTile) <= 1) {
-    //                 if (currentPathIdx < path.size() - 2)
-    //                     currentPathIdx++;
-    //             }
-    //             // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-    //             //     rc.move(rc.getLocation().directionTo(nextTile));
-                    
-    //             // }
-    //         }
-    //         return;
-    //     }
-    //     if (rc.isMovementReady()) {
-    //         rc.setIndicatorString("here");
-    //         bug2(rc, loc);
-    //         if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
-    //             bug2(rc, loc);
-    //         }
-    //     }
-    // }
 
     static boolean bfs(RobotController rc, MapLocation src, MapLocation dst) throws GameActionException {
-        
         // clear old path/init pathing src/dst
         if (pSrc == null || !src.equals(pSrc)) {
             pSrc = src;
@@ -507,7 +395,6 @@ public class Pathing {
             return true;
         }
         else if (bfsQ.size() == 0) {
-            rc.setIndicatorDot(src, 255, 0, 0);
             if (!parents.containsKey(src)) {
                 bfsQ.add(src);
                 parents.put(src, undefined_loc);
@@ -521,13 +408,11 @@ public class Pathing {
         }
         else if (bfsQ.size() > 0){
             MapLocation next = bfsQ.remove();
-            rc.setIndicatorDot(next, 0, 255, 0);
             for (int i = directions.length; --i >= 0;) {
                 MapLocation adj = next.add(directions[i]);
                 if (!rc.onTheMap(adj))
                     continue;
                 byte tile = board[adj.x + adj.y * width];
-                rc.setIndicatorDot(adj, 0, 0, 255);
                 switch (tile) {
                     case M_STORM:
                     case M_HIDDEN:

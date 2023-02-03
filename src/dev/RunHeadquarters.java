@@ -50,7 +50,6 @@ public strictfp class RunHeadquarters {
 				MapLocation loc = null;
 				while (rc.getResourceAmount(ResourceType.MANA) > EXCESS) {
 					while (rc.isActionReady()) {
-						rc.setIndicatorString("Trying to build launchers");
 						loc = getSpawnLocation(rc, RobotType.LAUNCHER);
 						if (loc != null) {
 							rc.buildRobot(RobotType.LAUNCHER, loc);
@@ -111,18 +110,6 @@ public strictfp class RunHeadquarters {
 				}
 			}
 		}
-    }
-
-     static int buildNLaunchers(RobotController rc, int n) throws GameActionException {
-        int i = 0;
-        while (rc.isActionReady() && i < n) {
-            MapLocation spawnLoc = getSpawnLocation(rc, RobotType.LAUNCHER);
-            if (spawnLoc != null) {
-                           rc.buildRobot(RobotType.LAUNCHER, spawnLoc);
-                i++;
-             }
-        }
-        return i;
     }
 
 	static void setup(RobotController rc) throws GameActionException {
