@@ -111,7 +111,8 @@ public strictfp class RunCarrier {
             // if (Pathing.hasPath) {
             //     Pathing.navigateToWithPath(rc, HQLOC, false);
             // } else {
-            // HQLOC = Communication.getClosestHeadquarters(rc);
+            if (!Pathing.hasPath)
+                HQLOC = Communication.getClosestHeadquarters(rc);
             Pathing.navigateTo(rc, HQLOC);
             // }
 
