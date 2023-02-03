@@ -421,10 +421,6 @@ public class Pathing {
                 }
                 MapLocation nextTile = path.get(currentPathIdx);
                 rc.setIndicatorString("toHQ moving to " + nextTile);
-                // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-                //     rc.move(rc.getLocation().directionTo(nextTile));
-                //     currentPathIdx--;
-                // }
                 bug2(rc, nextTile);
                 if (rc.getLocation().distanceSquaredTo(nextTile) <= 2)
                     currentPathIdx--;
@@ -468,7 +464,6 @@ public class Pathing {
             hasPath = false;
             currentPathIdx = -1;
             path.clear();
-            // visited.clear();
             parents.clear();
             bfsQ.clear();
         }
@@ -477,13 +472,6 @@ public class Pathing {
             pDst = dst;
             path.clear();
         }
-        // if (dst == null || pSrc == null || !src.equals(pSrc) || !dst.equals(pDst)) {
-        //     pSrc = src;
-        //     pDst = dst;
-        //     path.clear();
-        //     hasPath = false;
-        //     currentPathIdx = -1;
-        // }
 
         // constructs paths
         else if (dst != null && parents.containsKey(dst) && path.isEmpty()) {
@@ -505,11 +493,6 @@ public class Pathing {
         }
         else if (bfsQ.size() > 0){
             MapLocation next = bfsQ.remove();
-            // System.out.println("" + next);
-            // if (parents.containsKey(next)) {
-            //     System.out.println("oops");
-            //     return false;
-            // }
             rc.setIndicatorDot(next, 0, 255, 0);
             for (int i = directions.length; --i >= 0;) {
                 MapLocation adj = next.add(directions[i]);

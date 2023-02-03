@@ -10,7 +10,7 @@ import static dev.RobotPlayer.*;
 public strictfp class RunCarrier {
     static RobotInfo[] enemyRobots;
     static MapLocation me;
-    static final int BAN_LIST_SIZE = 10;
+    static final int BAN_LIST_SIZE = 8;
     static MapLocation[] bannedWells = new MapLocation[BAN_LIST_SIZE];
     static int banCounter = 0;
     static boolean foundWell = false;
@@ -81,46 +81,41 @@ public strictfp class RunCarrier {
         }
         // }
         
-        if (wellLoc != null && pWellLoc == null) {
-            Pathing.navigateTo(rc, HQLOC);
-            Pathing.navigateTo(rc, HQLOC);
-            Communication.tryWriteMessages(rc);
-            return;
-        }
-
-        foundWell = false;
-		// find resources
-        if (wellLoc != null && !rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
-            if (Pathing.hasPath) {
-                Pathing.navigateToWithPath(rc, wellLoc, true);
-                Pathing.navigateToWithPath(rc, wellLoc, true);
-            }
-            else Pathing.navigateTo(rc, wellLoc);
-        }
-
-        // Try to gather from assigned well.
-        if (wellLoc != null)
+        if (wellLoc != null) {
             rc.setIndicatorString("wellLoc " + wellLoc + " " + rc.canCollectResource(wellLoc, -1) + " "  + rc.getLocation());
-		if (wellLoc != null && rc.canCollectResource(wellLoc, -1) && getTotalResources(rc) < 40) {
-            rc.setIndicatorString("trying to mine");
-            mine(rc);
-		} else if (wellLoc != null && me.distanceSquaredTo(wellLoc) <= 9 && getTotalResources(rc) < 40) {
-            if (isWellFull(rc, wellLoc)) {
-                rc.setIndicatorString("banning " + wellLoc);
-                bannedWells[banCounter] = wellLoc;
-                wellLoc = null;
-                banCounter = ++banCounter % BAN_LIST_SIZE;
+            if (pWellLoc == null) {
+                Pathing.navigateTo(rc, HQLOC);
+                Pathing.navigateTo(rc, HQLOC);
+                Communication.tryWriteMessages(rc);
+                return;
+            } else if (getTotalResources(rc) < 40 && rc.isActionReady()) {
+                // try to find well or mine from well
+                if (rc.canCollectResource(wellLoc, -1)) {
+                    mine(rc);
+                } else if (me.isWithinDistanceSquared(wellLoc, 9) && isWellFull(rc, wellLoc)) {
+                    bannedWells[banCounter] = wellLoc;
+                    wellLoc = null;
+                    banCounter = ++banCounter % BAN_LIST_SIZE;
+                } else {
+                    if (Pathing.hasPath && getTotalResources(rc) == 0){
+                        Pathing.navigateToWithPath(rc, wellLoc, true);
+                        Pathing.navigateToWithPath(rc, wellLoc, true);
+                    }
+                    Pathing.navigateTo(rc, wellLoc);
+                }
             }
         }
 
-		// try to deposite resources
+		// try to deposit resources
         if (getTotalResources(rc) >= 40) {
-            HQLOC = Communication.getClosestHeadquarters(rc);
             if (Pathing.hasPath) {
                 Pathing.navigateToWithPath(rc, HQLOC, false);
                 Pathing.navigateToWithPath(rc, HQLOC, false);
+            } else {
+                HQLOC = Communication.getClosestHeadquarters(rc);
+                Pathing.navigateTo(rc, HQLOC);
             }
-            else Pathing.navigateTo(rc, HQLOC);
+
             // try to transfer ADAMANTIUM
             int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
             int mana = rc.getResourceAmount(ResourceType.MANA);
@@ -149,7 +144,7 @@ public strictfp class RunCarrier {
             if (rc.getRoundNum() < 300)
                 exploreBFS(rc);
             else {
-                // attackEnemyIsland(rc);
+                attackEnemyIsland(rc);
                 // Move randomly
                 Direction dir = Pathing.currentDirection;
                 if (rc.canMove(dir)) {
