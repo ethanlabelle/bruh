@@ -23,6 +23,7 @@ public strictfp class RunLauncher {
     static Direction oscillatDirection = directions[rng.nextInt(directions.length)];
     static RobotInfo[] friends;
     static RobotInfo[] enemies;
+    static RobotInfo[] pastEnemies = null;
     static MapLocation me;
     static MapLocation defLoc;
     static boolean swarm = false;
@@ -84,10 +85,37 @@ public strictfp class RunLauncher {
         }
 
         attackEnemies(rc);
+
+        // this keeps track of old enemies to fire at them if we move backwards and dont see them anymore
+        if (rc.isActionReady() && pastEnemies != null) {
+            MapLocation holder = getPossCloud(rc);
+            if (holder != null) {
+                rc.setIndicatorDot(holder, 120, 120, 120);
+                if (rc.canAttack(holder)) {
+                    rc.attack(holder);
+                }
+            }
+        }
+        pastEnemies = enemies;
+
         cloudShot(rc);
         avoidHQ(rc);
         // Communication.clearObsoleteEnemies(rc);
         Communication.clearOld();
+    }
+
+    static MapLocation getPossCloud (RobotController rc) throws GameActionException {
+        for (RobotInfo enemy : pastEnemies) {
+            MapLocation possLoc;
+            for (int index = directions.length; --index > 0;) {
+                possLoc = enemy.getLocation().add(directions[index]);
+                // checks to see if possible to leave vision then returns for a better target
+                if (!rc.canSenseLocation(possLoc) && rc.onTheMap(possLoc) && board[possLoc.x + possLoc.y * width] == M_CLOUD) {
+                    return possLoc;
+                }
+            }
+        }
+        return null;
     }
 
     static void runFollower(RobotController rc, MapLocation leader_loc) throws GameActionException {
