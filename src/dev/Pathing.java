@@ -27,7 +27,7 @@ public class Pathing {
     static Queue<MapLocation> bfsQ =  new LinkedList<>();
     // static HashSet<MapLocation> visited = new HashSet<>();
     static HashSet<MapLocation> hidden = new HashSet<>();
-    static LinkedList<MapLocation> path = new LinkedList<>();
+    // static LinkedList<MapLocation> path = new LinkedList<>();
     static HashMap<MapLocation, MapLocation> parents = new HashMap<>();
     static int currentPathIdx = -1;
     static boolean hasPath = false;
@@ -47,9 +47,24 @@ public class Pathing {
     }
     // Navigation
     static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
+        if (rc.isMovementReady() && rc.getType() == RobotType.CARRIER && loc.equals(HQLOC) && hasPath) {
+            MapLocation me = rc.getLocation();
+            if (parents.containsKey(me)) {
+                MapLocation goal = parents.get(me);
+                tryMove(rc, me.directionTo(goal));
+            }
+            if (rc.isMovementReady()) {
+                me = rc.getLocation();
+                if (parents.containsKey(me)) {
+                    MapLocation goal = parents.get(me);
+                    tryMove(rc, me.directionTo(goal));
+                }
+            }
+        }
+        
         if (rc.isMovementReady()) {
             bug2(rc, loc);
-            if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
+            if (rc.isMovementReady() && rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
                 bug2(rc, loc);
             }
         }
@@ -297,7 +312,7 @@ public class Pathing {
                     rc.move(a);
                     currentDirection = a;
                 } else {
-                    a = currentDirection.rotateRight();
+                    a = currentDirection.rotateLeft().rotateLeft();
                     if (rc.canMove(a)) {
                         rc.move(a);
                         currentDirection = a;
@@ -401,60 +416,60 @@ public class Pathing {
         return abs(loc.y - (slope * loc.x + yIntercept)) < epsilon;
     }
 
-    static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
-        if (path.size() == 0 || !(loc.equals(path.getLast()) || loc.equals(path.getFirst()))) {
-            // reset path state
-            pSrc = null;
-            pDst = null;
-            // visited.clear();
-            path.clear();
-            // bfsQ.clear();
-            // parents.clear();
-            hasPath = false;
-            currentPathIdx = -1;
-            // System.out.println("clearing bfs state");
-        }
-        if (path.size() > 2) {
-            if (toHQ) {
-                if (currentPathIdx == -1) {
-                    currentPathIdx = path.size() - 2;
-                }
-                MapLocation nextTile = path.get(currentPathIdx);
-                rc.setIndicatorString("toHQ moving to " + nextTile);
-                bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 2)
-                    currentPathIdx--;
-            }
-            else {
-                if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 2) {
-                    return;
-                }
-                if (currentPathIdx == -1 || currentPathIdx == 0) {
-                    currentPathIdx = 1;
-                }
-                MapLocation nextTile = path.get(currentPathIdx);
-                rc.setIndicatorString("to well moving to " + nextTile);
-                rc.setIndicatorDot(nextTile, 255, 0, 0);
-                bug2(rc, nextTile);
-                if (rc.getLocation().distanceSquaredTo(nextTile) <= 2) {
-                    if (currentPathIdx < path.size() - 2)
-                        currentPathIdx++;
-                }
-                // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
-                //     rc.move(rc.getLocation().directionTo(nextTile));
+    // static void navigateToWithPath(RobotController rc, MapLocation loc, boolean toHQ) throws GameActionException {
+    //     if (path.size() == 0 || !(loc.equals(path.getLast()) || loc.equals(path.getFirst()))) {
+    //         // reset path state
+    //         pSrc = null;
+    //         pDst = null;
+    //         // visited.clear();
+    //         path.clear();
+    //         // bfsQ.clear();
+    //         // parents.clear();
+    //         hasPath = false;
+    //         currentPathIdx = -1;
+    //         // System.out.println("clearing bfs state");
+    //     }
+    //     if (path.size() > 2) {
+    //         if (toHQ) {
+    //             if (currentPathIdx == -1) {
+    //                 currentPathIdx = path.size() - 2;
+    //             }
+    //             MapLocation nextTile = path.get(currentPathIdx);
+    //             rc.setIndicatorString("toHQ moving to " + nextTile);
+    //             bug2(rc, nextTile);
+    //             if (rc.getLocation().distanceSquaredTo(nextTile) <= 1)
+    //                 currentPathIdx--;
+    //         }
+    //         else {
+    //             if (rc.getLocation().distanceSquaredTo(path.getLast()) <= 1) {
+    //                 return;
+    //             }
+    //             if (currentPathIdx == -1 || currentPathIdx == 0) {
+    //                 currentPathIdx = 1;
+    //             }
+    //             MapLocation nextTile = path.get(currentPathIdx);
+    //             rc.setIndicatorString("to well moving to " + nextTile);
+    //             rc.setIndicatorDot(nextTile, 255, 0, 0);
+    //             bug2(rc, nextTile);
+    //             if (rc.getLocation().distanceSquaredTo(nextTile) <= 1) {
+    //                 if (currentPathIdx < path.size() - 2)
+    //                     currentPathIdx++;
+    //             }
+    //             // if (rc.canMove(rc.getLocation().directionTo(nextTile))) {
+    //             //     rc.move(rc.getLocation().directionTo(nextTile));
                     
-                // }
-            }
-            return;
-        }
-        if (rc.isMovementReady()) {
-            rc.setIndicatorString("here");
-            bug2(rc, loc);
-            if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
-                bug2(rc, loc);
-            }
-        }
-    }
+    //             // }
+    //         }
+    //         return;
+    //     }
+    //     if (rc.isMovementReady()) {
+    //         rc.setIndicatorString("here");
+    //         bug2(rc, loc);
+    //         if (rc.getType() == RobotType.CARRIER && !atWellLoc(rc, wellLoc)) {
+    //             bug2(rc, loc);
+    //         }
+    //     }
+    // }
 
     static boolean bfs(RobotController rc, MapLocation src, MapLocation dst) throws GameActionException {
         
@@ -463,24 +478,24 @@ public class Pathing {
             pSrc = src;
             hasPath = false;
             currentPathIdx = -1;
-            path.clear();
+            // path.clear();
             parents.clear();
             bfsQ.clear();
         }
 
         else if (dst != null && !dst.equals(pDst)) {
             pDst = dst;
-            path.clear();
+            // path.clear();
         }
 
         // constructs paths
-        else if (dst != null && parents.containsKey(dst) && path.isEmpty()) {
-            MapLocation current = dst;
-            while (!current.equals(undefined_loc)) {
-                path.add(current);
-                rc.setIndicatorDot(current, 255, 0, 0);
-                current = parents.get(current);
-            }
+        else if (dst != null && parents.containsKey(dst)) {
+            // MapLocation current = dst;
+            // while (!current.equals(undefined_loc)) {
+            //     path.add(current);
+            //     rc.setIndicatorDot(current, 255, 0, 0);
+            //     current = parents.get(current);
+            // }
             Pathing.hasPath = true;
             return true;
         }

@@ -324,14 +324,13 @@ public strictfp class RunLauncher {
                 currentPredictedHQIndex = ind;
                 possibleHQLocs[ind] = null;
             } else {
+                // if only one headquarters, assume rotational first
                 possibleEnemyLOC = possibleHQLocs[0];
                 possibleHQLocs[0] = null;
             }
         }
 
         if (possibleEnemyLOC != null) {
-
-
             Pathing.navigateTo(rc, possibleEnemyLOC);
             if (rc.canSenseLocation(possibleEnemyLOC)) {
                 RobotInfo robot = rc.senseRobotAtLocation(possibleEnemyLOC);
@@ -635,23 +634,6 @@ public strictfp class RunLauncher {
                     rc.attack(attackLoc);
                 }
             }
-            
-            // else {
-            //     MapLocation attackLoc;
-            //     switch(Pathing.currentDirection) {
-            //         case NORTHWEST:
-            //         case SOUTHWEST:
-            //         case NORTHEAST:
-            //         case SOUTHEAST:
-            //             attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection);
-            //             break;
-            //         default:
-            //             attackLoc = rc.getLocation().add(Pathing.currentDirection).add(Pathing.currentDirection).add(Pathing.currentDirection);
-            //     }
-            //     if (rc.canAttack(attackLoc)) {
-            //         rc.attack(attackLoc);
-            //     }
-            // }
         } else {
             rc.setIndicatorString("not action ready");
         }

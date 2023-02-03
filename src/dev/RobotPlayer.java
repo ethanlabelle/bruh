@@ -156,7 +156,7 @@ public strictfp class RobotPlayer {
 			} finally {
 				// Signify we've done everything we want to do, thereby ending our turn.
 				// This will make our code wait until the next turn, and then perform this loop again.
-				if (Clock.getBytecodeNum() < 2000) {
+				if (Clock.getBytecodeNum() < 1000) {
 					System.out.println("sus");
 				}
 				Clock.yield();

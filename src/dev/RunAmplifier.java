@@ -62,22 +62,22 @@ public strictfp class RunAmplifier {
         Communication.clearObsoleteEnemies(rc);
 
         if (defLoc == null) {
-            MapLocation neutralIslandLoc = null;
-            int minDist = 7200;
-            int id;
-            for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
-                Team team = Communication.readTeamHoldingIsland(rc, id);
-                MapLocation islLoc = Communication.readIslandLocation(rc, id);
-                if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
-                    neutralIslandLoc = Communication.readIslandLocation(rc, id);
-                    minDist = me.distanceSquaredTo(islLoc);
-                }
-            }
-            if (neutralIslandLoc != null)
-                Pathing.navigateTo(rc, neutralIslandLoc);
-            else {
-                RunLauncher.travelToPossibleHQ(rc);
-            }
+            // MapLocation neutralIslandLoc = null;
+            // int minDist = 7200;
+            // int id;
+            // for (id = 1; id <= GameConstants.MAX_NUMBER_ISLANDS; id++) {
+            //     Team team = Communication.readTeamHoldingIsland(rc, id);
+            //     MapLocation islLoc = Communication.readIslandLocation(rc, id);
+            //     if (team.equals(Team.NEUTRAL) && islLoc != null && me.distanceSquaredTo(islLoc) < minDist) {
+            //         neutralIslandLoc = Communication.readIslandLocation(rc, id);
+            //         minDist = me.distanceSquaredTo(islLoc);
+            //     }
+            // }
+            // if (neutralIslandLoc != null)
+            //     Pathing.navigateTo(rc, neutralIslandLoc);
+            // else {
+            RunLauncher.travelToPossibleHQ(rc);
+            // }
         }
 
         // Move randomly

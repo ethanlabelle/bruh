@@ -8,10 +8,10 @@ import static dev.RobotPlayer.*;
 
 public strictfp class RunHeadquarters {
 
-	static final int LAUNCHER_MOD = 40;
+	static final int LAUNCHER_MOD = 20;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 30;
-	static final int MAX_CARRIERS = 20;
+	static final int CARRIER_MOD = 10;
+	static final int MAX_CARRIERS = 10;
 	static final int EXCESS = 100;
 	static int launcherCount = 0;
 	static int carrierCount = 0;

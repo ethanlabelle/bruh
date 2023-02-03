@@ -70,10 +70,10 @@ public strictfp class RunCarrier {
         } 
         else {
             pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
-            rc.setIndicatorString(pWellLoc + "");
-            if (pWellLoc == null && !earlyMana) {
-                pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
-            }
+            // rc.setIndicatorString(pWellLoc + "");
+            // if (pWellLoc == null && !earlyMana) {
+            //     pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.ADAMANTIUM);
+            // }
         }
         if (pWellLoc != null) {
             if (wellLoc == null || pWellLoc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))
@@ -82,7 +82,7 @@ public strictfp class RunCarrier {
         // }
         
         if (wellLoc != null) {
-            rc.setIndicatorString("wellLoc " + wellLoc + " " + rc.canCollectResource(wellLoc, -1) + " "  + rc.getLocation());
+            rc.setIndicatorString("wellLoc " + wellLoc + " " + rc.canCollectResource(wellLoc, -1) + " "  + rc.getLocation() + " " + rc.getMovementCooldownTurns());
             if (pWellLoc == null) {
                 Pathing.navigateTo(rc, HQLOC);
                 Pathing.navigateTo(rc, HQLOC);
@@ -97,10 +97,7 @@ public strictfp class RunCarrier {
                     wellLoc = null;
                     banCounter = ++banCounter % BAN_LIST_SIZE;
                 } else {
-                    if (Pathing.hasPath && getTotalResources(rc) == 0){
-                        Pathing.navigateToWithPath(rc, wellLoc, true);
-                        Pathing.navigateToWithPath(rc, wellLoc, true);
-                    }
+                    rc.setIndicatorString("navigating to wellLoc " + wellLoc + " " + rc.getMovementCooldownTurns());
                     Pathing.navigateTo(rc, wellLoc);
                     if (rc.isActionReady() && rc.canCollectResource(wellLoc, -1)) {
                         mine(rc);
@@ -111,13 +108,12 @@ public strictfp class RunCarrier {
 
 		// try to deposit resources
         if (getTotalResources(rc) >= 40) {
-            if (Pathing.hasPath) {
-                Pathing.navigateToWithPath(rc, HQLOC, false);
-                Pathing.navigateToWithPath(rc, HQLOC, false);
-            } else {
-                HQLOC = Communication.getClosestHeadquarters(rc);
-                Pathing.navigateTo(rc, HQLOC);
-            }
+            // if (Pathing.hasPath) {
+            //     Pathing.navigateToWithPath(rc, HQLOC, false);
+            // } else {
+            // HQLOC = Communication.getClosestHeadquarters(rc);
+            Pathing.navigateTo(rc, HQLOC);
+            // }
 
             // try to transfer ADAMANTIUM
             int ada = rc.getResourceAmount(ResourceType.ADAMANTIUM);
@@ -139,12 +135,13 @@ public strictfp class RunCarrier {
                         rc.takeAnchor(HQLOC, Anchor.STANDARD);
                 }
             }
+            Pathing.navigateTo(rc, wellLoc);
         } else if (wellLoc == null) {
             short islandNum = myTeam != Team.A ? M_AISL : M_BISL;
             if (board[me.x + me.y * width] == islandNum) {
                 return;
             }  
-            if (rc.getRoundNum() < 300)
+            if (rc.getRoundNum() < 50)
                 exploreBFS(rc);
             else {
                 attackEnemyIsland(rc);
@@ -159,7 +156,7 @@ public strictfp class RunCarrier {
         }
         Communication.tryWriteMessages(rc);
         // System.out.println(Clock.getBytecodeNum());
-        while (Clock.getBytecodeNum() < 10000) {
+        while (Clock.getBytecodeNum() < 9000) {
             // int before = Clock.getBytecodeNum();
             Pathing.bfs(rc, HQLOC, wellLoc);
             // int after = Clock.getBytecodeNum();

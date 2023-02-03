@@ -234,22 +234,26 @@ class Communication {
         if (headquarterLocs[0] == null) {
             return;
         }
-        MapLocation closestIslandLoc = null;
-        int closestDistance = -1;
-        for (MapLocation loc : thisIslandLocs) {
-            int distance = headquarterLocs[0].distanceSquaredTo(loc);
-            if (closestIslandLoc == null || distance < closestDistance) {
-                closestDistance = distance;
-                closestIslandLoc = loc;
-            }
-        }
-        // Remember reading is cheaper than writing so we don't want to write without knowing if it's helpful
         int idx = id + STARTING_ISLAND_IDX - 1;
         int oldIslandValue = rc.readSharedArray(idx);
-        int updatedIslandValue = bitPackIslandInfo(rc, idx, closestIslandLoc);
-        if (oldIslandValue != updatedIslandValue) {
-            Message msg = new Message(idx, updatedIslandValue, RobotPlayer.turnCount);
-            add(msg);
+        Team teamHolding = rc.senseTeamOccupyingIsland(id);
+        if (oldIslandValue == 0 || ((oldIslandValue & TEAM_MASK) != teamHolding.ordinal())) {
+            MapLocation closestIslandLoc = null;
+            int closestDistance = -1;
+            for (MapLocation loc : thisIslandLocs) {
+                int distance = headquarterLocs[0].distanceSquaredTo(loc);
+                if (closestIslandLoc == null || distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIslandLoc = loc;
+                }
+            }
+            // Remember reading is cheaper than writing so we don't want to write without knowing if it's helpful
+            
+            int updatedIslandValue = bitPackIslandInfo(rc, idx, closestIslandLoc);
+            if (oldIslandValue != updatedIslandValue) {
+                Message msg = new Message(idx, updatedIslandValue, RobotPlayer.turnCount);
+                add(msg);
+            }
         }
     }
 
