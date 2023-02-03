@@ -100,8 +100,10 @@ public strictfp class RobotPlayer {
 		width = rc.getMapWidth();
 		height = rc.getMapHeight();
 		rng = new Random(rc.getID());
+		// int before = Clock.getBytecodeNum();
 		board = new byte[width * height];
-
+		// int after = Clock.getBytecodeNum();
+		// System.out.println(after-before);
         rc.setIndicatorString("Hello world!");
 		myTeam = rc.getTeam();
 		enemyTeam = myTeam.opponent();
@@ -156,7 +158,7 @@ public strictfp class RobotPlayer {
 			} finally {
 				// Signify we've done everything we want to do, thereby ending our turn.
 				// This will make our code wait until the next turn, and then perform this loop again.
-				if (Clock.getBytecodeNum() < 1000) {
+				if (Clock.getBytecodeNum() < 200) {
 					System.out.println("sus");
 				}
 				Clock.yield();
@@ -256,7 +258,7 @@ public strictfp class RobotPlayer {
 						if (arrayLoc == null || loc.distanceSquaredTo(HQLOC) < arrayLoc.distanceSquaredTo(HQLOC))
 							Communication.updateManaWellLocation(rc, loc, HQLOC);
 						Communication.addManaWell(rc, loc);
-						if (rc.getType() == RobotType.CARRIER && (wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
+						if ((wellLoc == null || loc.distanceSquaredTo(HQLOC) < wellLoc.distanceSquaredTo(HQLOC))) {
                             if (!RunCarrier.onBanList(loc))
 							    if (RunCarrier.earlyMana || (rc.getID() % RunCarrier.CARRIER_DIFF_MOD != 0 && !RunCarrier.earlyAda))
 								wellLoc = loc;

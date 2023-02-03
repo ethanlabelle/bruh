@@ -57,10 +57,12 @@ public strictfp class RunAmplifier {
 		MapLocation defLoc = Communication.getClosestEnemy(rc);
 		if (defLoc != null) {
 			Pathing.navigateTo(rc, defLoc);
+            Communication.clearObsoleteEnemies(rc);
+            Communication.tryWriteMessages(rc);
             return;
 		}
         Communication.clearObsoleteEnemies(rc);
-
+        Communication.tryWriteMessages(rc);
         if (defLoc == null) {
             // MapLocation neutralIslandLoc = null;
             // int minDist = 7200;

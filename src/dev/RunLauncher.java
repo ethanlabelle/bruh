@@ -34,14 +34,13 @@ public strictfp class RunLauncher {
 
     static void runLauncher(RobotController rc) throws GameActionException {
         attackEnemies(rc);
+        avoidHQ(rc);
         if (turnCount != 1)
             updateMap(rc);
         
-        // attack enemy islands
-        attackEnemyIsland(rc);
-
         // leaves after healing
-        healingStrategy(rc);
+        if (turnCount != 1)
+            healingStrategy(rc);
 
         if (isHealing && healingIsland != null) {
             attackEnemies(rc);
@@ -51,41 +50,80 @@ public strictfp class RunLauncher {
             return;
         }
         
+        MapLocation pWellLoc;
+        pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
+        if (wellLoc != null && pWellLoc == null) {
+            Pathing.navigateTo(rc, HQLOC);
+        } 
 		// look for targets to defend
         // if (turnCount > 30) {
-            defLoc = Communication.getClosestEnemy(rc);
-            if (defLoc != null) {
-                Pathing.navigateTo(rc, defLoc);
+        // if (turnCount == 1) {
+        defLoc = Communication.getClosestEnemy(rc);
+        if (defLoc != null) {
+            Pathing.navigateTo(rc, defLoc);
+            attackEnemies(rc);
+            cloudShot(rc);
+            Communication.clearObsoleteEnemies(rc);
+            Communication.clearOld();
+            return;
+        } else if (!attackEnemyIsland(rc)) {
+            if (move_randomly) {
+                moveLastResort(rc);
                 attackEnemies(rc);
                 cloudShot(rc);
                 Communication.clearObsoleteEnemies(rc);
                 Communication.clearOld();
                 return;
             }
-        // }
-
-        if (move_randomly) {
-            moveLastResort(rc);
-            attackEnemies(rc);
-            cloudShot(rc);
-            // Communication.clearObsoleteEnemies(rc);
-            Communication.clearOld();
-            return;
-        }
-
-        // want to stop 'outside' HQ action radius
-        if(EnemyHQLOC != null && !EnemyHQLOC.equals(Pathing.undefined_loc)) {
-            if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
-                Pathing.navigateTo(rc, EnemyHQLOC);
-                checkForFriends(rc, EnemyHQLOC);
+            // want to stop 'outside' HQ action radius
+            if(EnemyHQLOC != null && !EnemyHQLOC.equals(Pathing.undefined_loc)) {
+                if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
+                    Pathing.navigateTo(rc, EnemyHQLOC);
+                    checkForFriends(rc, EnemyHQLOC);
+                }
+            } else {
+                // int before = Clock.getBytecodeNum();
+                travelToPossibleHQ(rc);
+                // int after = Clock.getBytecodeNum();
+                // System.out.println(after-before);
             }
-        } else {
-            travelToPossibleHQ(rc);
         }
+        // } else if (!attackEnemyIsland(rc)) {
+        //     defLoc = Communication.getClosestEnemy(rc);
+        //     if (defLoc != null) {
+        //         Pathing.navigateTo(rc, defLoc);
+        //         attackEnemies(rc);
+        //         cloudShot(rc);
+        //         Communication.clearObsoleteEnemies(rc);
+        //         Communication.clearOld();
+        //         return;
+        //     } else {
+        //         if (move_randomly) {
+        //             moveLastResort(rc);
+        //             attackEnemies(rc);
+        //             cloudShot(rc);
+        //             // Communication.clearObsoleteEnemies(rc);
+        //             Communication.clearOld();
+        //             return;
+        //         }
+    
+        //         // want to stop 'outside' HQ action radius
+        //         if(EnemyHQLOC != null && !EnemyHQLOC.equals(Pathing.undefined_loc)) {
+        //             if (!justOutside(rc.getLocation(), EnemyHQLOC, RobotType.HEADQUARTERS.actionRadiusSquared, 20)) {
+        //                 Pathing.navigateTo(rc, EnemyHQLOC);
+        //                 checkForFriends(rc, EnemyHQLOC);
+        //             }
+        //         } else {
+        //             // int before = Clock.getBytecodeNum();
+        //             travelToPossibleHQ(rc);
+        //             // int after = Clock.getBytecodeNum();
+        //             // System.out.println(after-before);
+        //         }
+        //     }
+        // } 
 
         attackEnemies(rc);
         cloudShot(rc);
-        avoidHQ(rc);
         // Communication.clearObsoleteEnemies(rc);
         Communication.clearOld();
     }
@@ -415,6 +453,7 @@ public strictfp class RunLauncher {
             for (int i = enemies.length; --i >= 0;) {
                 toAttack = enemies[i].location;
                 if (rc.canAttack(toAttack) && enemies[i].getType() == RobotType.LAUNCHER) {
+                    Communication.reportEnemy(rc, toAttack);
                     rc.attack(toAttack);
                     shot = true;
                     break;
@@ -428,6 +467,7 @@ public strictfp class RunLauncher {
                 toAttack = enemies[enemies.length - 1].location;
                 Pathing.tryMove(rc, rc.getLocation().directionTo(toAttack));
                 if (rc.canAttack(toAttack)) {
+                    Communication.reportEnemy(rc, toAttack);
                     rc.attack(toAttack);
                 }
             }
@@ -452,7 +492,7 @@ public strictfp class RunLauncher {
     }
 
 
-    static void attackEnemyIsland(RobotController rc) throws GameActionException {
+    static boolean attackEnemyIsland(RobotController rc) throws GameActionException {
         if (enemyIsland == null) {
             enemyIsland = getClosestEnemyIsland(rc);
         }
@@ -461,10 +501,12 @@ public strictfp class RunLauncher {
             short islandNum = myTeam == Team.A ? M_AISL : M_BISL;
             if (board[me.x + me.y * width] == islandNum || board[me.x + me.y * width] == M_NISL) {
                 enemyIsland = null;
-                return;
+                return false;
             }
             Pathing.navigateTo(rc, enemyIsland);
+            return true;
         }
+        return false;
     }
 
     static void protectWell(RobotController rc) throws GameActionException {

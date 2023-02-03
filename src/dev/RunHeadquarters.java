@@ -10,7 +10,7 @@ public strictfp class RunHeadquarters {
 
 	static final int LAUNCHER_MOD = 20;
 	static final int LAUNCHERS_PER_AMPLIFIER = 10;
-	static final int CARRIER_MOD = 10;
+	static final int CARRIER_MOD = 8;
 	static final int MAX_CARRIERS = 10;
 	static final int EXCESS = 100;
 	static int launcherCount = 0;
@@ -66,7 +66,7 @@ public strictfp class RunHeadquarters {
 		}
 
 		MapLocation loc;
-        if (turnCount % 200 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
+        if (turnCount % 100 == 0 || (!hasSpawnedAmplifier && rc.getResourceAmount(ResourceType.MANA) > EXCESS)) {
             loc = getSpawnLocation(rc, RobotType.AMPLIFIER);
             if (loc != null) {
                 rc.buildRobot(RobotType.AMPLIFIER, loc);

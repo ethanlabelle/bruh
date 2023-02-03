@@ -49,9 +49,9 @@ public strictfp class RunCarrier {
         //     runAway(rc);
         // }
         if (enemyRobots.length > 0) {
+            Communication.reportEnemy(rc, enemyRobots[0].location);
             for (RobotInfo robot: enemyRobots) {
                 if (robot.type == RobotType.LAUNCHER) {
-			        // Communication.reportEnemy(rc, robot.location);
                     if (getTotalResources(rc) < 5)
                         runAway(rc);
                     break;
@@ -92,7 +92,7 @@ public strictfp class RunCarrier {
                 // try to find well or mine from well
                 if (rc.isActionReady() && rc.canCollectResource(wellLoc, -1)) {
                     mine(rc);
-                } else if (me.isWithinDistanceSquared(wellLoc, 9) && isWellFull(rc, wellLoc)) {
+                } else if (rc.canSenseLocation(wellLoc) && isWellFull(rc, wellLoc)) {
                     bannedWells[banCounter] = wellLoc;
                     wellLoc = null;
                     banCounter = ++banCounter % BAN_LIST_SIZE;
@@ -187,6 +187,7 @@ public strictfp class RunCarrier {
             int before = getTotalResources(rc);
             rc.attack(enemyRobots[0].location);
             rc.setIndicatorString("Attacking! before: " + before + " after: " + getTotalResources(rc));
+            return;
         }
     }
 
@@ -330,15 +331,11 @@ public strictfp class RunCarrier {
                 continue;
             }
             if (rc.canSenseRobotAtLocation(miningLoc)) {
-                RobotInfo r = rc.senseRobotAtLocation(miningLoc);
-                if (r.team == myTeam)
-                    taken++;
+                taken++;
             }
         }
         if (rc.canSenseRobotAtLocation(wellLoc)) {
-            RobotInfo r = rc.senseRobotAtLocation(wellLoc);
-            if (r.team == myTeam)
-                taken++;
+            taken++;
         }
         return spots == taken; 
     }

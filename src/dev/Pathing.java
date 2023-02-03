@@ -312,13 +312,41 @@ public class Pathing {
                     rc.move(a);
                     currentDirection = a;
                 } else {
-                    a = currentDirection.rotateLeft().rotateLeft();
+                    a = a.rotateLeft();
                     if (rc.canMove(a)) {
                         rc.move(a);
                         currentDirection = a;
-                    } else 
-                        bugRandom(rc, goalLoc);
-                }
+                    } else {
+                        a = a.rotateLeft();
+                        if (rc.canMove(a)) {
+                            rc.move(a);
+                            currentDirection = a;
+                        } else {
+                            a = a.rotateLeft();
+                            if (rc.canMove(a)) {
+                                rc.move(a);
+                                currentDirection = a;
+                            } else {
+                                a = a.rotateLeft();
+                                if (rc.canMove(a)) {
+                                    rc.move(a);
+                                    currentDirection = a;
+                                } else {
+                                    a = a.rotateLeft();
+                                    if (rc.canMove(a)) {
+                                        rc.move(a);
+                                        currentDirection = a;
+                                    } else {
+                                        a = a.rotateLeft();
+                                        if (rc.canMove(a)) {
+                                            rc.move(a);
+                                            currentDirection = a;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 				// if (hasObstacle(rc, goalDir)) {
 				// 	Direction left = currentDirection.rotateLeft();
                 //     if (rc.canMove(left)) {
@@ -335,6 +363,7 @@ public class Pathing {
 				// // } else {
 				// 	bugRandom(rc, goalLoc);
 				// }
+                }
             }
         }
         
