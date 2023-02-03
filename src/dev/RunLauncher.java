@@ -15,7 +15,7 @@ public strictfp class RunLauncher {
     static MapLocation possibleEnemyLOC;
     static int fake_id = 0;
     static MapLocation center = new MapLocation(width/2, height/2);
-    static final int minimum_health = RobotType.LAUNCHER.health/2;
+    static final int minimum_health = (3*RobotType.LAUNCHER.health)/4;
     static final int maximum_health = RobotType.LAUNCHER.health;
     static boolean isHealing = false;
     static MapLocation healingIsland = null;
@@ -49,12 +49,7 @@ public strictfp class RunLauncher {
             Communication.clearOld();
             return;
         }
-        
-        MapLocation pWellLoc;
-        pWellLoc = Communication.getClosestUnbannedWell(rc, ResourceType.MANA);
-        if (wellLoc != null && pWellLoc == null) {
-            Pathing.navigateTo(rc, HQLOC);
-        } 
+
 		// look for targets to defend
         // if (turnCount > 30) {
         // if (turnCount == 1) {
@@ -124,7 +119,7 @@ public strictfp class RunLauncher {
 
         attackEnemies(rc);
         cloudShot(rc);
-        // Communication.clearObsoleteEnemies(rc);
+        Communication.clearObsoleteEnemies(rc);
         Communication.clearOld();
     }
 

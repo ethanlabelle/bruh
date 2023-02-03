@@ -4,7 +4,6 @@ import battlecode.common.*;
 import static dev.RobotPlayer.*;
 import java.util.Queue;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 public class Pathing {
@@ -25,9 +24,7 @@ public class Pathing {
     static int stuckCounter = 0;
     static MapLocation undefined_loc = new MapLocation(-1, -1);
     static Queue<MapLocation> bfsQ =  new LinkedList<>();
-    // static HashSet<MapLocation> visited = new HashSet<>();
-    static HashSet<MapLocation> hidden = new HashSet<>();
-    // static LinkedList<MapLocation> path = new LinkedList<>();
+    static Queue<MapLocation> hidden = new LinkedList<>();
     static HashMap<MapLocation, MapLocation> parents = new HashMap<>();
     static int currentPathIdx = -1;
     static boolean hasPath = false;
@@ -47,7 +44,7 @@ public class Pathing {
     }
     // Navigation
     static void navigateTo(RobotController rc, MapLocation loc) throws GameActionException {
-        if (rc.isMovementReady() && rc.getType() == RobotType.CARRIER && loc.equals(HQLOC) && hasPath) {
+        if (rc.isMovementReady() && rc.getType() == RobotType.CARRIER && loc.equals(HQLOC)) {
             MapLocation me = rc.getLocation();
             if (parents.containsKey(me)) {
                 MapLocation goal = parents.get(me);
@@ -341,28 +338,18 @@ public class Pathing {
                                         if (rc.canMove(a)) {
                                             rc.move(a);
                                             currentDirection = a;
+                                        } else {
+                                            a = a.rotateLeft();
+                                            if (rc.canMove(a)) {
+                                                rc.move(a);
+                                                currentDirection = a;
+                                            }
                                         }
-                                    }
+                                    } 
                                 }
                             }
                         }
                     }
-				// if (hasObstacle(rc, goalDir)) {
-				// 	Direction left = currentDirection.rotateLeft();
-                //     if (rc.canMove(left)) {
-                //         rc.move(left);
-                //         currentDirection = left;
-                //     }
-                //     else {
-                //         Direction right = currentDirection.rotateRight();
-                //         if (rc.canMove(right)) {
-                //             rc.move(right);
-                //             currentDirection = right;
-                //         }
-                //     }
-				// // } else {
-				// 	bugRandom(rc, goalLoc);
-				// }
                 }
             }
         }
@@ -418,11 +405,11 @@ public class Pathing {
             goalLoc = null;
         
         
-        if (stuckCounter > 3) {
-            // if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
-            //     RunCarrier.banWellLoc();
-            //     stuckCounter = 0;
-            // }
+        if (stuckCounter > 10) {
+            if (rc.getType() == RobotType.CARRIER && getTotalResources(rc) == 0) {
+                RunCarrier.banWellLoc();
+                stuckCounter = 0;
+            }
             for (int i = directions.length; --i >= 0;)
                 if (rc.canMove(directions[i])) {
                     rc.move(directions[i]);
@@ -506,33 +493,30 @@ public class Pathing {
         if (pSrc == null || !src.equals(pSrc)) {
             pSrc = src;
             hasPath = false;
-            currentPathIdx = -1;
-            // path.clear();
             parents.clear();
             bfsQ.clear();
         }
 
         else if (dst != null && !dst.equals(pDst)) {
             pDst = dst;
-            // path.clear();
         }
 
         // constructs paths
         else if (dst != null && parents.containsKey(dst)) {
-            // MapLocation current = dst;
-            // while (!current.equals(undefined_loc)) {
-            //     path.add(current);
-            //     rc.setIndicatorDot(current, 255, 0, 0);
-            //     current = parents.get(current);
-            // }
             Pathing.hasPath = true;
             return true;
         }
         else if (bfsQ.size() == 0) {
             rc.setIndicatorDot(src, 255, 0, 0);
-            if (board[src.x + src.y * width] != M_HIDDEN) {
+            if (!parents.containsKey(src)) {
                 bfsQ.add(src);
                 parents.put(src, undefined_loc);
+            } else if (hidden.size() > 0) {
+                MapLocation tile = hidden.peek();
+                if (board[tile.x + tile.y * width] != M_HIDDEN) {
+                    bfsQ.add(tile);
+                    hidden.remove();
+                }
             }
         }
         else if (bfsQ.size() > 0){
@@ -543,11 +527,12 @@ public class Pathing {
                 if (!rc.onTheMap(adj))
                     continue;
                 byte tile = board[adj.x + adj.y * width];
-                // rc.setIndicatorDot(adj, 0, 0, 255);
+                rc.setIndicatorDot(adj, 0, 0, 255);
                 switch (tile) {
                     case M_STORM:
                     case M_HIDDEN:
                         parents.put(adj, next);
+                        hidden.add(adj);
                         continue;
                     case M_CURN:
                     case M_CURS:

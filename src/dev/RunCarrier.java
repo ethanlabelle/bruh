@@ -99,7 +99,7 @@ public strictfp class RunCarrier {
                 } else {
                     rc.setIndicatorString("navigating to wellLoc " + wellLoc + " " + rc.getMovementCooldownTurns());
                     Pathing.navigateTo(rc, wellLoc);
-                    if (rc.isActionReady() && rc.canCollectResource(wellLoc, -1)) {
+                    if (rc.isActionReady() && wellLoc != null && rc.canCollectResource(wellLoc, -1)) {
                         mine(rc);
                     }
                 }
