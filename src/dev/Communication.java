@@ -51,6 +51,9 @@ class Communication {
     
     // a set of headquarterLocs
     public static HashSet<MapLocation> headquarterLocsSet = new HashSet<MapLocation>();
+    // set of well locations
+    public static HashSet<MapLocation> manaWellLocsSet = new HashSet<>();
+    public static MapLocation[] thisIslandLocs = {};
 
 	static void add(Message m) throws GameActionException {
 		if (messagesQueue[tail] == null)
@@ -233,8 +236,7 @@ class Communication {
         }
         MapLocation closestIslandLoc = null;
         int closestDistance = -1;
-        MapLocation[] islandLocs = rc.senseNearbyIslandLocations(id);
-        for (MapLocation loc : islandLocs) {
+        for (MapLocation loc : thisIslandLocs) {
             int distance = headquarterLocs[0].distanceSquaredTo(loc);
             if (closestIslandLoc == null || distance < closestDistance) {
                 closestDistance = distance;

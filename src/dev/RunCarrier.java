@@ -208,13 +208,13 @@ public strictfp class RunCarrier {
         me = rc.getLocation();
         int[] islands = rc.senseNearbyIslands();
         for (int id : islands) {
-            MapLocation[] thisIslandLocs = rc.senseNearbyIslandLocations(id);
-			if (thisIslandLocs.length > 0) {
+            Communication.thisIslandLocs = rc.senseNearbyIslandLocations(id);
+			if (Communication.thisIslandLocs.length > 0) {
 				Team team = rc.senseTeamOccupyingIsland(id);
 				MapLocation islLoc = null;
             	if (team == Team.NEUTRAL) {
 					boolean onIsland = false;
-            	    for (MapLocation loc: thisIslandLocs) {
+            	    for (MapLocation loc: Communication.thisIslandLocs) {
 						if (me.equals(loc))
 							onIsland = true;
 						islLoc = loc;
@@ -232,7 +232,7 @@ public strictfp class RunCarrier {
             	}
             	else if (team == enemyTeam) {
             	    boolean onIsland = false;
-            	    for (MapLocation loc: thisIslandLocs) {
+            	    for (MapLocation loc: Communication.thisIslandLocs) {
 						if (me.equals(loc))
 							onIsland = true;
 						islLoc = loc;
